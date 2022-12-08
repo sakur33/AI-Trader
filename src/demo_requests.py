@@ -27,9 +27,7 @@ async def main(client):
         start=start_date, period=period
     )
 
-    df = pd.DataFrame.from_dict(candles)
-    df.to_pickle(f'../data/{symbol}_{start_date.strftime("%m-%d-%Y")}_{period}.pickle')
-    print(df.head())
+    print(candles.head(20))
 
 if __name__ == "__main__":
     client = XTBclient()

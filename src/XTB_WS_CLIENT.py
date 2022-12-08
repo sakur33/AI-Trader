@@ -4,7 +4,10 @@ import asyncio
 import time
 from datetime import datetime, timedelta
 import pytz
+from utils import xtb_time_to_date, date_to_xtb_time
 from creds import user, passw
+import pandas as pd
+import pathlib
 
 
 class XTBclient:
@@ -57,32 +60,22 @@ class XTBclient:
         response = await connection.recv()
         print(f"{datetime.now()} | Response: {response}")
     
-    def date_to_xtb_time(self, target):
-        initial = self.initial_time
-        target = target.astimezone(self.timezone)
-        diff = 1000 * (target - initial).seconds
-        return diff
-
-    def xtb_time_to_date(self, time):
-        initial = self.initial_time
-        date = initial + timedelta(milliseconds=time)
-        return date
-
-    def return_as_dict(self, response):
+    def return_as_df(self, response):
         columns = response[0].keys()
         df_dict = {}
         for col in columns:
             df_dict[col] = []
-
         for r_dict in response:
             for col in columns:
-                df_dict[col] = r_dict[col]
-        return df_dict     
+                df_dict[col].append(r_dict[col])
+        print(df_dict.keys())
+        df = pd.DataFrame.from_dict(df_dict)
+        return df    
 
     async def get_candles_range(self, connection, symbol, start, period):
         CHART_RANGE_INFO_RECORD = {
             "period": period,
-            "start": self.date_to_xtb_time(start),
+            "start": date_to_xtb_time(start),
             "symbol": symbol
         }
         get_candles = {
@@ -96,5 +89,15 @@ class XTBclient:
         # digits = response["digits"]
         # exemode = response["exemode"]
         print(f"{datetime.now()} | Response: {status}")
-        rate_info_dict = self.return_as_dict(rate_infos)
-        return rate_infos
+        df = self.return_as_df(rate_infos)
+
+        df['ctm'] = pd.to_numeric(df['ctm'])
+        df['ctmString'] = pd.to_datetime(df['ctmString'])
+        df['open'] = pd.to_numeric(df['open'])
+        df['close'] = pd.to_numeric(df['close'])
+        df['high'] = pd.to_numeric(df['high'])
+        df['low'] = pd.to_numeric(df['low'])
+        df['vol'] = pd.to_numeric(df['vol'])
+        df.to_pickle(f'../data/{symbol}_{start.strftime("%m-%d-%Y")}_{period}.pickle')
+
+        return df
