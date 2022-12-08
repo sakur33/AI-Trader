@@ -6,41 +6,31 @@ from datetime import datetime
 import warnings
 import json
 import concurrent.futures
-warnings.filterwarnings("ignore", category=DeprecationWarning)
+from datetime import timedelta
+import pandas as pd
+import pickle as pkl
 
+warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 async def main(client):
     global loop
     loop = asyncio.get_event_loop()
     connection = await client.connect()
-    print(f"{datetime.now()}| Connected")
+    print(f"{datetime.now()} | Connected")
 
-    await connection.send(json.dumps({"command": "getAllSymbols"}))
-    response = await connection.recv()
-    print(f"{datetime.now()} | Response: {response}")
 
-    
-    # with concurrent.futures.ThreadPoolExecutor() as pool:
-    #     pers_tasks = [
-    #         asyncio.ensure_future(client.heartbeat(connection)),
-    #         asyncio.ensure_future(client.receiveMessage(connection)),
-    #     ]
-    #     result = await loop.run_in_executor(
-    #         pool, exec, pers_tasks)
+    symbol = 'EURUSD'
+    start_date = (datetime.now() - timedelta(days=90))
+    period = 1440
+    candles = await client.get_candles_range(
+        connection, symbol=symbol,
+        start=start_date, period=period
+    )
 
-    # with concurrent.futures.ThreadPoolExecutor() as persistent_thread:
-        
-    # mssg_tasks = [
-    #         asyncio.ensure_future(client.sendMessage(connection, "all_symbols")),
-    #         asyncio.ensure_future(client.receiveMessage(connection)),
-    #     ]
-
-def exec(tasks):
-    global loop
-    loop.run_until_complete(asyncio.wait(tasks))
+    df = pd.DataFrame.from_dict(candles)
+    df.to_pickle(f'../data/{symbol}_{start_date.strftime("%m-%d-%Y")}_{period}.pickle')
+    print(df.head())
 
 if __name__ == "__main__":
     client = XTBclient()
     asyncio.run(main(client))
-
-
