@@ -1,4 +1,5 @@
 # Installation
+http://developers.xstore.pro/documentation/#getAllSymbols
 
 To use this API you need the following installed in your system:
 
