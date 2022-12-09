@@ -22,7 +22,7 @@ async def main(client):
 
     ## FIND SYMBOLS THAT ARE STOCKS
 
-    df = await client.get_STC_Symbols(connection)
+    df = await client.get_STC_Symbols(connection, save=True)
 
     ## GET CANDLES FOR A GIVEN SYMBOL FROM DATE UNTIL NOW AND PLOT
     # symbol = 'EURUSD'

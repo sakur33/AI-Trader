@@ -71,21 +71,21 @@ class XTBclient:
         df = pd.DataFrame.from_dict(df_dict)
         return df    
 
-    async def get_AllSymbols(self, connection):
+    async def get_AllSymbols(self, connection, save=False):
         allsymbols = {"command": "getAllSymbols"}
         response = await self.sendMessage(connection, allsymbols)
         status = response["status"]
         print(f"{datetime.now()} | Response: {status}")
-        response = response["returnData"]
+        response = self.return_as_df(response["returnData"])
+        if save:
+            response.to_pickle(f'../data/ALLsymbols_{datetime.now().strftime("%m-%d-%Y")}.pickle')
         return response
 
-    async def get_STC_Symbols(self, connection):
-        allsymbols = self.get_AllSymbols(connection)
-        STC = []
-        for symbol in allsymbols["returnData"]:
-            if symbol["categoryName"] == "STC":
-                STC.append(symbol)
-        return STC
+    async def get_STC_Symbols(self, connection, save=False):
+        allsymbols = await self.get_AllSymbols(connection)
+        if save:
+            allsymbols.to_pickle(f'../data/STCsymbols_{datetime.now().strftime("%m-%d-%Y")}.pickle')
+        return allsymbols[allsymbols["categoryName"] == "STC"]
 
     async def get_candles_range(self, connection, symbol, start, period, save=False):
         CHART_RANGE_INFO_RECORD = {
