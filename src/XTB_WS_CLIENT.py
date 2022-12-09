@@ -68,11 +68,26 @@ class XTBclient:
         for r_dict in response:
             for col in columns:
                 df_dict[col].append(r_dict[col])
-        print(df_dict.keys())
         df = pd.DataFrame.from_dict(df_dict)
         return df    
 
-    async def get_candles_range(self, connection, symbol, start, period):
+    async def get_AllSymbols(self, connection):
+        allsymbols = {"command": "getAllSymbols"}
+        response = await self.sendMessage(connection, allsymbols)
+        status = response["status"]
+        print(f"{datetime.now()} | Response: {status}")
+        response = response["returnData"]
+        return response
+
+    async def get_STC_Symbols(self, connection):
+        allsymbols = self.get_AllSymbols(connection)
+        STC = []
+        for symbol in allsymbols["returnData"]:
+            if symbol["categoryName"] == "STC":
+                STC.append(symbol)
+        return STC
+
+    async def get_candles_range(self, connection, symbol, start, period, save=False):
         CHART_RANGE_INFO_RECORD = {
             "period": period,
             "start": date_to_xtb_time(start),
@@ -98,6 +113,7 @@ class XTBclient:
         df['high'] = pd.to_numeric(df['high'])
         df['low'] = pd.to_numeric(df['low'])
         df['vol'] = pd.to_numeric(df['vol'])
-        df.to_pickle(f'../data/{symbol}_{start.strftime("%m-%d-%Y")}_{period}.pickle')
+        if save:
+            df.to_pickle(f'../data/{symbol}_{start.strftime("%m-%d-%Y")}_{period}.pickle')
 
         return df
