@@ -1,11 +1,8 @@
 from XTB_WS_CLIENT import XTBclient
-import threading
-import asyncio, nest_asyncio
+import asyncio
 import time
 from datetime import datetime
 import warnings
-import json
-import concurrent.futures
 from datetime import timedelta, datetime
 import pandas as pd
 import pickle as pkl
@@ -23,6 +20,8 @@ async def main(client):
     ## FIND SYMBOLS THAT ARE STOCKS
 
     df = await client.get_STC_Symbols(connection, save=True)
+    print(df.columns)
+    print(df.head())
 
     ## GET CANDLES FOR A GIVEN SYMBOL FROM DATE UNTIL NOW AND PLOT
     # symbol = 'EURUSD'
