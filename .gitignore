@@ -1,5 +1,5 @@
 .env
 .venv
-
 creds.py
-.pickle
+*.pickle
+data

@@ -19,19 +19,18 @@ async def main(client):
 
     ## FIND SYMBOLS THAT ARE STOCKS
 
-    df = await client.get_STC_Symbols(connection, save=True)
-    print(df.columns)
-    print(df.head())
+    df = await client.get_STC_Symbols(connection)
+    df.sort_values(by=['instantMaxVolume'], inplace=True)
+    picks = list(df['symbol'][:10].values)
 
-    ## GET CANDLES FOR A GIVEN SYMBOL FROM DATE UNTIL NOW AND PLOT
-    # symbol = 'EURUSD'
-    # start_date = (datetime.now() - timedelta(days=90))
-    # period = 1440
-    # df = await client.get_candles_range(
-    #     connection, symbol=symbol,
-    #     start=start_date, period=period
-    # )
-
+    for pick in picks:
+        start_date = (datetime.now() - timedelta(days=365))
+        period = 1440
+        df = await client.get_candles_range(
+            connection, symbol=pick,
+            start=start_date, period=period,
+            save=True
+        )
 
     # fig = go.Figure(data=[go.Candlestick(x=df['ctmString'],
     #             open=df['open'],

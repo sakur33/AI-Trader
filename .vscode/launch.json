@@ -5,12 +5,13 @@
     "version": "0.2.0",
     "configurations": [
 
+
         
         {
             "name": "Python: archivo actual",
             "type": "python",
             "request": "launch",
-            "program": "./src/demo_requests.py",
+            "program": "./src/trend_predictor.py",
             "console": "integratedTerminal",
             "justMyCode": true
         }
