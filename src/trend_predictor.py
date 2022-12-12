@@ -1,63 +1,109 @@
-import os
+import glob
+import pickle as pkl
 import pandas as pd
 import plotly.graph_objects as go
+from plotly.subplots import make_subplots
+from datetime import datetime
 import numpy as np
 import plotly.express as px
 from tensorflow import keras
+from keras.utils import pad_sequences
 from keras.models import Sequential
-from keras.layers import Dense, LSTM, Dropout
+from keras.layers import Dense, LSTM, Dropout, SpatialDropout1D
+from keras.callbacks import EarlyStopping
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
-from sklearn.metrics import mean_squared_error, mean_absolute_percentage_error
+from sklearn.metrics import (
+    mean_squared_error,
+    mean_absolute_percentage_error,
+    accuracy_score,
+)
 from sklearn.model_selection import train_test_split, TimeSeriesSplit
+from utils import (
+    adapt_data,
+    plot_stock,
+    plot_stock_pred,
+    lstm_split,
+    lstm_accumulative_split,
+    print_stats,
+    build_test_df,
+)
 
 
-def lstm_split(data, target, n_steps):
-    X, y = [], []
-    for i in range(len(data) - n_steps + 1):
-        X.append(data[i:i + n_steps, :-1])
-        y.append(target[i + n_steps-1])
-    return np.array(X), np.array(y)
+picks = glob.glob("../data/*_1440.pickle")
+predictable_symbols = []
 
+for pick in picks:
+    df = adapt_data(pd.read_pickle(pick))
+    symbol = pick.split("_")[0].split("\\")[-1]
 
-data_path = '../data/'
-picks = os.listdir(data_path)
+    df["target"] = (df["close"].shift(-10) > df['open']).replace({True: 1, False: 0})
+    df.set_index(df['ctmString'])
 
+    rises_n =  df[df['target'] == 1].shape[0]
+    lowers_n =  df[df['target'] == 0].shape[0]
+    print(f"Rises: {rises_n} | Lowers: {lowers_n}")
 
-df = pd.read_pickle(data_path + picks[1])
-        
-next_day = df['open'].shift(-1)
-next_day_rise = (next_day > df['open']).replace({True: 1, False: 0})
-target_y = next_day_rise
-x_feat = df[['open', 'close', 'high', 'low', 'vol']].values
+    x_feat = df[["open", "close", "high", "low"]].values
 
-sc = StandardScaler()
-x_feat_sc = sc.fit_transform(x_feat)
-x_feat_sc = pd.DataFrame(columns=['open', 'close', 'high', 'low', 'vol'],
-                                data = x_feat_sc, index=df['ctmString'])
+    sc = StandardScaler()
+    x_feat_sc = sc.fit_transform(x_feat)
+    x_feat_sc = pd.DataFrame(
+        columns=["open", "close", "high", "low"],
+        data=x_feat_sc,
+        index=df["ctmString"],
+    )
 
-X1, y1 = lstm_split(x_feat_sc.values, target_y, 30)
+    X1, y1 = lstm_split(
+        x_feat_sc[["open", "close", "high", "low"]].values,
+        df["target"],
+        n_steps=10,
+    )
 
-train_split = 0.8
-split_idx = int(np.ceil(len(X1) * train_split))
-date_index = df['ctmString']
+    train_split = 0.8
+    split_idx = int(np.ceil(len(X1) * train_split))
+    date_index = df["ctmString"]
 
-X_train, X_test = X1[:split_idx], X1[split_idx:]
-y_train, y_test = y1[:split_idx], y1[split_idx:]
-X_train_date, X_test_date = date_index[:split_idx], date_index[split_idx:]
+    X_train, X_test = X1[:split_idx], X1[split_idx:]
+    y_train, y_test = y1[:split_idx], y1[split_idx:]
+    X_train_date, X_test_date = date_index[:split_idx], date_index[split_idx:]
+    print(X1.shape, X_train.shape, y_train.shape, X_test.shape, y_test.shape)
 
-print(X1.shape, X_train.shape, y_train.shape, X_test.shape, y_test.shape)
+    n_lstm = 128
+    drop_lstm = 0.2
 
-lstm = Sequential()
-lstm.add(LSTM(32, input_shape=(X_train.shape[1], X_train.shape[2]),
-activation='relu'))
-lstm.add(Dense(1, activation='sigmoid'))
-lstm.compile(loss='binary_crossentropy', optimizer='adam', metrics='accuracy')
-lstm.summary()
+    model = Sequential()
+    # model.add(SpatialDropout1D(drop_lstm))
+    model.add(LSTM(n_lstm, input_shape=(X_train.shape[1], X_train.shape[2]), return_sequences=False))
+    # model.add(Dropout(drop_lstm))
+    model.add(Dense(1, activation="sigmoid"))
 
-history = lstm.fit(X_train, y_train, epochs=50, batch_size=4,
-                            verbose=2, shuffle=False)
+    model.summary()
+    model.compile(loss="binary_crossentropy", optimizer="adam", metrics=["accuracy"])
+    
 
+    num_epochs = 30
+    early_stop = EarlyStopping(monitor="val_loss", patience=10)
 
-px.line(history.history['loss'])
+    history = model.fit(
+        X_train,
+        y_train,
+        epochs=num_epochs,
+        validation_data=(X_test, y_test),
+        callbacks=[early_stop],
+        verbose=2,
+    )
 
-lstm.evaluate(x=X_test, y=y_test)
+    train_dense_results = model.evaluate(X_train, y_train, verbose=2, batch_size=16)
+    valid_dense_results = model.evaluate(X_test, y_test, verbose=2, batch_size=16)
+    print(f'Train accuracy: {train_dense_results[1]*100:0.2f}')
+    print(f'Valid accuracy: {valid_dense_results[1]*100:0.2f}')
+
+    # loss = model.evaluate(x=X_test, y=y_test)
+    y_pred = model.predict(x=X_test).reshape(-1)
+
+    # acc = accuracy_score(y_test, y_pred)
+
+    # SHOW RESULTS
+    test_df = build_test_df(X_test, y_test, y_pred, X_test_date)
+    plot_stock_pred(test_df, df, history.history, pred_threshold=0.5)
+    input()
