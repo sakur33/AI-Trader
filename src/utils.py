@@ -9,6 +9,10 @@ TIMEZONE = pytz.timezone("GMT")
 INITIAL_TIME = datetime(1970, 1, 1, 00, 00, 00, 000000, tzinfo=TIMEZONE)
 
 
+def get_today():
+    return datetime.now().strftime("%m-%d-%Y")
+
+
 def xtb_time_to_date(time):
     initial = INITIAL_TIME
     date = initial + timedelta(milliseconds=time)
