@@ -21,7 +21,7 @@ async def main(client):
 
     df = await client.get_STC_Symbols(connection)
     df.sort_values(by=['instantMaxVolume'], inplace=True)
-    picks = list(df['symbol'][:10].values)
+    picks = list(df['symbol'][:50].values)
 
     for pick in picks:
         start_date = (datetime.now() - timedelta(days=365))
