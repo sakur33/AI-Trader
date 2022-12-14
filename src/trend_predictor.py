@@ -26,10 +26,18 @@ from utils import (
     lstm_accumulative_split,
     print_stats,
     build_test_df,
+    get_today,
+    generate_clustered_dataset
 )
 
+today = get_today()
+
+with open("../clusters/grouper_" + today + ".pickle", "rb") as f:
+    group_dict = pkl.load(f)
 
 picks = glob.glob("../data/*_1440.pickle")
+generate_clustered_dataset(picks, group_dict["Clusters"][0])
+input()
 predictable_symbols = []
 
 for pick in picks:
@@ -43,7 +51,7 @@ for pick in picks:
     lowers_n =  df[df['target'] == 0].shape[0]
     print(f"Rises: {rises_n} | Lowers: {lowers_n}")
 
-    x_feat = df[["open", "close", "high", "low"]].values
+    x_feat = df[["open", "close", "high", "low", "vol"]].values
 
     sc = StandardScaler()
     x_feat_sc = sc.fit_transform(x_feat)
