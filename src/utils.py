@@ -55,17 +55,25 @@ def plot_stock(df, df2=None, params=None, symbols=None):
         ],
     }
     if df2 is None:
-        fig = make_subplots(specs=[[{"secondary_y": True}]])
+        print("None")
+        fig = make_subplots(
+            rows=4,
+            cols=1,
+            shared_xaxes=True,
+            vertical_spacing=0.01,
+            row_heights=[0.5, 0.1, 0.2, 0.2],
+        )
         fig.add_trace(
             go.Candlestick(
                 x=df["ctmString"],
-                open=df["open"] / 1000,
-                high=df["high"] / 1000,
-                low=df["low"] / 1000,
-                close=df["close"] / 1000,
+                open=df["open"],
+                high=df["high"],
+                low=df["low"],
+                close=df["close"],
                 name=symbols[0],
             ),
-            secondary_y=False,
+            row=1,
+            col=1,
         )
         fig.add_trace(
             go.Scatter(
@@ -84,6 +92,33 @@ def plot_stock(df, df2=None, params=None, symbols=None):
                 line=dict(color="orange", width=2),
                 name="MA 20",
             )
+        )
+        MACD1, STOCH1 = get_macd_stoch(df)
+        fig.add_trace(go.Bar(x=df.index, y=df["vol"]), row=2, col=1)
+        fig.add_trace(go.Bar(x=df.index, y=MACD1.macd_diff()), row=3, col=1)
+        fig.add_trace(
+            go.Scatter(x=df.index, y=MACD1.macd(), line=dict(color="black", width=2)),
+            row=3,
+            col=1,
+        )
+        fig.add_trace(
+            go.Scatter(
+                x=df.index, y=MACD1.macd_signal(), line=dict(color="blue", width=1)
+            ),
+            row=3,
+            col=1,
+        )
+        fig.add_trace(
+            go.Scatter(x=df.index, y=STOCH1.stoch(), line=dict(color="black", width=2)),
+            row=4,
+            col=1,
+        )
+        fig.add_trace(
+            go.Scatter(
+                x=df.index, y=STOCH1.stoch_signal(), line=dict(color="blue", width=1)
+            ),
+            row=4,
+            col=1,
         )
     else:
         fig = make_subplots(
@@ -162,60 +197,63 @@ def plot_stock(df, df2=None, params=None, symbols=None):
             row=1,
             col=2,
         )
+        MACD1, STOCH1 = get_macd_stoch(df)
+        fig.add_trace(go.Bar(x=df.index, y=df["vol"]), row=2, col=1)
+        fig.add_trace(go.Bar(x=df.index, y=MACD1.macd_diff()), row=3, col=1)
+        fig.add_trace(
+            go.Scatter(x=df.index, y=MACD1.macd(), line=dict(color="black", width=2)),
+            row=3,
+            col=1,
+        )
+        fig.add_trace(
+            go.Scatter(
+                x=df.index, y=MACD1.macd_signal(), line=dict(color="blue", width=1)
+            ),
+            row=3,
+            col=1,
+        )
+        fig.add_trace(
+            go.Scatter(x=df.index, y=STOCH1.stoch(), line=dict(color="black", width=2)),
+            row=4,
+            col=1,
+        )
+        fig.add_trace(
+            go.Scatter(
+                x=df.index, y=STOCH1.stoch_signal(), line=dict(color="blue", width=1)
+            ),
+            row=4,
+            col=1,
+        )
 
-    MACD1, STOCH1 = get_macd_stoch(df)
-    fig.add_trace(go.Bar(x=df.index, y=df["vol"]), row=2, col=1)
-    fig.add_trace(go.Bar(x=df.index, y=MACD1.macd_diff()), row=3, col=1)
-    fig.add_trace(
-        go.Scatter(x=df.index, y=MACD1.macd(), line=dict(color="black", width=2)),
-        row=3,
-        col=1,
-    )
-    fig.add_trace(
-        go.Scatter(x=df.index, y=MACD1.macd_signal(), line=dict(color="blue", width=1)),
-        row=3,
-        col=1,
-    )
-    fig.add_trace(
-        go.Scatter(x=df.index, y=STOCH1.stoch(), line=dict(color="black", width=2)),
-        row=4,
-        col=1,
-    )
-    fig.add_trace(
-        go.Scatter(
-            x=df.index, y=STOCH1.stoch_signal(), line=dict(color="blue", width=1)
-        ),
-        row=4,
-        col=1,
-    )
-
-    MACD2, STOCH2 = get_macd_stoch(df2)
-    fig.add_trace(go.Bar(x=df2.index, y=df2["vol"]), row=2, col=2)
-    fig.add_trace(go.Bar(x=df2.index, y=MACD2.macd_diff()), row=3, col=2)
-    fig.add_trace(
-        go.Scatter(x=df2.index, y=MACD2.macd(), line=dict(color="black", width=2)),
-        row=3,
-        col=2,
-    )
-    fig.add_trace(
-        go.Scatter(
-            x=df2.index, y=MACD2.macd_signal(), line=dict(color="blue", width=1)
-        ),
-        row=3,
-        col=2,
-    )
-    fig.add_trace(
-        go.Scatter(x=df2.index, y=STOCH2.stoch(), line=dict(color="black", width=2)),
-        row=4,
-        col=2,
-    )
-    fig.add_trace(
-        go.Scatter(
-            x=df2.index, y=STOCH2.stoch_signal(), line=dict(color="blue", width=1)
-        ),
-        row=4,
-        col=2,
-    )
+        MACD2, STOCH2 = get_macd_stoch(df2)
+        fig.add_trace(go.Bar(x=df2.index, y=df2["vol"]), row=2, col=2)
+        fig.add_trace(go.Bar(x=df2.index, y=MACD2.macd_diff()), row=3, col=2)
+        fig.add_trace(
+            go.Scatter(x=df2.index, y=MACD2.macd(), line=dict(color="black", width=2)),
+            row=3,
+            col=2,
+        )
+        fig.add_trace(
+            go.Scatter(
+                x=df2.index, y=MACD2.macd_signal(), line=dict(color="blue", width=1)
+            ),
+            row=3,
+            col=2,
+        )
+        fig.add_trace(
+            go.Scatter(
+                x=df2.index, y=STOCH2.stoch(), line=dict(color="black", width=2)
+            ),
+            row=4,
+            col=2,
+        )
+        fig.add_trace(
+            go.Scatter(
+                x=df2.index, y=STOCH2.stoch_signal(), line=dict(color="blue", width=1)
+            ),
+            row=4,
+            col=2,
+        )
 
     if params:
         fig.add_hline(
@@ -224,6 +262,8 @@ def plot_stock(df, df2=None, params=None, symbols=None):
             line_dash="dash",
             line_color="yellow",
             line_width=3,
+            row=1,
+            col=1,
         )
         fig.add_hline(
             y=params["stop_loss"],
@@ -231,6 +271,8 @@ def plot_stock(df, df2=None, params=None, symbols=None):
             line_dash="dash",
             line_color="red",
             line_width=3,
+            row=1,
+            col=1,
         )
         fig.add_hline(
             y=params["take_profit"],
@@ -238,6 +280,8 @@ def plot_stock(df, df2=None, params=None, symbols=None):
             line_dash="dash",
             line_color="green",
             line_width=3,
+            row=1,
+            col=1,
         )
     fig.update_layout(
         xaxis_rangeslider_visible=False,
@@ -376,14 +420,7 @@ def plot_stock_pred(df, real_df, history, pred_threshold=0.5):
     fig.show()
 
 
-def adapt_data(df):
-    """adapt_data This function removes the relative values of the candles
-    and makes them independent
-
-    Args:
-        df (_type_): dataframe with columns ['ctm', 'ctmString',
-        'open', 'close', 'high', 'low', 'vol']
-    """
+def adapt_data(df, pred_step=1):
     df["close"] = df["open"] + df["close"]
     df["high"] = df["open"] + df["high"]
     df["low"] = df["open"] + df["low"]
@@ -392,7 +429,9 @@ def adapt_data(df):
     df["MA20"] = df["close"].rolling(window=20).mean()
     df["MA5"] = df["close"].rolling(window=5).mean()
 
-    df["target"] = (df["close"].shift(-10) > df["open"]).replace({True: 1, False: 0})
+    df["target"] = (df["close"].shift(-pred_step) > df["open"]).replace(
+        {True: 1, False: 0}
+    )
 
     df = df.dropna()
 
@@ -482,7 +521,7 @@ def show_heatmap(df, xs, ys):
     input()
 
 
-def generate_clustered_dataset(picks, group):
+def generate_clustered_dataset(picks, group, pred_step=1):
     (
         splits,
         X_train,
@@ -497,7 +536,7 @@ def generate_clustered_dataset(picks, group):
     ) = (None, None, None, None, None, None, None, None, None, None)
     for pick in picks:
         if any(symbol in pick for symbol in group):
-            df = adapt_data(pd.read_pickle(pick))
+            df = adapt_data(pd.read_pickle(pick), pred_step=1)
             df.set_index(df["ctmString"])
             x_feat = df[["open", "close", "high", "low", "vol", "MA20", "MA5"]].values
             sc = StandardScaler()
@@ -644,11 +683,11 @@ def get_test_df(pick, model):
     return test_df, df, y_pred
 
 
-def calculate_stop_loss(df, step=10, short=False):
+def calculate_stop_loss(df, step=1, short=False):
     if short:
-        return df["high"][-step:].max() / 1000
+        return df["high"][-step:].max()
     else:
-        return df["low"][-step:].min() / 1000
+        return df["low"][-step:].min()
 
 
 def calculate_take_profit(buy_price, stop_loss, short=False):
