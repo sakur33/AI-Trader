@@ -1,4 +1,5 @@
 import glob
+import os
 import pandas as pd
 import pickle as pkl
 import numpy as np
@@ -11,27 +12,45 @@ import matplotlib.pyplot as plt
 from sklearn.decomposition import PCA
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
+import warnings
+
+warnings.filterwarnings("ignore", category=FutureWarning)
+
+today = get_today()
+curr_path = os.path.dirname(os.path.realpath(__file__))
+data_path = curr_path + "../../data/"
+symbol_path = curr_path + "../../symbols/"
+cluster_path = curr_path + "../../clusters/"
+model_path = curr_path + "../../model/"
+docs_path = curr_path + "../../docs/"
+
 
 today = get_today()
 show = False
-picks = glob.glob("../data/*_1440.pickle")
+picks = glob.glob(f"{data_path}*.pickle")
 
 correlations = np.zeros((len(picks), len(picks)))
 names = []
 for cont1, pick1 in enumerate(picks):
-    df1 = adapt_data(pd.read_pickle(pick1))
+    try:
+        df1 = adapt_data(pd.read_pickle(pick1))
+    except Exception as e:
+        print(f"Exception loading '{pick1}': {e}")
     symbol1 = pick1.split("_")[0].split("\\")[-1]
     names.append(symbol1)
     corrs = []
     for cont2, pick2 in enumerate(picks):
-        df2 = adapt_data(pd.read_pickle(pick2))
+        try:
+            df2 = adapt_data(pd.read_pickle(pick2))
+        except Exception as e:
+            print(f"Exception loading '{pick2}': {e}")
         symbol2 = pick2.split("_")[0].split("\\")[-1]
-        df1_len = len(df1["open"].values)
-        df2_len = len(df2["open"].values)
+        df1_len = len(df1["close"].values)
+        df2_len = len(df2["close"].values)
         if df1_len > df2_len:
-            r, p = pearsonr(df1["open"].values[-df2_len:], df2["open"].values)
+            r, p = pearsonr(df1["close"].values[-df2_len:], df2["close"].values)
         else:
-            r, p = pearsonr(df1["open"].values, df2["open"].values[-df1_len:])
+            r, p = pearsonr(df1["close"].values, df2["close"].values[-df1_len:])
         corrs.append(r)
     correlations[cont1, :] = np.array(corrs)
 
@@ -65,7 +84,7 @@ group_dict = {
     "Groups": symbol_dict,
 }
 
-with open("../clusters/grouper_" + today + ".pickle", "wb") as f:
+with open(f"{cluster_path}grouper_" + today + ".pickle", "wb") as f:
     pkl.dump(group_dict, f, pkl.HIGHEST_PROTOCOL)
 
 if show:

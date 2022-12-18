@@ -10,6 +10,9 @@ from keras.models import Sequential
 from keras.layers import Dense, LSTM, Dropout, SpatialDropout1D
 from keras.callbacks import EarlyStopping
 from plotly.subplots import make_subplots
+from scipy.stats import pearsonr
+from ta.trend import MACD
+from ta.momentum import StochasticOscillator
 
 TIMEZONE = pytz.timezone("GMT")
 INITIAL_TIME = datetime(1970, 1, 1, 00, 00, 00, 000000, tzinfo=TIMEZONE)
@@ -31,32 +34,217 @@ def date_to_xtb_time(target):
     return diff
 
 
-def plot_stock(df, next_day_rise, test_split=0.8):
-    fig = make_subplots(specs=[[{"secondary_y": True}]])
+def plot_stock(df, df2=None, params=None, symbols=None):
+    config = {
+        "scrollZoom": True,
+        "displaylogo": False,
+        "toImageButtonOptions": {
+            "format": "html",
+            "filename": "custom_image",
+            "height": 500,
+            "width": 700,
+            "scale": 1,
+        },
+        "modeBarButtonsToAdd": [
+            "drawline",
+            "drawopenpath",
+            "drawclosedpath",
+            "drawcircle",
+            "drawrect",
+            "eraseshape",
+        ],
+    }
+    if df2 is None:
+        fig = make_subplots(specs=[[{"secondary_y": True}]])
+        fig.add_trace(
+            go.Candlestick(
+                x=df["ctmString"],
+                open=df["open"] / 1000,
+                high=df["high"] / 1000,
+                low=df["low"] / 1000,
+                close=df["close"] / 1000,
+                name=symbols[0],
+            ),
+            secondary_y=False,
+        )
+        fig.add_trace(
+            go.Scatter(
+                x=df.index,
+                y=df["MA5"],
+                opacity=0.7,
+                line=dict(color="blue", width=2),
+                name="MA 5",
+            )
+        )
+        fig.add_trace(
+            go.Scatter(
+                x=df.index,
+                y=df["MA20"],
+                opacity=0.7,
+                line=dict(color="orange", width=2),
+                name="MA 20",
+            )
+        )
+    else:
+        fig = make_subplots(
+            rows=4,
+            cols=2,
+            shared_xaxes=True,
+            vertical_spacing=0.01,
+            row_heights=[0.5, 0.1, 0.2, 0.2],
+            column_widths=[0.5, 0.5],
+        )
+        fig.add_trace(
+            go.Candlestick(
+                x=df.index,
+                open=df["open"],
+                high=df["high"],
+                low=df["low"],
+                close=df["close"],
+                name=symbols[0],
+            ),
+            row=1,
+            col=1,
+        )
+        fig.add_trace(
+            go.Candlestick(
+                x=df2.index,
+                open=df2["open"],
+                high=df2["high"],
+                low=df2["low"],
+                close=df2["close"],
+                name=symbols[1],
+            ),
+            row=1,
+            col=2,
+        )
+        fig.add_trace(
+            go.Scatter(
+                x=df.index,
+                y=df["MA5"],
+                opacity=0.7,
+                line=dict(color="blue", width=2),
+                name="MA 5",
+            ),
+            row=1,
+            col=1,
+        )
+        fig.add_trace(
+            go.Scatter(
+                x=df.index,
+                y=df["MA20"],
+                opacity=0.7,
+                line=dict(color="orange", width=2),
+                name="MA 20",
+            ),
+            row=1,
+            col=1,
+        )
+        fig.add_trace(
+            go.Scatter(
+                x=df2.index,
+                y=df2["MA5"],
+                opacity=0.7,
+                line=dict(color="blue", width=2),
+                name="MA 5",
+            ),
+            row=1,
+            col=2,
+        )
+        fig.add_trace(
+            go.Scatter(
+                x=df2.index,
+                y=df2["MA20"],
+                opacity=0.7,
+                line=dict(color="orange", width=2),
+                name="MA 20",
+            ),
+            row=1,
+            col=2,
+        )
+
+    MACD1, STOCH1 = get_macd_stoch(df)
+    fig.add_trace(go.Bar(x=df.index, y=df["vol"]), row=2, col=1)
+    fig.add_trace(go.Bar(x=df.index, y=MACD1.macd_diff()), row=3, col=1)
     fig.add_trace(
-        go.Candlestick(
-            x=df["ctmString"],
-            open=df["open"],
-            high=df["high"],
-            low=df["low"],
-            close=df["close"],
+        go.Scatter(x=df.index, y=MACD1.macd(), line=dict(color="black", width=2)),
+        row=3,
+        col=1,
+    )
+    fig.add_trace(
+        go.Scatter(x=df.index, y=MACD1.macd_signal(), line=dict(color="blue", width=1)),
+        row=3,
+        col=1,
+    )
+    fig.add_trace(
+        go.Scatter(x=df.index, y=STOCH1.stoch(), line=dict(color="black", width=2)),
+        row=4,
+        col=1,
+    )
+    fig.add_trace(
+        go.Scatter(
+            x=df.index, y=STOCH1.stoch_signal(), line=dict(color="blue", width=1)
         ),
-        secondary_y=False,
+        row=4,
+        col=1,
     )
-    fig.add_vrect(
-        x0=df["ctmString"][int(df.shape[0] * 0.8)],
-        x1=df["ctmString"].iat[-1],
-        fillcolor="#2ca02c",
-        opacity=0.2,
-        layer="below",
-        line_width=0,
+
+    MACD2, STOCH2 = get_macd_stoch(df2)
+    fig.add_trace(go.Bar(x=df2.index, y=df2["vol"]), row=2, col=2)
+    fig.add_trace(go.Bar(x=df2.index, y=MACD2.macd_diff()), row=3, col=2)
+    fig.add_trace(
+        go.Scatter(x=df2.index, y=MACD2.macd(), line=dict(color="black", width=2)),
+        row=3,
+        col=2,
     )
     fig.add_trace(
-        go.Scatter(x=df["ctmString"], y=next_day_rise, mode="markers", name="Rises"),
-        secondary_y=True,
+        go.Scatter(
+            x=df2.index, y=MACD2.macd_signal(), line=dict(color="blue", width=1)
+        ),
+        row=3,
+        col=2,
     )
+    fig.add_trace(
+        go.Scatter(x=df2.index, y=STOCH2.stoch(), line=dict(color="black", width=2)),
+        row=4,
+        col=2,
+    )
+    fig.add_trace(
+        go.Scatter(
+            x=df2.index, y=STOCH2.stoch_signal(), line=dict(color="blue", width=1)
+        ),
+        row=4,
+        col=2,
+    )
+
+    if params:
+        fig.add_hline(
+            y=params["buy_price"],
+            name="BP",
+            line_dash="dash",
+            line_color="yellow",
+            line_width=3,
+        )
+        fig.add_hline(
+            y=params["stop_loss"],
+            name="SL",
+            line_dash="dash",
+            line_color="red",
+            line_width=3,
+        )
+        fig.add_hline(
+            y=params["take_profit"],
+            name="TP",
+            line_dash="dash",
+            line_color="green",
+            line_width=3,
+        )
+    fig.update_layout(
+        xaxis_rangeslider_visible=False,
+        xaxis2_rangeslider_visible=False,
+    )
+    # fig.update_xaxes(rangebreaks=[dict(bounds=["sat", "mon"])])
     fig.show()
-    input()
 
 
 def plot_stock_pred(df, real_df, history, pred_threshold=0.5):
@@ -199,6 +387,11 @@ def adapt_data(df):
     df["close"] = df["open"] + df["close"]
     df["high"] = df["open"] + df["high"]
     df["low"] = df["open"] + df["low"]
+    df = df.set_index(pd.to_datetime(df["ctmString"]))
+
+    df["MA20"] = df["close"].rolling(window=20).mean()
+    df["MA5"] = df["close"].rolling(window=5).mean()
+
     return df
 
 
@@ -238,7 +431,7 @@ def build_test_df(X_test, y_test, preds, X_test_date):
         full_pred = np.append(full_pred, np.array(preds[i]).reshape(1, 1), axis=0)
 
     full_test = np.concatenate((full_test, full_target, full_pred), axis=1)
-    full_test = full_test[-X_test_date.shape[0]:, :]
+    full_test = full_test[-X_test_date.shape[0] :, :]
     test_df = pd.DataFrame(
         columns=["open", "close", "high", "low", "vol", "y_test", "y_pred"],
         data=full_test,
@@ -275,7 +468,6 @@ def show_heatmap(df, xs, ys):
 
 
 def generate_clustered_dataset(picks, group):
-    print(f"GROUP: {group}")
     (
         splits,
         X_train,
@@ -363,7 +555,7 @@ def generate_clustered_dataset(picks, group):
         "X_train_date": X_train_date,
         "X_val_date": X_val_date,
         "X_test_date": X_test_date,
-    }
+    }, sc
 
 
 def build_lstm_v1(n_lstm, shape, show=False):
@@ -372,15 +564,17 @@ def build_lstm_v1(n_lstm, shape, show=False):
     model = Sequential()
     model.add(LSTM(n_lstm, input_shape=(shape[0], shape[1]), return_sequences=False))
     model.add(Dense(1, activation="sigmoid"))
-    
+
     if show:
         model.summary()
     model.compile(loss="binary_crossentropy", optimizer="adam", metrics=["accuracy"])
-    
+
     return model
 
 
-def train_model(model, X_train, X_val, X_test, y_train, y_val, y_test, epochs=30, patience=10):
+def train_model(
+    model, X_train, X_val, X_test, y_train, y_val, y_test, epochs=30, patience=10
+):
     num_epochs = epochs
     early_stop = EarlyStopping(monitor="val_loss", patience=patience)
 
@@ -396,32 +590,30 @@ def train_model(model, X_train, X_val, X_test, y_train, y_val, y_test, epochs=30
     train_results = model.evaluate(X_train, y_train, verbose=2, batch_size=16)
     val_results = model.evaluate(X_val, y_val, verbose=2, batch_size=16)
     test_results = model.evaluate(X_test, y_test, verbose=2, batch_size=16)
-    print(f'Train accuracy: {train_results[1]*100:0.2f}')
-    print(f'Val accuracy: {val_results[1]*100:0.2f}')
-    print(f'Test accuracy: {test_results[1]*100:0.2f}')
+    print(f"Train accuracy: {train_results[1]*100:0.2f}")
+    print(f"Val accuracy: {val_results[1]*100:0.2f}")
+    print(f"Test accuracy: {test_results[1]*100:0.2f}")
 
     return model, history.history
 
 
 def get_test_df(pick, model):
     df = adapt_data(pd.read_pickle(pick))
-    df["target"] = (df["close"].shift(-10) > df["open"]).replace(
-                {True: 1, False: 0}
-            )
+    df["target"] = (df["close"].shift(-10) > df["open"]).replace({True: 1, False: 0})
     df.set_index(df["ctmString"])
     x_feat = df[["open", "close", "high", "low", "vol"]].values
     sc = StandardScaler()
     x_feat_sc = sc.fit_transform(x_feat)
     x_feat_sc = pd.DataFrame(
-                columns=["open", "close", "high", "low", "vol"],
-                data=x_feat_sc,
-                index=df["ctmString"],
-            )
+        columns=["open", "close", "high", "low", "vol"],
+        data=x_feat_sc,
+        index=df["ctmString"],
+    )
     X1, y1 = lstm_split(
-                x_feat_sc[["open", "close", "high", "low", "vol"]].values,
-                df["target"],
-                n_steps=10,
-            )
+        x_feat_sc[["open", "close", "high", "low", "vol"]].values,
+        df["target"],
+        n_steps=10,
+    )
     train_split = 0.8
     val_split = 0.1
     val_split_idx = int(np.ceil(len(X1) * (train_split + val_split)))
@@ -433,5 +625,95 @@ def get_test_df(pick, model):
 
     y_pred = model.predict(x=X_test).reshape(-1)
     test_df = build_test_df(X_test, y_test, y_pred, X_test_date)
-    
+
     return test_df, df, y_pred
+
+
+def calculate_stop_loss(df, step=10, short=False):
+    if short:
+        return df["high"][-step:].max() / 1000
+    else:
+        return df["low"][-step:].min() / 1000
+
+
+def calculate_take_profit(buy_price, stop_loss, short=False):
+    if short:
+        return buy_price + 1.5 * (buy_price - stop_loss)
+    else:
+        return buy_price + 1.5 * (buy_price - stop_loss)
+
+
+def find_maximum_correlation_shift(df1, df2, max_shift=50):
+    rs = []
+    symbol_diff = df1.shape[0] - df2.shape[0]
+    if symbol_diff < 0:
+        df2 = df2.iloc[np.abs(symbol_diff) :, :]
+    else:
+        df1 = df1.iloc[np.abs(symbol_diff) :, :]
+    r, p = pearsonr(df1["close"].values, df2["close"].values)
+    rs.append(r)
+    for shift in range(1, max_shift):
+        sv_df1 = df1["close"].shift(-shift).values[:-shift]
+        sv_df2 = df2["close"].values[shift:]
+        try:
+            r, p = pearsonr(sv_df1, sv_df2)
+            rs.append(r)
+        except ValueError as e:
+            rs.append(0)
+
+    return np.argmax(np.abs(rs)), np.max(np.abs(rs)), np.abs(rs[0])
+
+
+def get_last_step(df, sc, step):
+    x_feat = df[["open", "close", "high", "low", "vol"]].values
+    x_feat_sc = sc.fit_transform(x_feat)
+    return x_feat[-step:, :]
+
+
+def get_macd_stoch(df):
+    macd = MACD(close=df["close"], window_slow=26, window_fast=12, window_sign=9)
+    STOCH = StochasticOscillator(
+        high=df["high"], close=df["close"], low=df["low"], window=14, smooth_window=3
+    )
+    return macd, STOCH
+
+
+# example function for processing ticks from Streaming socket
+def procTickExample(msg):
+    print("TICK: ", msg)
+
+
+# example function for processing trades from Streaming socket
+def procTradeExample(msg):
+    print("TRADE: ", msg)
+
+
+# example function for processing trades from Streaming socket
+def procBalanceExample(msg):
+    print("BALANCE: ", msg)
+
+
+# example function for processing trades from Streaming socket
+def procTradeStatusExample(msg):
+    print("TRADE STATUS: ", msg)
+
+
+# example function for processing trades from Streaming socket
+def procProfitExample(msg):
+    print("PROFIT: ", msg)
+
+
+# example function for processing news from Streaming socket
+def procNewsExample(msg):
+    print("NEWS: ", msg)
+
+
+# Command templates
+def baseCommand(commandName, arguments=None):
+    if arguments == None:
+        arguments = dict()
+    return dict([("command", commandName), ("arguments", arguments)])
+
+
+def loginCommand(userId, password, appName=""):
+    return baseCommand("login", dict(userId=userId, password=password, appName=appName))
