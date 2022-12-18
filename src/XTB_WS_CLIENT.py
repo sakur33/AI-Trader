@@ -4,17 +4,26 @@ import asyncio
 import time
 from datetime import datetime, timedelta
 import pytz
-from utils import xtb_time_to_date, date_to_xtb_time
+from utils import date_to_xtb_time, get_today
 from creds import user, passw
 import pandas as pd
 import pathlib
 import warnings
+import os
+import numpy as np
+
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 warnings.filterwarnings("ignore", category=FutureWarning)
+today = get_today()
+curr_path = os.path.dirname(os.path.realpath(__file__))
+data_path = curr_path + "../../data/"
+symbol_path = curr_path + "../../symbols/"
+cluster_path = curr_path + "../../clusters/"
+model_path = curr_path + "../../model/"
+docs_path = curr_path + "../../docs/"
 
 
 class XTBclient:
-
     def __init__(self) -> None:
         self.uri = "wss://ws.xtb.com/demo"
         self.login = {
@@ -27,8 +36,10 @@ class XTBclient:
             },
         }
         self.sessionid = None
-        self.timezone = pytz.timezone('GMT')
-        self.initial_time = datetime(1970, 1, 1, 00, 00, 00, 000000, tzinfo=self.timezone)
+        self.timezone = pytz.timezone("GMT")
+        self.initial_time = datetime(
+            1970, 1, 1, 00, 00, 00, 000000, tzinfo=self.timezone
+        )
         self.logout = {"command": "logout"}
         self.ping = {"command": "ping"}
 
@@ -55,16 +66,16 @@ class XTBclient:
             response = await self.sendMessage(connection=connection, command=command)
             return response
         except Exception as e:
-                print(f"{datetime.now()} | Other exception")
-                print(f"{datetime.now()} | {e}")
-                return None
+            print(f"{datetime.now()} | Other exception")
+            print(f"{datetime.now()} | {e}")
+            return None
 
     async def disconnect(self):
         connection = await websockets.connect("wss://ws.xtb.com/demoStream")
         await connection.send(json.dumps(self.logout))
         response = await connection.recv()
         print(f"{datetime.now()} | Response: {response}")
-    
+
     def return_as_df(self, response):
         if len(response) != 0:
             columns = response[0].keys()
@@ -86,20 +97,21 @@ class XTBclient:
         print(f"{datetime.now()} | get_AllSymbols | Response: {status}")
         response = self.return_as_df(response["returnData"])
         if save:
-            response.to_pickle(f'../data/ALLsymbols_{datetime.now().strftime("%m-%d-%Y")}.pickle')
+            response.to_pickle(f"{symbol_path}ALLsymbols_{today}.pickle")
         return response
 
-    async def get_STC_Symbols(self, connection, save=False):
+    async def get_X_Symbols(self, connection, category_name, save=False):
         allsymbols = await self.get_AllSymbols(connection)
+        print(allsymbols["categoryName"].unique())
         if save:
-            allsymbols.to_pickle(f'../data/STCsymbols_{datetime.now().strftime("%m-%d-%Y")}.pickle')
-        return allsymbols[allsymbols["categoryName"] == "STC"]
+            allsymbols.to_pickle(f"{symbol_path}STCsymbols_{today}.pickle")
+        return allsymbols[allsymbols["categoryName"] == category_name]
 
     async def get_candles_range(self, connection, symbol, start, period, save=False):
         CHART_RANGE_INFO_RECORD = {
             "period": period,
             "start": date_to_xtb_time(start),
-            "symbol": symbol
+            "symbol": symbol,
         }
         get_candles = {
             "command": "getChartLastRequest",
@@ -112,19 +124,29 @@ class XTBclient:
             connection = await self.connect()
             response = await self.sendMessage(connection, get_candles)
         response = response["returnData"]
+        digits = response["digits"]
         rate_infos = response["rateInfos"]
-        
+
         df = self.return_as_df(rate_infos)
-        if not df is None:
-            df['ctm'] = pd.to_numeric(df['ctm'])
-            df['ctmString'] = pd.to_datetime(df['ctmString'])
-            df['open'] = pd.to_numeric(df['open'])
-            df['close'] = pd.to_numeric(df['close'])
-            df['high'] = pd.to_numeric(df['high'])
-            df['low'] = pd.to_numeric(df['low'])
-            df['vol'] = pd.to_numeric(df['vol'])
+        if df is not None:
+            df["ctm"] = pd.to_numeric(df["ctm"])
+            df["ctmString"] = pd.to_datetime(df["ctmString"])
+            df["open"] = pd.to_numeric(df["open"])
+            df["close"] = pd.to_numeric(df["close"])
+            df["high"] = pd.to_numeric(df["high"])
+            df["low"] = pd.to_numeric(df["low"])
+            df["vol"] = pd.to_numeric(df["vol"])
+            df = df.set_index(df["ctmString"])
+            df = self.numbers_to_decimal(df, digits)
             if save:
-                df.to_pickle(f'../data/{symbol}_{start.strftime("%m-%d-%Y")}_{period}.pickle')
+                df.to_pickle(
+                    f'{data_path}{symbol}_{start.strftime("%m-%d-%Y")}_{period}.pickle'
+                )
             return df
         else:
             return None
+
+    def numbers_to_decimal(self, df, digits):
+        for column in ["open", "close", "high", "low", "vol"]:
+            df[column] = df[column] / np.power(10, digits)
+        return df
