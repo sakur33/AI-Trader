@@ -11,6 +11,7 @@ from utils import (
     get_last_step,
     calculate_stop_loss,
     calculate_take_profit,
+    plot_stock,
 )
 
 today = get_today()
@@ -62,7 +63,7 @@ for group in group_dict["Clusters"]:
                 acc = accuracy_score(test_df["y_test"], test_df["y_pred"])
                 print(f"{symbol} | Acc: {acc}")
 
-                if acc > 0.85:
+                if acc > 0.80:
                     last_step = get_last_step(real_df, sc, step)
                     prediction = model.predict(last_step.reshape(1, step, -1))[0]
                     if prediction < pred_threshold:
@@ -77,6 +78,15 @@ for group in group_dict["Clusters"]:
                     take_profit = calculate_take_profit(buy_price, stop_loss, short)
                     print(
                         f"{trans_txt} Transaction on {symbol} -> BP:{buy_price} | SL:{stop_loss} | TP: {take_profit} || Prediction of {prediction}"
+                    )
+                    plot_stock(
+                        df=real_df,
+                        symbols=[symbol],
+                        params={
+                            "buy_price": buy_price,
+                            "stop_loss": stop_loss,
+                            "take_profit": take_profit,
+                        },
                     )
                     input()
                     # plot_stock(
