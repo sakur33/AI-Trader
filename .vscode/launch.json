@@ -8,7 +8,7 @@
       "name": "Python: archivo actual",
       "type": "python",
       "request": "launch",
-      "program": "${workspaceFolder}/src/symbol_plotter.py",
+      "program": "${workspaceFolder}/src/cluster_predictor.py",
       "console": "integratedTerminal",
       "justMyCode": true
     }

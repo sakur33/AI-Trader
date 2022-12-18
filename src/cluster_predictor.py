@@ -40,7 +40,7 @@ for group in group_dict["Clusters"]:
         128, [dataset_dict["X_train"].shape[1], dataset_dict["X_train"].shape[2]]
     )
 
-    model, history = train_model(
+    model, history, test_preds = train_model(
         model,
         dataset_dict["X_train"],
         dataset_dict["X_val"],
@@ -52,41 +52,39 @@ for group in group_dict["Clusters"]:
         patience=15,
     )
 
-    for pick in picks:
-        if any(symbol in pick for symbol in group_dict["Clusters"][0]):
-            test_df, real_df, y_pred = get_test_df(pick, model)
-            # plot_stock_pred(test_df, real_df, history, pred_threshold=0.5)
-            y_test = test_df["y_test"][10:]
-            test_df[test_df["y_pred"] > pred_threshold] = 1
-            test_df[test_df["y_pred"] < pred_threshold] = 0
-            y_pred = test_df["y_pred"][10:]
-            symbol = pick.split("_")[0].split("\\")[-1]
-            acc = accuracy_score(y_test, y_pred)
-            print(f"{symbol} | Acc: {acc}")
+    if test_preds > 0.5:
+        for pick in picks:
+            if any(symbol in pick for symbol in group_dict["Clusters"][0]):
+                test_df, real_df, y_pred = get_test_df(pick, model)
+                test_df["y_pred"][test_df["y_pred"] > pred_threshold] = 1
+                test_df["y_pred"][test_df["y_pred"] < pred_threshold] = 0
+                symbol = pick.split("_")[0].split("\\")[-1]
+                acc = accuracy_score(test_df["y_test"], test_df["y_pred"])
+                print(f"{symbol} | Acc: {acc}")
 
-            if acc > 0.85:
-                last_step = get_last_step(real_df, sc, step)
-                prediction = model.predict(last_step.reshape(1, step, -1))[0]
-                if prediction < pred_threshold:
-                    short = True
-                    trans_txt = "SELL"
-                else:
-                    short = False
-                    trans_txt = "BUY"
+                if acc > 0.85:
+                    last_step = get_last_step(real_df, sc, step)
+                    prediction = model.predict(last_step.reshape(1, step, -1))[0]
+                    if prediction < pred_threshold:
+                        short = True
+                        trans_txt = "SELL"
+                    else:
+                        short = False
+                        trans_txt = "BUY"
 
-                buy_price = real_df["close"].values[-1] / 1000
-                stop_loss = calculate_stop_loss(real_df, step, short)
-                take_profit = calculate_take_profit(buy_price, stop_loss, short)
-                print(
-                    f"{trans_txt} Transaction on {symbol} -> BP:{buy_price} | SL:{stop_loss} | TP: {take_profit} || Prediction of {prediction}"
-                )
-                input()
-                # plot_stock(
-                #     real_df,
-                #     {
-                #         "buy_price": buy_price,
-                #         "stop_loss": stop_loss,
-                #         "take_profit": take_profit,
-                #     },
-                #     symbol,
-                # )
+                    buy_price = real_df["close"].values[-1]
+                    stop_loss = calculate_stop_loss(real_df, step, short)
+                    take_profit = calculate_take_profit(buy_price, stop_loss, short)
+                    print(
+                        f"{trans_txt} Transaction on {symbol} -> BP:{buy_price} | SL:{stop_loss} | TP: {take_profit} || Prediction of {prediction}"
+                    )
+                    input()
+                    # plot_stock(
+                    #     real_df,
+                    #     {
+                    #         "buy_price": buy_price,
+                    #         "stop_loss": stop_loss,
+                    #         "take_profit": take_profit,
+                    #     },
+                    #     symbol,
+                    # )

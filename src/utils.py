@@ -392,6 +392,10 @@ def adapt_data(df):
     df["MA20"] = df["close"].rolling(window=20).mean()
     df["MA5"] = df["close"].rolling(window=5).mean()
 
+    df["target"] = (df["close"].shift(-10) > df["open"]).replace({True: 1, False: 0})
+
+    df = df.dropna()
+
     return df
 
 
@@ -433,10 +437,21 @@ def build_test_df(X_test, y_test, preds, X_test_date):
     full_test = np.concatenate((full_test, full_target, full_pred), axis=1)
     full_test = full_test[-X_test_date.shape[0] :, :]
     test_df = pd.DataFrame(
-        columns=["open", "close", "high", "low", "vol", "y_test", "y_pred"],
+        columns=[
+            "open",
+            "close",
+            "high",
+            "low",
+            "vol",
+            "MA20",
+            "MA5",
+            "y_test",
+            "y_pred",
+        ],
         data=full_test,
         index=X_test_date,
     )
+    test_df = test_df.dropna()
     return test_df
 
 
@@ -483,20 +498,19 @@ def generate_clustered_dataset(picks, group):
     for pick in picks:
         if any(symbol in pick for symbol in group):
             df = adapt_data(pd.read_pickle(pick))
-            df["target"] = (df["close"].shift(-10) > df["open"]).replace(
-                {True: 1, False: 0}
-            )
             df.set_index(df["ctmString"])
-            x_feat = df[["open", "close", "high", "low", "vol"]].values
+            x_feat = df[["open", "close", "high", "low", "vol", "MA20", "MA5"]].values
             sc = StandardScaler()
             x_feat_sc = sc.fit_transform(x_feat)
             x_feat_sc = pd.DataFrame(
-                columns=["open", "close", "high", "low", "vol"],
+                columns=["open", "close", "high", "low", "vol", "MA20", "MA5"],
                 data=x_feat_sc,
                 index=df["ctmString"],
             )
             X1, y1 = lstm_split(
-                x_feat_sc[["open", "close", "high", "low", "vol"]].values,
+                x_feat_sc[
+                    ["open", "close", "high", "low", "vol", "MA20", "MA5"]
+                ].values,
                 df["target"],
                 n_steps=10,
             )
@@ -559,10 +573,13 @@ def generate_clustered_dataset(picks, group):
 
 
 def build_lstm_v1(n_lstm, shape, show=False):
-    n_lstm = 128
+    n_lstm = 10
 
     model = Sequential()
     model.add(LSTM(n_lstm, input_shape=(shape[0], shape[1]), return_sequences=False))
+    model.add(Dropout(0.2))
+    model.add(Dense(10, activation="sigmoid"))
+    model.add(Dropout(0.2))
     model.add(Dense(1, activation="sigmoid"))
 
     if show:
@@ -573,7 +590,7 @@ def build_lstm_v1(n_lstm, shape, show=False):
 
 
 def train_model(
-    model, X_train, X_val, X_test, y_train, y_val, y_test, epochs=30, patience=10
+    model, X_train, X_val, X_test, y_train, y_val, y_test, epochs=100, patience=20
 ):
     num_epochs = epochs
     early_stop = EarlyStopping(monitor="val_loss", patience=patience)
@@ -594,23 +611,21 @@ def train_model(
     print(f"Val accuracy: {val_results[1]*100:0.2f}")
     print(f"Test accuracy: {test_results[1]*100:0.2f}")
 
-    return model, history.history
+    return model, history.history, test_results[1]
 
 
 def get_test_df(pick, model):
     df = adapt_data(pd.read_pickle(pick))
-    df["target"] = (df["close"].shift(-10) > df["open"]).replace({True: 1, False: 0})
-    df.set_index(df["ctmString"])
-    x_feat = df[["open", "close", "high", "low", "vol"]].values
+    x_feat = df[["open", "close", "high", "low", "vol", "MA20", "MA5"]].values
     sc = StandardScaler()
     x_feat_sc = sc.fit_transform(x_feat)
     x_feat_sc = pd.DataFrame(
-        columns=["open", "close", "high", "low", "vol"],
+        columns=["open", "close", "high", "low", "vol", "MA20", "MA5"],
         data=x_feat_sc,
         index=df["ctmString"],
     )
     X1, y1 = lstm_split(
-        x_feat_sc[["open", "close", "high", "low", "vol"]].values,
+        x_feat_sc[["open", "close", "high", "low", "vol", "MA20", "MA5"]].values,
         df["target"],
         n_steps=10,
     )
@@ -665,9 +680,9 @@ def find_maximum_correlation_shift(df1, df2, max_shift=50):
 
 
 def get_last_step(df, sc, step):
-    x_feat = df[["open", "close", "high", "low", "vol"]].values
+    x_feat = df[["open", "close", "high", "low", "vol", "MA20", "MA5"]].values
     x_feat_sc = sc.fit_transform(x_feat)
-    return x_feat[-step:, :]
+    return x_feat_sc[-step:, :]
 
 
 def get_macd_stoch(df):
