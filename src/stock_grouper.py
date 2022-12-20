@@ -8,8 +8,6 @@ from utils import adapt_data, get_today, show_clusters, show_heatmap
 from scipy.stats import pearsonr
 import plotly.express as px
 from sklearn.cluster import KMeans
-import matplotlib.pyplot as plt
-from sklearn.decomposition import PCA
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import warnings
@@ -22,6 +20,7 @@ data_path = curr_path + "../../data/"
 symbol_path = curr_path + "../../symbols/"
 cluster_path = curr_path + "../../clusters/"
 model_path = curr_path + "../../model/"
+result_path = curr_path + "../../result/"
 docs_path = curr_path + "../../docs/"
 
 
@@ -36,7 +35,7 @@ for cont1, pick1 in enumerate(picks):
         df1 = adapt_data(pd.read_pickle(pick1))
     except Exception as e:
         print(f"Exception loading '{pick1}': {e}")
-    symbol1 = pick1.split("_")[0].split("\\")[-1]
+    symbol1 = pick1.split("\\")[-1].split("_")[0]
     names.append(symbol1)
     corrs = []
     for cont2, pick2 in enumerate(picks):
@@ -44,7 +43,7 @@ for cont1, pick1 in enumerate(picks):
             df2 = adapt_data(pd.read_pickle(pick2))
         except Exception as e:
             print(f"Exception loading '{pick2}': {e}")
-        symbol2 = pick2.split("_")[0].split("\\")[-1]
+        symbol2 = pick2.split("\\")[-1].split("_")[0]
         df1_len = len(df1["close"].values)
         df2_len = len(df2["close"].values)
         if df1_len > df2_len:
@@ -69,16 +68,17 @@ for cont, symbol in enumerate(names):
 
 counts = list(np.zeros(group_n, dtype=int))
 clusters = []
-for i in range(group_n):
+for i in range(group_n + 1):
     clusters.append([])
 
 for key in symbol_dict.keys():
     counts[symbol_dict[key]] += 1
     clusters[symbol_dict[key]].append(key)
+clusters[group_n] = names
 
 group_dict = {
     "Date": today,
-    "Clusters_n": group_n,
+    "Clusters_n": group_n + 1,
     "Clusters": clusters,
     "Occurrences": counts,
     "Groups": symbol_dict,

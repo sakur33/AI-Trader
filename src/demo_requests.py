@@ -16,7 +16,13 @@ data_path = curr_path + "../../data/"
 symbol_path = curr_path + "../../symbols/"
 cluster_path = curr_path + "../../clusters/"
 model_path = curr_path + "../../model/"
+result_path = curr_path + "../../result/"
 docs_path = curr_path + "../../docs/"
+
+paths = [data_path, symbol_path, cluster_path, model_path, docs_path]
+for path in paths:
+    if not os.path.exists(path):
+        os.makedirs(path)
 
 
 async def main(client):

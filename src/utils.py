@@ -520,14 +520,15 @@ def show_heatmap(df, xs, ys):
 
 
 def generate_target(df, pred_step):
-    df["target"] = np.zeros_like(df["close"], dtype=int)
+    targets = np.zeros_like(df["close"], dtype=int)
     for day in range(df.shape[0] - pred_step):
         target = 0
         for preds in range(pred_step):
             if df["close"][day] < df["close"][day + preds]:
                 target += 1
         if target == pred_step - 1:
-            df["target"][day] = 1
+            targets[day] = 1
+    df["target"] = targets
     return df
 
 
@@ -663,10 +664,9 @@ def train_model(
     return model, history.history, test_results[1]
 
 
-def get_test_df(pick, model):
+def get_test_df(pick, model, sc):
     df = adapt_data(pd.read_pickle(pick))
     x_feat = df[["open", "close", "high", "low", "vol", "MA20", "MA5"]].values
-    sc = StandardScaler()
     x_feat_sc = sc.fit_transform(x_feat)
     x_feat_sc = pd.DataFrame(
         columns=["open", "close", "high", "low", "vol", "MA20", "MA5"],

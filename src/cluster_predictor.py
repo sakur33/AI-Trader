@@ -20,6 +20,7 @@ data_path = curr_path + "../../data/"
 symbol_path = curr_path + "../../symbols/"
 cluster_path = curr_path + "../../clusters/"
 model_path = curr_path + "../../model/"
+result_path = curr_path + "../../result/"
 docs_path = curr_path + "../../docs/"
 
 
@@ -56,10 +57,10 @@ for group in group_dict["Clusters"]:
     if test_preds > 0.5:
         for pick in picks:
             if any(symbol in pick for symbol in group_dict["Clusters"][0]):
-                test_df, real_df, y_pred = get_test_df(pick, model)
+                test_df, real_df, y_pred = get_test_df(pick, model, sc)
                 test_df["y_pred"][test_df["y_pred"] > pred_threshold] = 1
                 test_df["y_pred"][test_df["y_pred"] < pred_threshold] = 0
-                symbol = pick.split("_")[0].split("\\")[-1]
+                symbol = picks[0].split("\\")[-1].split("_")[0]
                 acc = accuracy_score(test_df["y_test"], test_df["y_pred"])
                 print(f"{symbol} | Acc: {acc}")
 
@@ -89,12 +90,14 @@ for group in group_dict["Clusters"]:
                         },
                     )
                     input()
-                    # plot_stock(
-                    #     real_df,
-                    #     {
-                    #         "buy_price": buy_price,
-                    #         "stop_loss": stop_loss,
-                    #         "take_profit": take_profit,
-                    #     },
-                    #     symbol,
-                    # )
+                else:
+                    plot_stock(
+                        df=real_df,
+                        symbols=[symbol],
+                        params={
+                            "buy_price": buy_price,
+                            "stop_loss": stop_loss,
+                            "take_profit": take_profit,
+                        },
+                    )
+                    input()
