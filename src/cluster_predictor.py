@@ -24,7 +24,7 @@ docs_path = curr_path + "../../docs/"
 
 
 today = get_today()
-step = 10
+step = 5
 pred_threshold = 0.5
 CURRENT_PRICE = 100
 
@@ -35,7 +35,7 @@ picks = glob.glob(f"{data_path}*.pickle")
 for group in group_dict["Clusters"]:
     print("--------------------------------------------------------")
     print(f"GROUP: {group}")
-    dataset_dict, sc = generate_clustered_dataset(picks, group)
+    dataset_dict, sc = generate_clustered_dataset(picks, group, pred_step=3)
 
     model = build_lstm_v1(
         128, [dataset_dict["X_train"].shape[1], dataset_dict["X_train"].shape[2]]
@@ -63,7 +63,7 @@ for group in group_dict["Clusters"]:
                 acc = accuracy_score(test_df["y_test"], test_df["y_pred"])
                 print(f"{symbol} | Acc: {acc}")
 
-                if acc > 0.80:
+                if acc > 0.7:
                     last_step = get_last_step(real_df, sc, step)
                     prediction = model.predict(last_step.reshape(1, step, -1))[0]
                     if prediction < pred_threshold:

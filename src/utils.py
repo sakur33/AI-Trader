@@ -429,9 +429,7 @@ def adapt_data(df, pred_step=1):
     df["MA20"] = df["close"].rolling(window=20).mean()
     df["MA5"] = df["close"].rolling(window=5).mean()
 
-    df["target"] = (df["close"].shift(-pred_step) > df["open"]).replace(
-        {True: 1, False: 0}
-    )
+    df = generate_target(df, pred_step)
 
     df = df.dropna()
 
@@ -521,6 +519,18 @@ def show_heatmap(df, xs, ys):
     input()
 
 
+def generate_target(df, pred_step):
+    df["target"] = np.zeros_like(df["close"], dtype=int)
+    for day in range(df.shape[0] - pred_step):
+        target = 0
+        for preds in range(pred_step):
+            if df["close"][day] < df["close"][day + preds]:
+                target += 1
+        if target == pred_step:
+            df["target"][day] = target
+    return df
+
+
 def generate_clustered_dataset(picks, group, pred_step=1):
     (
         splits,
@@ -536,7 +546,7 @@ def generate_clustered_dataset(picks, group, pred_step=1):
     ) = (None, None, None, None, None, None, None, None, None, None)
     for pick in picks:
         if any(symbol in pick for symbol in group):
-            df = adapt_data(pd.read_pickle(pick), pred_step=1)
+            df = adapt_data(pd.read_pickle(pick), pred_step=pred_step)
             df.set_index(df["ctmString"])
             x_feat = df[["open", "close", "high", "low", "vol", "MA20", "MA5"]].values
             sc = StandardScaler()
