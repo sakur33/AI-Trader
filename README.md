@@ -1,3 +1,1 @@
-# AI based trader for xtb
-
-![System's flow](./flow-graph.jpg)
+# AI based trader for xtb [ON THE WORKS]
