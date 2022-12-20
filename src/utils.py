@@ -526,8 +526,8 @@ def generate_target(df, pred_step):
         for preds in range(pred_step):
             if df["close"][day] < df["close"][day + preds]:
                 target += 1
-        if target == pred_step:
-            df["target"][day] = target
+        if target == pred_step - 1:
+            df["target"][day] = 1
     return df
 
 
