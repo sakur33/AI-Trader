@@ -35,7 +35,7 @@ picks = glob.glob(f"{data_path}*.pickle")
 for group in group_dict["Clusters"]:
     print("--------------------------------------------------------")
     print(f"GROUP: {group}")
-    dataset_dict, sc = generate_clustered_dataset(picks, group, pred_step=3)
+    dataset_dict, sc = generate_clustered_dataset(picks, group, pred_step=5)
 
     model = build_lstm_v1(
         128, [dataset_dict["X_train"].shape[1], dataset_dict["X_train"].shape[2]]
