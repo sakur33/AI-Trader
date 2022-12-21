@@ -20,6 +20,7 @@ data_path = curr_path + "../../data/"
 symbol_path = curr_path + "../../symbols/"
 cluster_path = curr_path + "../../clusters/"
 model_path = curr_path + "../../model/"
+result_path = curr_path + "../../result/"
 docs_path = curr_path + "../../docs/"
 
 
@@ -47,7 +48,7 @@ class XTBclient:
         connection = await websockets.connect(self.uri, max_size=1_000_000_000)
         await connection.send(json.dumps(self.login))
         response = await connection.recv()
-        print(f"{datetime.now()} | Response: {response}")
+        print(f"{datetime.now()} | Connection response: {response}")
         self.sessionid = json.loads(response)["streamSessionId"]
         return connection
 
@@ -104,7 +105,7 @@ class XTBclient:
         allsymbols = await self.get_AllSymbols(connection)
         print(allsymbols["categoryName"].unique())
         if save:
-            allsymbols.to_pickle(f"{symbol_path}STCsymbols_{today}.pickle")
+            allsymbols.to_pickle(f"{symbol_path}{category_name}symbols_{today}.pickle")
         return allsymbols[allsymbols["categoryName"] == category_name]
 
     async def get_candles_range(self, connection, symbol, start, period, save=False):

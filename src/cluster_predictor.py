@@ -2,6 +2,7 @@ import glob
 import os
 import pickle as pkl
 from sklearn.metrics import accuracy_score
+from trading_accounts import trader
 from utils import (
     get_today,
     generate_clustered_dataset,
@@ -23,6 +24,9 @@ model_path = curr_path + "../../model/"
 result_path = curr_path + "../../result/"
 docs_path = curr_path + "../../docs/"
 
+
+trader1 = trader(capital=1000, max_risk=0.1, trade_type="STC")
+trader1.make_trade("", 100)
 
 today = get_today()
 step = 5
