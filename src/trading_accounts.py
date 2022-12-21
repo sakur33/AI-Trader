@@ -1,6 +1,7 @@
 import os
 import pandas as pd
 from utils import *
+from XTB_WS_CLIENT import *
 
 today = get_today()
 curr_path = os.path.dirname(os.path.realpath(__file__))
@@ -20,11 +21,7 @@ class trader:
         self.active_trades = pd.DataFrame(data=[], columns=["Date", "symbol", "amount", "buy_price", "stop_loss", "take_profit"])
         self.historic_trades = pd.DataFrame(data=[], columns=["Type","Date_entry", "Date_close", "symbol", "amount", "buy_price", "initial_stop_loss", "initial_take_profit", "stop_loss_trail", "take_profit_trail"])
     
-    def make_trade(self, symbol, current_price, stop_loss=None, take_profit=None):
-        symbol_df = pd.read_pickle(f"{symbol_path}{self.trade_type}symbols_{today}.pickle")
-        symbol_info = symbol_df[symbol_df["symbol"] == symbol]
-        
-        
-
+    def make_trade(self, symbol_info, current_price, stop_loss=None, take_profit=None):
+        symbol_info = get_symbol(symbol)
 
         print()
