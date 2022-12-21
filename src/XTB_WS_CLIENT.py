@@ -43,6 +43,7 @@ class XTBclient:
         )
         self.logout = {"command": "logout"}
         self.ping = {"command": "ping"}
+        self.connection = None
 
     async def connect(self):
         connection = await websockets.connect(self.uri, max_size=1_000_000_000)
@@ -50,6 +51,7 @@ class XTBclient:
         response = await connection.recv()
         print(f"{datetime.now()} | Connection response: {response}")
         self.sessionid = json.loads(response)["streamSessionId"]
+        self.connection = connection
         return connection
 
     async def sendMessage(self, connection, command):
@@ -64,6 +66,7 @@ class XTBclient:
             print(f"{datetime.now()} | Message not sent.")
             print(f"{datetime.now()} | Connection with server closed.")
             connection = await self.connect()
+            self.connection = connection
             response = await self.sendMessage(connection=connection, command=command)
             return response
         except Exception as e:
@@ -107,6 +110,15 @@ class XTBclient:
         if save:
             allsymbols.to_pickle(f"{symbol_path}{category_name}symbols_{today}.pickle")
         return allsymbols[allsymbols["categoryName"] == category_name]
+
+    async def get_symbol(self, symbol):
+        command = {"command": "getSymbol", "arguments": {"symbol": symbol}}
+
+        response = await self.sendMessage(self.connection, command)
+        status = response["status"]
+        print(f"{datetime.now()} | get_symbol | Response: {status}")
+        response = self.return_as_df(response["returnData"])
+        return response
 
     async def get_candles_range(self, connection, symbol, start, period, save=False):
         CHART_RANGE_INFO_RECORD = {
