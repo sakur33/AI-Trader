@@ -429,6 +429,8 @@ def adapt_data(df, pred_step=1):
     df["MA20"] = df["close"].rolling(window=20).mean()
     df["MA5"] = df["close"].rolling(window=5).mean()
 
+    df = add_supports(df)
+
     df = generate_target(df, pred_step)
 
     df = df.dropna()
@@ -482,6 +484,7 @@ def build_test_df(X_test, y_test, preds, X_test_date):
             "vol",
             "MA20",
             "MA5",
+            "supports",
             "y_test",
             "y_pred",
         ],
@@ -519,6 +522,21 @@ def show_heatmap(df, xs, ys):
     input()
 
 
+def add_supports(df):
+    supports = np.zeros_like(df["close"], dtype=int)
+    for day in range(1, df.shape[0]):
+        current_value = df["close"][day]
+        past_df = df.iloc[:day, :]
+        temp_supports = past_df[current_value * 1.05 > past_df["close"]]
+        temp_supports = temp_supports[current_value * 0.95 < temp_supports["close"]][
+            "close"
+        ]
+        supports[day] = temp_supports.shape[0]
+
+    df["supports"] = supports
+    return df
+
+
 def generate_target(df, pred_step):
     targets = np.zeros_like(df["close"], dtype=int)
     for day in range(df.shape[0] - pred_step):
@@ -532,7 +550,7 @@ def generate_target(df, pred_step):
     return df
 
 
-def generate_clustered_dataset(picks, group, pred_step=1):
+def generate_clustered_dataset(picks, group, steps, pred_step=1):
     (
         splits,
         X_train,
@@ -548,21 +566,19 @@ def generate_clustered_dataset(picks, group, pred_step=1):
     for pick in picks:
         if any(symbol in pick for symbol in group):
             df = adapt_data(pd.read_pickle(pick), pred_step=pred_step)
-            df.set_index(df["ctmString"])
-            x_feat = df[["open", "close", "high", "low", "vol", "MA20", "MA5"]].values
+            df = df.set_index(df["ctmString"])
+            x_feat = df.iloc[:, 2:-1].values
             sc = StandardScaler()
             x_feat_sc = sc.fit_transform(x_feat)
             x_feat_sc = pd.DataFrame(
-                columns=["open", "close", "high", "low", "vol", "MA20", "MA5"],
+                columns=df.iloc[:, 2:-1].columns,
                 data=x_feat_sc,
                 index=df["ctmString"],
             )
             X1, y1 = lstm_split(
-                x_feat_sc[
-                    ["open", "close", "high", "low", "vol", "MA20", "MA5"]
-                ].values,
+                x_feat_sc.values,
                 df["target"],
-                n_steps=10,
+                n_steps=steps,
             )
             train_split = 0.8
             val_split = 0.1
@@ -649,7 +665,7 @@ def train_model(
         X_train,
         y_train,
         epochs=num_epochs,
-        validation_data=(X_test, y_test),
+        validation_data=(X_val, y_val),
         callbacks=[early_stop],
         verbose=2,
     )
@@ -664,19 +680,19 @@ def train_model(
     return model, history.history, test_results[1]
 
 
-def get_test_df(pick, model, sc):
+def get_test_df(pick, model, sc, steps):
     df = adapt_data(pd.read_pickle(pick))
-    x_feat = df[["open", "close", "high", "low", "vol", "MA20", "MA5"]].values
+    x_feat = df.iloc[:, 2:-1].values
     x_feat_sc = sc.fit_transform(x_feat)
     x_feat_sc = pd.DataFrame(
-        columns=["open", "close", "high", "low", "vol", "MA20", "MA5"],
+        columns=df.iloc[:, 2:-1].columns,
         data=x_feat_sc,
         index=df["ctmString"],
     )
     X1, y1 = lstm_split(
-        x_feat_sc[["open", "close", "high", "low", "vol", "MA20", "MA5"]].values,
+        x_feat_sc.values,
         df["target"],
-        n_steps=10,
+        n_steps=steps,
     )
     train_split = 0.8
     val_split = 0.1
@@ -729,7 +745,7 @@ def find_maximum_correlation_shift(df1, df2, max_shift=50):
 
 
 def get_last_step(df, sc, step):
-    x_feat = df[["open", "close", "high", "low", "vol", "MA20", "MA5"]].values
+    x_feat = df.iloc[:, 2:-1].values
     x_feat_sc = sc.fit_transform(x_feat)
     return x_feat_sc[-step:, :]
 
