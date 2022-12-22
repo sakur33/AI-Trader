@@ -47,7 +47,7 @@ async def main(client):
 
     for pick in picks:
         start_date = datetime.now() - timedelta(days=365)
-        period = 1440
+        period = 60
         df = await client.get_candles_range(
             connection, symbol=pick, start=start_date, period=period, save=True
         )
