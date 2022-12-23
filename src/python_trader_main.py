@@ -1,20 +1,7 @@
-from xAPIConnector import (
-    TransactionSide,
-    TransactionType,
-    JsonSocket,
-    APIClient,
-    APIStreamClient,
-)
-from utils import (
-    loginCommand,
-    procTickExample,
-    procTradeExample,
-    procProfitExample,
-    procTradeStatusExample,
-)
+from xAPIConnector import *
+from utils import *
 import logging
-from creds import user, passw
-
+from trading_accounts import Trader
 import time
 
 logging.basicConfig(
@@ -26,55 +13,47 @@ logger = logging.getLogger()
 
 
 def main():
-    # enter your login credentials here
-    userId = user
-    password = passw
+    trader = Trader(name="Test-trader", capital=250, max_risk=0.05, trade_type="STC")
 
-    # create & connect to RR socket
-    client = APIClient()
-
-    # connect to RR socket, login
-    loginResponse = client.execute(loginCommand(userId=userId, password=password))
-    logger.info(str(loginResponse))
+    loginResponse = trader.client.execute(
+        loginCommand(userId=trader.user, password=trader.passw)
+    )
+    print(f"Login Response: {str(loginResponse)}")
 
     # check if user logged in correctly
     if loginResponse["status"] == False:
-        print("Login failed. Error code: {0}".format(loginResponse["errorCode"]))
+        error_code = loginResponse["errorCode"]
+        print(f"Login failed. Error code: {error_code}")
         return
 
     # get ssId from login response
     ssid = loginResponse["streamSessionId"]
+    trader.ssid = ssid
 
     # second method of invoking commands
-    resp = client.commandExecute("getAllSymbols")
+    resp = trader.client.commandExecute("getAllSymbols")
 
     # create & connect to Streaming socket with given ssID
     # and functions for processing ticks, trades, profit and tradeStatus
-    sclient = APIStreamClient(
-        ssId=ssid,
-        tickFun=procTickExample,
-        tradeFun=procTradeExample,
-        profitFun=procProfitExample,
-        tradeStatusFun=procTradeStatusExample,
-    )
+    trader.start_streaming()
 
     # subscribe for trades
-    sclient.subscribeTrades()
+    trader.stream_client.subscribeTrades()
 
     # subscribe for prices
-    sclient.subscribePrices(["EURUSD", "EURGBP", "EURJPY"])
+    trader.stream_client.subscribePrices(["EURUSD", "EURGBP", "EURJPY"])
 
     # subscribe for profits
-    sclient.subscribeProfits()
+    trader.stream_client.subscribeProfits()
 
     # this is an example, make it run for 5 seconds
     time.sleep(5)
 
     # gracefully close streaming socket
-    sclient.disconnect()
+    trader.stream_client.disconnect()
 
     # gracefully close RR socket
-    client.disconnect()
+    trader.client.disconnect()
 
 
 if __name__ == "__main__":
