@@ -3,6 +3,7 @@ import socket
 import logging
 import time
 import ssl
+from utils import baseCommand
 from threading import Thread
 
 # set to true on debug environment only
