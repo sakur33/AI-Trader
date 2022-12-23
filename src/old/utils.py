@@ -22,10 +22,6 @@ def get_today():
     return datetime.now().strftime("%m-%d-%Y")
 
 
-def get_today_ms():
-    return datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
-
-
 def xtb_time_to_date(time):
     initial = INITIAL_TIME
     date = initial + timedelta(milliseconds=time)
