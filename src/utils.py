@@ -23,7 +23,10 @@ def get_today():
 
 
 def get_today_ms():
-    return datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
+    timestamp = datetime.now()
+    t_str = timestamp.strftime("%Y-%m-%d %H:%M:%S.%f")
+    t_int = int(timestamp.strftime("%Y%m%d%H%M%S"))
+    return t_str, t_int
 
 
 def xtb_time_to_date(time):
@@ -434,9 +437,7 @@ def adapt_data(df, pred_step=1):
     df["MA5"] = df["close"].rolling(window=5).mean()
 
     df = add_supports(df)
-
     df = generate_target(df, pred_step)
-
     df = df.dropna()
 
     return df
@@ -762,42 +763,21 @@ def get_macd_stoch(df):
     return macd, STOCH
 
 
-# example function for processing ticks from Streaming socket
-def procTickExample(msg):
-    print("TICK: ", msg)
+def select_operator_models(symbols):
+    # TODO select the operator model for each symbol
+    pass
 
 
-# example function for processing trades from Streaming socket
-def procTradeExample(msg):
-    print("TRADE: ", msg)
-
-
-# example function for processing trades from Streaming socket
-def procBalanceExample(msg):
-    print("BALANCE: ", msg)
-
-
-# example function for processing trades from Streaming socket
-def procTradeStatusExample(msg):
-    print("TRADE STATUS: ", msg)
-
-
-# example function for processing trades from Streaming socket
-def procProfitExample(msg):
-    print("PROFIT: ", msg)
-
-
-# example function for processing news from Streaming socket
-def procNewsExample(msg):
-    print("NEWS: ", msg)
-
-
-# Command templates
-def baseCommand(commandName, arguments=None):
-    if arguments == None:
-        arguments = dict()
-    return dict([("command", commandName), ("arguments", arguments)])
-
-
-def loginCommand(userId, password, appName=""):
-    return baseCommand("login", dict(userId=userId, password=password, appName=appName))
+def return_as_df(returnData):
+    if len(returnData) != 0:
+        columns = returnData[0].keys()
+        df_dict = {}
+        for col in columns:
+            df_dict[col] = []
+        for r_dict in returnData:
+            for col in columns:
+                df_dict[col].append(r_dict[col])
+        df = pd.DataFrame.from_dict(df_dict)
+        return df
+    else:
+        return None

@@ -1,13 +1,27 @@
 from xAPIConnector import *
-from utils import *
+from trader_utils import *
 import logging
 from trading_accounts import Trader
 import time
+import os
+
+
+today = get_today()
+todayms = get_today_ms()
+curr_path = os.path.dirname(os.path.realpath(__file__))
+data_path = curr_path + "../../data/"
+symbol_path = curr_path + "../../symbols/"
+cluster_path = curr_path + "../../clusters/"
+model_path = curr_path + "../../model/"
+result_path = curr_path + "../../result/"
+docs_path = curr_path + "../../docs/"
+database_path = curr_path + "../../database/"
+logs_path = curr_path + "../../logs/"
 
 logging.basicConfig(
     level=logging.DEBUG,
     format="%(asctime)s %(levelname)s %(threadName)s %(name)s %(message)s",
-    handlers=logging.FileHandler("./logs/python_trader.log"),
+    handlers=logging.FileHandler(f"{logs_path}python_trader.log"),
 )
 logger = logging.getLogger()
 
@@ -18,7 +32,8 @@ def main():
     loginResponse = trader.client.execute(
         loginCommand(userId=trader.user, password=trader.passw)
     )
-    print(f"Login Response: {str(loginResponse)}")
+    status = loginResponse["status"]
+    print(f"Login Response: {status}")
 
     # check if user logged in correctly
     if loginResponse["status"] == False:
@@ -31,8 +46,22 @@ def main():
     trader.ssid = ssid
 
     # second method of invoking commands
-    resp = trader.client.commandExecute("getAllSymbols")
+    commandResponse = trader.client.commandExecute("getAllSymbols")
 
+    if commandResponse["status"] == False:
+        error_code = commandResponse["errorCode"]
+        print(f"Login failed. Error code: {error_code}")
+        symbols_df = None
+    else:
+        symbols_df = return_as_df(commandResponse["returnData"])
+
+    trader.insert_symbols(symbols_df)
+    symbols_df = trader.look_for_suitable_symbols_v1(symbols_df)
+    # symbols_df = trader.filter_symbols_by_liquidity(symbols_df)
+    trader.update_stocks(symbols_df, period=60)
+
+    trader.evaluate_stocks()
+    # CONNECT IN STREAMMING TO TRADE
     # create & connect to Streaming socket with given ssID
     # and functions for processing ticks, trades, profit and tradeStatus
     trader.start_streaming()
