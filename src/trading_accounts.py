@@ -76,7 +76,7 @@ class Trader:
 
     def insert_symbols(self, df):
         try:
-            df.to_sql("symbols", self.db_conn, if_exists="replace", index=False)
+            df.to_sql("symbols", self.db_conn, if_exists="append", index=False)
         except Exception as e:
             print(f"Exception | insert symbol | {e}")
 
@@ -163,7 +163,7 @@ class Trader:
                         candles["symbol_name"] = symbol
                         candles["period"] = period
                         candles.to_sql(
-                            "stocks", self.db_conn, if_exists="replace", index=False
+                            "stocks", self.db_conn, if_exists="append", index=False
                         )
                     except Exception as e:
                         print(f"Exception | insert symbol | {e}")
@@ -176,33 +176,30 @@ class Trader:
         symbols = cur.fetchall()
         for symbol in symbols:
             candles = pd.read_sql(
-                f"SELECT ctm, ctmString, low, high, open, close, vol FROM stocks where symbol_name = {symbol}",
+                f"SELECT ctm, ctmString, low, high, open, close, vol FROM stocks where symbol_name = '{symbol[0]}'",
                 self.db_conn,
             )
-            trend = test_trend(candles, period=24)
-            if trend < 1:
-                # DOWNWARD
-                # TODO test short is enabled
-                # TODO update backtest with short enabled
-                back_test(
+            candles = cast_candles_to_types(candles, digits=None)
+            cur.execute(
+                f"SELECT shortSelling FROM symbols WHERE symbol = '{symbol[0]}' ORDER BY time LIMIT 1"
+            )
+            short_enabled = cur.fetchall()[0][0]
+            trend = test_trend(candles, period=24 * 10)
+            fig = None
+            if (trend >= 0) or (trend < 0 and short_enabled):
+                fig = back_test(
                     candles,
                     period=24 * 10,
                     capital=self.capital * self.max_risk,
-                    symbol=symbol,
-                    short=4,
-                    long=112,
+                    symbol=symbol[0],
+                    short_ma=4,
+                    long_ma=112,
+                    trend=trend,
+                    short_enabled=short_enabled,
+                    fig=fig,
                 )
-            elif trend >= 1:
-                # UPWARD
-                back_test(
-                    candles,
-                    period=24 * 10,
-                    capital=250 * 0.05,
-                    symbol=symbol,
-                    short=4,
-                    long=112,
-                )
-
+            else:
+                print(f"Downward trend and short not enabled")
         pass
 
     def trader_logic():

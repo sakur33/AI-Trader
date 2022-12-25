@@ -45,20 +45,19 @@ def main():
     ssid = loginResponse["streamSessionId"]
     trader.ssid = ssid
 
+    # TODO to run once the market is closed
     # second method of invoking commands
-    commandResponse = trader.client.commandExecute("getAllSymbols")
+    # commandResponse = trader.client.commandExecute("getAllSymbols")
 
-    if commandResponse["status"] == False:
-        error_code = commandResponse["errorCode"]
-        print(f"Login failed. Error code: {error_code}")
-        symbols_df = None
-    else:
-        symbols_df = return_as_df(commandResponse["returnData"])
-
-    trader.insert_symbols(symbols_df)
-    symbols_df = trader.look_for_suitable_symbols_v1(symbols_df)
-    # symbols_df = trader.filter_symbols_by_liquidity(symbols_df)
-    trader.update_stocks(symbols_df, period=60)
+    # if commandResponse["status"] == False:
+    #     error_code = commandResponse["errorCode"]
+    #     print(f"Login failed. Error code: {error_code}")
+    #     symbols_df = None
+    # else:
+    #     symbols_df = return_as_df(commandResponse["returnData"])
+    # trader.insert_symbols(symbols_df)
+    # symbols_df = trader.look_for_suitable_symbols_v1(symbols_df)
+    # trader.update_stocks(symbols_df, period=60)
 
     trader.evaluate_stocks()
     # CONNECT IN STREAMMING TO TRADE
