@@ -3,7 +3,7 @@ import socket
 import logging
 import time
 import ssl
-from utils import baseCommand
+from trader_utils import baseCommand, return_as_df
 from threading import Thread
 
 # set to true on debug environment only

@@ -8,7 +8,7 @@
       "name": "Python: archivo actual",
       "type": "python",
       "request": "launch",
-      "program": "${workspaceFolder}/src/cluster_predictor.py",
+      "program": "${workspaceFolder}/src/python_trader_main.py",
       "console": "integratedTerminal",
       "justMyCode": true
     }
