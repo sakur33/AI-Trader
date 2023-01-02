@@ -4,6 +4,7 @@ from trader_utils import *
 import sqlite3
 from xAPIConnector import *
 from creds import creds
+import psycopg2
 
 today = get_today()
 todayms, today_int = get_today_ms()
@@ -26,6 +27,7 @@ class Trader:
         self.capital = capital
         self.max_risk = max_risk
         self.db_conn = self.create_db_conn("ai_trader.db")
+        self.ts_conn = self.create_ts_conn()
         self.insert_trader()
         self.client = APIClient()
         self.ssid = None
@@ -42,6 +44,17 @@ class Trader:
         except Exception as e:
             print(f"Exception | create_db_conn | {e}")
         return conn
+
+    def create_ts_conn(self):
+        dbname = "postgres"
+        user = "postgres"
+        password = "1234"
+        host = "localhost"
+        port = 5432
+        connection = (
+            f"dbname ={dbname} user={user} password={password} host={host} port={port}"
+        )
+        return psycopg2.connect(connection)
 
     def insert_trader(self):
         conn = self.db_conn
@@ -96,11 +109,51 @@ class Trader:
     def start_streaming(self):
         self.stream_client = APIStreamClient(
             ssId=self.ssid,
-            tickFun=procTickExample,
-            tradeFun=procTradeExample,
-            profitFun=procProfitExample,
-            tradeStatusFun=procTradeStatusExample,
+            tickFun=self.tick_processor,
+            tradeFun=self.trade_processor,
+            profitFun=self.profit_processor,
+            tradeStatusFun=self.trade_status_processor,
         )
+
+    def tick_processor(self, msg):
+        tick_df = return_as_df([msg["data"]])
+        tick_df["timestamp"] = xtb_time_to_date(int(tick_df["timestamp"].values[0]))
+
+        print(tick_df["timestamp"].values[0])
+        print("TICK msg: ", msg)
+        print("\n")
+        print("TICK df: ", tick_df)
+        print("\n")
+
+        cursor = self.ts_conn.cursor()
+        try:
+            cursor.execute(
+                f"INSERT INTO ticks (timestamp, symbol, ask, bid, high, low, askVolume, bidVolume, tick_level, quoteId, spreadTable, spreadRaw) VALUES ('{tick_df['timestamp'].values[0]}', '{tick_df['symbol'].values[0]}', {tick_df['ask'].values[0]}, {tick_df['bid'].values[0]}, {tick_df['high'].values[0]}, {tick_df['low'].values[0]}, {tick_df['askVolume'].values[0]}, {tick_df['bidVolume'].values[0]}, {tick_df['level'].values[0]}, {tick_df['quoteId'].values[0]}, {tick_df['spreadTable'].values[0]}, {tick_df['spreadRaw'].values[0]});"
+            )
+        except (Exception, psycopg2.Error) as error:
+            print(error.pgerror)
+
+        self.ts_conn.commit()
+
+    def trade_processor(msg):
+        print("TRADE: ", msg)
+        print("\n")
+
+    def balance_processor(msg):
+        print("BALANCE: ", msg)
+        print("\n")
+
+    def trade_status_processor(msg):
+        print("TRADE STATUS: ", msg)
+        print("\n")
+
+    def profit_processor(msg):
+        print("PROFIT: ", msg)
+        print("\n")
+
+    def news_processor(msg):
+        print("NEWS: ", msg)
+        print("\n")
 
     def look_for_suitable_symbols_v1(self, df):
         # TODO look for suitable symbols

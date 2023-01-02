@@ -37,7 +37,7 @@ def get_today_ms():
 def xtb_time_to_date(time):
     initial = INITIAL_TIME
     date = initial + timedelta(milliseconds=time)
-    return date
+    return date.strftime("%Y-%m-%d %H:%M:%S.%f")
 
 
 def date_to_xtb_time(target):
@@ -95,37 +95,6 @@ def add_rolling_means(df, short, long):
     df["MA_short"] = df["close"].rolling(window=short).mean()
     df["MA_long"] = df["close"].rolling(window=long).mean()
     return df
-
-
-# API RELATED
-# example function for processing ticks from Streaming socket
-def procTickExample(msg):
-    print("TICK: ", msg)
-
-
-# example function for processing trades from Streaming socket
-def procTradeExample(msg):
-    print("TRADE: ", msg)
-
-
-# example function for processing trades from Streaming socket
-def procBalanceExample(msg):
-    print("BALANCE: ", msg)
-
-
-# example function for processing trades from Streaming socket
-def procTradeStatusExample(msg):
-    print("TRADE STATUS: ", msg)
-
-
-# example function for processing trades from Streaming socket
-def procProfitExample(msg):
-    print("PROFIT: ", msg)
-
-
-# example function for processing news from Streaming socket
-def procNewsExample(msg):
-    print("NEWS: ", msg)
 
 
 # Command templates

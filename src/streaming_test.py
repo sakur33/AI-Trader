@@ -61,3 +61,7 @@ def main():
 
     # gracefully close streaming socket
     trader.stream_client.disconnect()
+
+
+if __name__ == "__main__":
+    main()
