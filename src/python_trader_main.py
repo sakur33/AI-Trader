@@ -60,6 +60,7 @@ def main():
     # trader.update_stocks(symbols_df, period=60)
 
     trader.evaluate_stocks()
+
     # CONNECT IN STREAMMING TO TRADE
     # create & connect to Streaming socket with given ssID
     # and functions for processing ticks, trades, profit and tradeStatus
