@@ -3,7 +3,7 @@ $ErrorActionPreference = 'SilentlyContinue'
 Write-Output "Installing Docker"
 if (Test-Path -Path "C:\Program Files\Docker")
     {   
-        Invoke-Expression "C:\Program Files\Docker\Docker\Docker Desktop.exe"
+        Invoke-Expression "C:\'Program Files'\Docker\Docker\'Docker Desktop.exe'"
         $dockerv = Invoke-Expression "docker --version"
         Write-Output "Docker already installed: $dockerv"
     }

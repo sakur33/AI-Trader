@@ -60,7 +60,7 @@ def main():
     symbols_df = trader.look_for_suitable_symbols_v1(symbols_df)
     trader.update_stocks(symbols_df, period=1, days=30)
 
-    trader.evaluate_stocks()
+    # trader.evaluate_stocks()
 
 
 if __name__ == "__main__":

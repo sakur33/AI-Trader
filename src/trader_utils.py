@@ -159,16 +159,6 @@ def back_test(
     short_enabled,
     fig=None,
     show=False,
-    df,
-    period,
-    capital,
-    symbol,
-    short_ma,
-    long_ma,
-    trend,
-    short_enabled,
-    fig=None,
-    show=False,
 ):
     df = add_rolling_means(df, short=short_ma, long=long_ma)
     if show:
