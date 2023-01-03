@@ -74,7 +74,7 @@ class JsonSocket(object):
                 logger.error("SockThread Error: %s" % msg)
                 time.sleep(0.25)
                 continue
-            logger.info("Socket connected")
+            logger.info("\nSocket connected")
             return True
         return False
 
@@ -88,7 +88,7 @@ class JsonSocket(object):
             msg = msg.encode("utf-8")
             while sent < len(msg):
                 sent += self.conn.send(msg[sent:])
-                logger.info("Sent: " + str(msg))
+                logger.info("\nSent: " + str(msg))
                 time.sleep(API_SEND_TIMEOUT / 1000)
 
     def _read(self, bytesSize=4096):
@@ -107,7 +107,7 @@ class JsonSocket(object):
                     break
             except ValueError as e:
                 continue
-        logger.info("Received: " + str(resp))
+        logger.debug("Received: " + str(resp))
         return resp
 
     def _readObj(self):
@@ -184,7 +184,14 @@ class APIClient(JsonSocket):
         self.close()
 
     def commandExecute(self, commandName, arguments=None):
-        return self.execute(baseCommand(commandName, arguments))
+        commandResponse = self.execute(baseCommand(commandName, arguments))
+        if commandResponse["status"] == False:
+            error_code = commandResponse["errorCode"]
+            logger.info(f"\nLogin failed. Error code: {error_code}")
+            df = None
+        else:
+            df = return_as_df(commandResponse["returnData"])
+        return df
 
 
 class APIStreamClient(JsonSocket):

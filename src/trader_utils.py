@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from sklearn.base import BaseEstimator, DensityMixin
 import glob
 import pandas as pd
 import pytz
@@ -14,6 +15,7 @@ from scipy.stats import pearsonr
 from ta.trend import MACD
 from ta.momentum import StochasticOscillator
 from scipy.signal import argrelextrema
+from sklearn.model_selection import GridSearchCV
 import json
 import warnings
 
@@ -147,25 +149,35 @@ def return_as_df(returnData):
 
 # TRADING SYSTEM RELATED
 def back_test(
-    df, period, capital, symbol, short_ma, long_ma, trend, short_enabled, fig=None
+    df,
+    period,
+    capital,
+    symbol,
+    short_ma,
+    long_ma,
+    trend,
+    short_enabled,
+    fig=None,
+    show=False,
 ):
     df = add_rolling_means(df, short=short_ma, long=long_ma)
-    fig = plot_stock(df, symbol=symbol, return_fig=True, fig=None)
+    if show:
+        fig = plot_stock(df, symbol=symbol, return_fig=True, fig=None)
     start_date = df["ctmString"][-period].strftime("%Y-%m-%d")
     transactions = []
     is_bought = False
     is_short = False
     profits = []
     potential_profits = [0]
-    print("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
-    print("")
-    print("")
-    print(f"Start test from {start_date}")
-    print(f"    Short selling: {short_enabled}")
-    print(f"    Capital at risk: {capital}")
-    print(f"    Trend: {trend}")
+    if show:
+        print("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
+        print("")
+        print("")
+        print(f"Start test from {start_date}")
+        print(f"    Short selling: {short_enabled}")
+        print(f"    Capital at risk: {capital}")
+        print(f"    Trend: {trend}")
 
-    input()
     for step in range(df.shape[0] - period, df.shape[0]):
         # print(f"Step {step}")
         start_date = df["ctmString"][-period].strftime("%Y-%m-%d %H:%M:%S")
@@ -173,14 +185,15 @@ def back_test(
         tick = df.iloc[step, :]
         tick_day = str(tick["ctmString"])
         if is_bought:
-            print(f"Tick: {start_date}")
             diff = tick["low"] - prev_tick["low"]
             profit = tick["low"] - buy_price
-            print(f"Sell Price {tick['low']}")
-            print(f"Buy price {buy_price}")
-            print(f"Profit {profit}")
-            print(f"Diff {diff}")
-            print(f"Potential profits {potential_profits}")
+            if show:
+                print(f"Tick: {start_date}")
+                print(f"Sell Price {tick['low']}")
+                print(f"Buy price {buy_price}")
+                print(f"Profit {profit}")
+                print(f"Diff {diff}")
+                print(f"Potential profits {potential_profits}")
 
             if is_short:
                 profit = -1 * profit
@@ -212,7 +225,8 @@ def back_test(
                         ) = sell_position(
                             transactions, tick, tick_day, profits, profit, fig=fig
                         )
-                        print("Sold because of upward trend")
+                        if show:
+                            print("Sold because of upward trend")
                 else:
                     if (prev_tick["low"] - buy_price) > (
                         tick["low"] - buy_price
@@ -227,7 +241,8 @@ def back_test(
                         ) = sell_position(
                             transactions, tick, tick_day, profits, profit, fig=fig
                         )
-                        print("Sold because of downward trend")
+                        if show:
+                            print("Sold because of downward trend")
             else:
                 potential_profits.append(diff)
 
@@ -237,7 +252,8 @@ def back_test(
             or (prev_tick["MA_short"] > prev_tick["MA_long"])
             and (tick["MA_short"] < tick["MA_long"])
         ):
-            print(f"CROSSOVER at {tick_day}")
+            if show:
+                print(f"CROSSOVER at {tick_day}")
             balance = np.sum(profits) + capital
             c_price = tick["high"]
 
@@ -259,28 +275,33 @@ def back_test(
                 [step / df.shape[0], tick["MA_long"] / df["MA_long"][:step].max()],
             )
             crossover_angle = get_angle_between_lines(ma_short_slope, ma_long_slope)
-            print(f"    Balance: {balance}")
-            print(f"    Price: {c_price}")
-            print(f"    Crossover angle: {crossover_angle}")
+            if show:
+                print(f"    Balance: {balance}")
+                print(f"    Price: {c_price}")
+                print(f"    Crossover angle: {crossover_angle}")
 
         if (prev_tick["MA_short"] < prev_tick["MA_long"]) and (
             tick["MA_short"] > tick["MA_long"]
         ):
-            print(f"Short term upward crossover")
+            if show:
+                print(f"Short term upward crossover")
             if np.abs(crossover_angle) > 40:
                 if np.sum(profits) + capital > tick["high"]:
                     transactions, is_bought, is_short, buy_price, fig = buy_position(
                         transactions, tick, tick_day, fig=fig
                     )
                 else:
-                    print(f"Not enough money to buy")
+                    if show:
+                        print(f"Not enough money to buy")
             else:
-                print(f"Crossover angle to small {crossover_angle}")
+                if show:
+                    print(f"Crossover angle to small {crossover_angle}")
 
         if (prev_tick["MA_short"] > prev_tick["MA_long"]) and (
             tick["MA_short"] < tick["MA_long"]
         ):
-            print(f"Short term downward crossover")
+            if show:
+                print(f"Short term downward crossover")
             if is_bought:
                 (
                     transactions,
@@ -305,9 +326,11 @@ def back_test(
                             transactions, tick, tick_day, short_enabled, fig=fig
                         )
                     else:
-                        print(f"Not enough money to buy")
+                        if show:
+                            print(f"Not enough money to buy")
                 else:
-                    print(f"Crossover angle to small {crossover_angle}")
+                    if show:
+                        print(f"Crossover angle to small {crossover_angle}")
 
         if step == df.shape[0] - 1 and (is_bought or is_short):
             (
@@ -341,8 +364,7 @@ def back_test(
         print("")
         print("End test")
         print("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
-    input()
-    return fig
+    return fig, np.nansum(profits)
 
 
 def sell_position(transactions, tick, tick_day, profits, profit, fig=None):
@@ -373,6 +395,8 @@ def buy_position(transactions, tick, tick_day, is_short=False, fig=None):
 def test_trend(df, period):
     start_date = df["ctmString"][-period].strftime("%Y-%m-%d")
     MA = df["close"].rolling(period).mean()
+    MA = MA.dropna()
+
     trend = []
     for step in range(1, period):
         if MA.values[-(step + 1)] < MA.values[-step]:
@@ -538,3 +562,245 @@ def get_macd_stoch(df):
         high=df["high"], close=df["close"], low=df["low"], window=14, smooth_window=3
     )
     return macd, STOCH
+
+
+def trading_loss(y, y_pred, **kwargs):
+    y_true = np.zeros_like(y)
+    return np.sum(y_pred - y_true)
+
+
+class TradingEstimator(BaseEstimator, DensityMixin):
+    def __init__(
+        self,
+        period,
+        capital,
+        symbol,
+        short_enabled,
+        short_ma=None,
+        long_ma=None,
+        show=False,
+        fig=False,
+    ) -> None:
+        super().__init__()
+        self.candles = None
+        self.period = period
+        self.capital = capital
+        self.symbol = symbol
+        self.short_ma = short_ma
+        self.long_ma = long_ma
+        self.short_enabled = short_enabled
+        self.show = show
+        if not fig:
+            self.fig = fig
+        else:
+            self.fig = make_subplots(
+                rows=4,
+                cols=1,
+                shared_xaxes=True,
+                vertical_spacing=0.01,
+                row_heights=[0.5, 0.1, 0.2, 0.2],
+            )
+
+    def fit(self, X, y=None, **kwargs):
+        self.candles = X
+        return self
+
+    def score(self, X, y=None):
+        return self.back_test(X)
+
+    def back_test(self, df=None):
+        if df is None:
+            df = self.candles
+        period = self.period
+        capital = self.capital
+        symbol = self.symbol
+        short_ma = self.short_ma
+        long_ma = self.long_ma
+        trend = 0
+        short_enabled = self.short_enabled
+        show = self.show
+        fig = self.fig
+
+        df = add_rolling_means(df, short=short_ma, long=long_ma)
+        if show:
+            fig = plot_stock(df, symbol=symbol, return_fig=True, fig=None)
+        start_date = df["ctmString"][-period].strftime("%Y-%m-%d")
+        is_bought = False
+        is_short = False
+        profits = []
+        profit = 0
+        potential_profits = [0]
+        if show:
+            print("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
+            print("")
+            print("")
+            print(f"Start test from {start_date}")
+            print(f"    Short selling: {short_enabled}")
+            print(f"    Capital at risk: {capital}")
+            print(f"    Trend: {trend}")
+
+        for step in range(df.shape[0] - period, df.shape[0]):
+            prev_tick = df.iloc[step - 1, :]
+            tick = df.iloc[step, :]
+            tick_day = str(tick["ctmString"])
+            if is_bought:
+                diff = tick["low"] - prev_tick["low"]
+                profit = tick["low"] - buy_price
+                if show:
+                    print(f"Tick: {start_date}")
+                    print(f"Sell Price {tick['low']}")
+                    print(f"Buy price {buy_price}")
+                    print(f"Profit {profit}")
+                    print(f"Diff {diff}")
+                    print(f"Potential profits {potential_profits}")
+
+                if is_short:
+                    profit = -1 * profit
+                if profit < -(buy_price * 0.05):
+                    (
+                        is_bought,
+                        is_short,
+                        profits,
+                        potential_profits,
+                    ) = self.sell_position(profits, profit)
+
+                elif profit > 0:
+                    potential_profits.append(diff)
+                    if is_short:
+                        if (prev_tick["low"] - buy_price) < (
+                            tick["low"] - buy_price
+                        ) * 1.05:
+                            (
+                                is_bought,
+                                is_short,
+                                profits,
+                                potential_profits,
+                            ) = self.sell_position(profits, profit)
+                            if show:
+                                print("Sold because of upward trend")
+                    else:
+                        if (prev_tick["low"] - buy_price) > (
+                            tick["low"] - buy_price
+                        ) * 1.05:
+                            (
+                                is_bought,
+                                is_short,
+                                profits,
+                                potential_profits,
+                            ) = self.sell_position(profits, profit)
+                            if show:
+                                print("Sold because of downward trend")
+                else:
+                    potential_profits.append(diff)
+
+            if (
+                (prev_tick["MA_short"] < prev_tick["MA_long"])
+                and (tick["MA_short"] > tick["MA_long"])
+                or (prev_tick["MA_short"] > prev_tick["MA_long"])
+                and (tick["MA_short"] < tick["MA_long"])
+            ):
+                if show:
+                    print(f"CROSSOVER at {tick_day}")
+                balance = np.sum(profits) + capital
+                c_price = tick["high"]
+
+                ma_short_slope = get_line_slope(
+                    [
+                        (step - 1) / df.shape[0],
+                        prev_tick["MA_short"] / df["MA_short"][: step - 1].max(),
+                    ],
+                    [
+                        step / df.shape[0],
+                        tick["MA_short"] / df["MA_short"][:step].max(),
+                    ],
+                )
+                ma_long_slope = get_line_slope(
+                    [
+                        (step - 1) / df.shape[0],
+                        prev_tick["MA_long"] / df["MA_long"][: step - 1].max(),
+                    ],
+                    [step / df.shape[0], tick["MA_long"] / df["MA_long"][:step].max()],
+                )
+                crossover_angle = get_angle_between_lines(ma_short_slope, ma_long_slope)
+                if show:
+                    print(f"    Balance: {balance}")
+                    print(f"    Price: {c_price}")
+                    print(f"    Crossover angle: {crossover_angle}")
+
+            if (prev_tick["MA_short"] < prev_tick["MA_long"]) and (
+                tick["MA_short"] > tick["MA_long"]
+            ):
+                if show:
+                    print(f"Short term upward crossover")
+                if np.abs(crossover_angle) > 40:
+                    if np.sum(profits) + capital > tick["high"]:
+                        (is_bought, is_short, buy_price) = self.buy_position(tick)
+                    else:
+                        if show:
+                            print(f"Not enough money to buy")
+                else:
+                    if show:
+                        print(f"Crossover angle to small {crossover_angle}")
+
+            if (prev_tick["MA_short"] > prev_tick["MA_long"]) and (
+                tick["MA_short"] < tick["MA_long"]
+            ):
+                if show:
+                    print(f"Short term downward crossover")
+                if is_bought:
+                    (
+                        is_bought,
+                        is_short,
+                        profits,
+                        potential_profits,
+                    ) = self.sell_position(profits, profit)
+                if short_enabled:
+                    if np.abs(crossover_angle) > 40:
+                        if np.sum(profits) + capital > tick["high"]:
+                            (is_bought, is_short, buy_price) = self.buy_position(
+                                tick, short_enabled
+                            )
+                        else:
+                            if show:
+                                print(f"Not enough money to buy")
+                    else:
+                        if show:
+                            print(f"Crossover angle to small {crossover_angle}")
+
+            if step == df.shape[0] - 1 and (is_bought or is_short):
+                (is_bought, is_short, profits, potential_profits) = self.sell_position(
+                    profits, profit
+                )
+
+        # FINISHED BACKTEST
+        if len(profits) > 0:
+            np_profits = np.array(profits)
+            lossing_trades = np_profits[np_profits < 0]
+            winning_trades = np_profits[np_profits > 0]
+            if show:
+                print(f"Profits: {np.nansum(profits)}")
+                print(
+                    f"Winning/Lossing trades: {len(winning_trades)}|{len(lossing_trades)}"
+                )
+                print(
+                    f"Average transaction profit: w:{np.nanmean(winning_trades)} | l: {np.nanmean(lossing_trades)}"
+                )
+                print("")
+                print("")
+                print("End test")
+                print("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
+        else:
+            profits = 0
+        return np.sum(profits)
+
+    def sell_position(self, profits, profit):
+        is_bought = False
+        is_short = False
+        profits.append(profit)
+        potential_profits = [0]
+        return is_bought, is_short, profits, potential_profits
+
+    def buy_position(self, tick, is_short=False):
+        is_bought = True
+        buy_price = tick["high"]
+        return is_bought, is_short, buy_price
