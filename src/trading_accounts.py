@@ -21,6 +21,8 @@ database_path = curr_path + "../../database/"
 
 minimun_trade = 10
 
+minimun_trade = 10
+
 
 class Trader:
     def __init__(self, name, capital, max_risk, trader_type) -> None:
@@ -109,6 +111,15 @@ class Trader:
             conn.commit()
         except Exception as e:
             print(f"Exception | insert_trans | {e}")
+
+    def insert_params(self, day, symbol, score, short_ma, long_ma):
+        sql = f"INSERT INTO trading_params(symbol_name, date, score, short_ma, long_ma)VALUES('{symbol}', '{day}', {score}, {short_ma}, {long_ma});"
+        try:
+            cur = self.db_conn.cursor()
+            cur.execute(sql)
+            self.db_conn.commit()
+        except Exception as e:
+            print(f"Exception | insert_trade | {e}")
 
     def insert_params(self, day, symbol, score, short_ma, long_ma):
         sql = f"INSERT INTO trading_params(symbol_name, date, score, short_ma, long_ma)VALUES('{symbol}', '{day}', {score}, {short_ma}, {long_ma});"
@@ -284,6 +295,9 @@ class Trader:
         period = 24 * 10
         parameters = {"short_ma": list(range(1, 20)), "long_ma": list(range(21, 200))}
         profits = []
+        period = 24 * 10
+        parameters = {"short_ma": list(range(1, 20)), "long_ma": list(range(21, 200))}
+        profits = []
         for symbol in symbols:
             candles = pd.read_sql(
                 f"SELECT ctm, ctmString, low, high, open, close, vol FROM stocks where symbol_name = '{symbol[0]}'",
@@ -294,6 +308,55 @@ class Trader:
                 f"SELECT shortSelling FROM symbols WHERE symbol = '{symbol[0]}' ORDER BY time LIMIT 1"
             )
             short_enabled = cur.fetchall()[0][0]
+            trading_estimator = TradingEstimator(
+                period=period,
+                capital=self.capital * self.max_risk,
+                symbol=symbol[0],
+                short_enabled=short_enabled,
+            )
+            if period < (candles.shape[0] - 200):
+                trend = test_trend(candles, period=period)
+                if (trend >= 0) or (trend < 0 and short_enabled):
+                    estimator = trading_estimator.fit(candles)
+                    clf = RandomizedSearchCV(
+                        estimator, parameters, n_iter=50, verbose=0, cv=2
+                    )
+                    clf.fit(candles)
+                    print(" Results from Grid Search ")
+                    print(
+                        f"    The best estimator across ALL searched params: {clf.best_estimator_}"
+                    )
+                    print(
+                        f"    The best score across ALL searched params: {clf.best_score_}"
+                    )
+                    print(
+                        f"    The best parameters across ALL searched params: {clf.best_params_}"
+                    )
+                    if clf.best_score_ > 0:
+                        self.insert_params(
+                            day=todayms,
+                            symbol=symbol[0],
+                            score=clf.best_score_,
+                            short_ma=clf.best_params_["short_ma"],
+                            long_ma=clf.best_params_["long_ma"],
+                        )
+                    # fig, profit = back_test(
+                    #     candles,
+                    #     period=period,
+                    #     capital=self.capital * self.max_risk,
+                    #     symbol=symbol[0],
+                    #     short_ma=4,
+                    #     long_ma=112,
+                    #     trend=trend,
+                    #     short_enabled=short_enabled,
+                    #     fig=fig,
+                    #     show=False,
+                    # )
+                    # if profit > 0:
+                    #     potential_symbols.append[symbol]
+
+                else:
+                    print(f"Downward trend and short not enabled")
             trading_estimator = TradingEstimator(
                 period=period,
                 capital=self.capital * self.max_risk,
