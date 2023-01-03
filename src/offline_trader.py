@@ -27,7 +27,7 @@ logger = logging.getLogger()
 
 
 def main():
-    trader = Trader(name="Test-trader", capital=250, max_risk=0.05, trade_type="STC")
+    trader = Trader(name="Test-trader", capital=1000, max_risk=0.05, trader_type="FX")
 
     loginResponse = trader.client.execute(
         loginCommand(userId=trader.user, password=trader.passw)
@@ -45,22 +45,22 @@ def main():
     ssid = loginResponse["streamSessionId"]
     trader.ssid = ssid
 
-    trader.start_streaming()
+    # TODO to run once the market is closed
 
-    # subscribe for trades
-    trader.stream_client.subscribeTrades()
+    commandResponse = trader.client.commandExecute("getAllSymbols")
 
-    # subscribe for prices
-    trader.stream_client.subscribePrices(["EURUSD"])
+    if commandResponse["status"] == False:
+        error_code = commandResponse["errorCode"]
+        print(f"Login failed. Error code: {error_code}")
+        symbols_df = None
+    else:
+        symbols_df = return_as_df(commandResponse["returnData"])
 
-    # subscribe for profits
-    trader.stream_client.subscribeProfits()
+    trader.insert_symbols(symbols_df)
+    symbols_df = trader.look_for_suitable_symbols_v1(symbols_df)
+    trader.update_stocks(symbols_df, period=1, days=30)
 
-    # this is an example, make it run for 5 seconds
-    time.sleep(3600 * 5)
-
-    # gracefully close streaming socket
-    trader.stream_client.disconnect()
+    trader.evaluate_stocks()
 
 
 if __name__ == "__main__":

@@ -62,7 +62,12 @@ def adapt_data(df):
 def cast_candles_to_types(df, digits):
     if df is not None:
         df["ctm"] = pd.to_numeric(df["ctm"])
-        df["ctmString"] = pd.to_datetime(df["ctmString"], format="%Y-%m-%d %H:%M:%S")
+        # Dec 4, 2022, 11:00:00 PM
+        df["ctmString"] = pd.to_datetime(
+            df["ctmString"], format="%b %d, %Y, %I:%M:%S %p"
+        )
+        df["ctmString"] = df["ctmString"].dt.strftime("%m/%d/%Y %H:%M:%S")
+        df["ctmString"] = pd.to_datetime(df["ctmString"])
         df["open"] = pd.to_numeric(df["open"])
         df["close"] = pd.to_numeric(df["close"])
         df["high"] = pd.to_numeric(df["high"])
@@ -71,6 +76,21 @@ def cast_candles_to_types(df, digits):
         df = df.set_index(df["ctmString"])
         if digits:
             df = numbers_to_decimal(df, digits)
+    return df
+
+
+def cast_ticks_to_types(df):
+    if df is not None:
+        df["ask"] = pd.to_numeric(df["ask"])
+        df["askVolume"] = pd.to_numeric(df["askVolume"], downcast="integer")
+        df["bid"] = pd.to_numeric(df["bid"])
+        df["bidVolume"] = pd.to_numeric(df["bidVolume"], downcast="integer")
+        df["high"] = pd.to_numeric(df["high"])
+        df["low"] = pd.to_numeric(df["low"])
+        df["level"] = pd.to_numeric(df["level"], downcast="integer")
+        df["spreadRaw"] = pd.to_numeric(df["spreadRaw"])
+        df["spreadTable"] = pd.to_numeric(df["spreadTable"])
+        df["timestamp"] = pd.to_datetime(df["timestamp"])
     return df
 
 

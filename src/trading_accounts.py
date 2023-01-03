@@ -19,7 +19,7 @@ database_path = curr_path + "../../database/"
 
 
 class Trader:
-    def __init__(self, name, capital, max_risk, trade_type) -> None:
+    def __init__(self, name, capital, max_risk, trader_type) -> None:
         self.traderid = today_int
         self.user = creds["trader1"]["user"]
         self.passw = creds["trader1"]["passw"]
@@ -32,6 +32,7 @@ class Trader:
         self.client = APIClient()
         self.ssid = None
         self.stream_client = None
+        self.trader_type = trader_type
 
     def make_trade(self, symbol_info, current_price, stop_loss=None, take_profit=None):
         # TODO implement make trade:
@@ -89,7 +90,10 @@ class Trader:
 
     def insert_symbols(self, df):
         try:
-            df.to_sql("symbols", self.db_conn, if_exists="append", index=False)
+            df["min_price"] = (
+                (df["ask"] * df["contractSize"]) / ((1 / df["leverage"]) * 100)
+            ) * df["lotStep"]
+            df.to_sql("symbols", self.db_conn, if_exists="replace", index=False)
         except Exception as e:
             print(f"Exception | insert symbol | {e}")
 
@@ -118,13 +122,6 @@ class Trader:
     def tick_processor(self, msg):
         tick_df = return_as_df([msg["data"]])
         tick_df["timestamp"] = xtb_time_to_date(int(tick_df["timestamp"].values[0]))
-
-        print(tick_df["timestamp"].values[0])
-        print("TICK msg: ", msg)
-        print("\n")
-        print("TICK df: ", tick_df)
-        print("\n")
-
         cursor = self.ts_conn.cursor()
         try:
             cursor.execute(
@@ -132,7 +129,6 @@ class Trader:
             )
         except (Exception, psycopg2.Error) as error:
             print(error.pgerror)
-
         self.ts_conn.commit()
 
     def trade_processor(msg):
@@ -159,10 +155,11 @@ class Trader:
         # TODO look for suitable symbols
         # Look for symbols with:
         #   - Tight spread
-        #   - STC type
+        #   - Trader_type products
+        df = df[df["categoryName"] == self.trader_type]
         #   - ask comparable to our max_risk
-        df = df[df["categoryName"] == "STC"]
-        df = df[df["ask"] <= (self.capital * self.max_risk)]
+        # ((ask * contract_size) / leverage) * lotStep
+        df = df[df["min_price"] <= (self.capital * self.max_risk)]
         df["spread_percentage"] = (df["ask"] - df["bid"]) / df["ask"]
         df = df.sort_values(by=["spread_percentage"])
         return df
@@ -190,9 +187,10 @@ class Trader:
         df = df[df["daily_max_volume"] > df["daily_max_volume"].quantile(0.90)]
         return df
 
-    def update_stocks(self, df, period, save=False):
-        start_date = datetime.now() - timedelta(days=365)
+    def update_stocks(self, df, period, days, save=False):
+        start_date = datetime.now() - timedelta(days=days)
         for symbol in list(df["symbol"]):
+            # get candles
             CHART_RANGE_INFO_RECORD = {
                 "period": period,
                 "start": date_to_xtb_time(start_date),
@@ -217,6 +215,49 @@ class Trader:
                         candles["period"] = period
                         candles.to_sql(
                             "stocks", self.db_conn, if_exists="append", index=False
+                        )
+                    except Exception as e:
+                        print(f"Exception | insert symbol | {e}")
+                else:
+                    print(f"Symbol {symbol} did not return candles")
+            # get ticks
+            commandResponse = self.client.commandExecute(
+                "getTickPrices",
+                arguments={
+                    "level": -1,
+                    "symbols": [symbol],
+                    "timestamp": date_to_xtb_time(start_date),
+                },
+            )
+            if commandResponse["status"] == False:
+                error_code = commandResponse["errorCode"]
+                print(f"Login failed. Error code: {error_code}")
+            else:
+                returnData = commandResponse["returnData"]
+                ticks = return_as_df(returnData["quotations"])
+                if not candles is None:
+                    ticks = cast_ticks_to_types(ticks)
+                    ticks["tick_level"] = ticks["level"]
+                    for column in list(ticks.columns):
+                        if column in [
+                            "symbol",
+                            "timestamp",
+                            "ask",
+                            "askVolume",
+                            "bid",
+                            "bidVolume",
+                            "high",
+                            "low",
+                            "tick_level",
+                            "spreadTable",
+                            "spreadRaw",
+                        ]:
+                            pass
+                        else:
+                            ticks = ticks.drop(columns=column)
+                    try:
+                        ticks.to_sql(
+                            "ticks", self.db_conn, if_exists="append", index=False
                         )
                     except Exception as e:
                         print(f"Exception | insert symbol | {e}")

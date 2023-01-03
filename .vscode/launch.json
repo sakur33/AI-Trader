@@ -8,7 +8,7 @@
       "name": "Python: archivo actual",
       "type": "python",
       "request": "launch",
-      "program": "${workspaceFolder}/src/python_trader_main.py",
+      "program": "${workspaceFolder}/src/offline_trader.py",
       "console": "integratedTerminal",
       "justMyCode": true
     }

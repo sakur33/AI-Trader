@@ -39,6 +39,7 @@ CREATE TABLE balance(
 
 CREATE TABLE symbols(
     symbol TEXT NULL,
+    min_price REAL NULL,
     currency TEXT NULL,
     categoryName TEXT NULL,
     currencyProfit TEXT NULL,
@@ -101,4 +102,18 @@ CREATE TABLE stocks(
     vol REAL NULL,
     PRIMARY KEY (symbol_name, ctm),
     FOREIGN KEY (symbol_name) REFERENCES symbols (symbol)
+);
+
+CREATE TABLE ticks (
+    timestamp TEXT NOT NULL,
+    symbol TEXT NOT NULL,
+    ask REAL NULL,
+    bid REAL NULL,
+    high REAL NULL,
+    low REAL NULL,
+    askVolume INT NULL,
+    bidVolume INT NULL,
+    tick_level INT NULL,
+    spreadTable REAL NULL,
+    spreadRaw REAL NULL
 );
