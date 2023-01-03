@@ -188,29 +188,6 @@ class Trader:
         df = df.sort_values(by=["spread_percentage"])
         return df
 
-    def filter_symbols_by_liquidity(self, df):
-        symbol_volumes = []
-        start_date = datetime.now() - timedelta(days=10)
-        for symbol in list(df["symbol"]):
-            CHART_RANGE_INFO_RECORD = {
-                "period": 60,
-                "start": date_to_xtb_time(start_date),
-                "symbol": symbol,
-            }
-            commandResponse = self.client.commandExecute(
-                "getChartLastRequest", arguments={"info": CHART_RANGE_INFO_RECORD}
-            )
-            if commandResponse["status"] == False:
-                error_code = commandResponse["errorCode"]
-                print(f"Login failed. Error code: {error_code}")
-                symbols_df = None
-            else:
-                candles = return_as_df(commandResponse["returnData"])
-                symbol_volumes.append(candles["vol"].max())
-        df["daily_max_volume"] = symbol_volumes
-        df = df[df["daily_max_volume"] > df["daily_max_volume"].quantile(0.90)]
-        return df
-
     def update_stocks(self, df, period, days, save=False):
         start_date = datetime.now() - timedelta(days=days)
         for symbol in list(df["symbol"]):
@@ -245,48 +222,48 @@ class Trader:
                 else:
                     print(f"Symbol {symbol} did not return candles")
             # get ticks
-            commandResponse = self.client.commandExecute(
-                "getTickPrices",
-                arguments={
-                    "level": -1,
-                    "symbols": [symbol],
-                    "timestamp": date_to_xtb_time(start_date),
-                },
-            )
-            if commandResponse["status"] == False:
-                error_code = commandResponse["errorCode"]
-                print(f"Login failed. Error code: {error_code}")
-            else:
-                returnData = commandResponse["returnData"]
-                ticks = return_as_df(returnData["quotations"])
-                if not candles is None:
-                    ticks = cast_ticks_to_types(ticks)
-                    ticks["tick_level"] = ticks["level"]
-                    for column in list(ticks.columns):
-                        if column in [
-                            "symbol",
-                            "timestamp",
-                            "ask",
-                            "askVolume",
-                            "bid",
-                            "bidVolume",
-                            "high",
-                            "low",
-                            "tick_level",
-                            "spreadTable",
-                            "spreadRaw",
-                        ]:
-                            pass
-                        else:
-                            ticks = ticks.drop(columns=column)
-                    try:
-                        ticks.to_sql(
-                            "ticks", self.db_conn, if_exists="append", index=False
-                        )
-                    except Exception as e:
-                        print(f"Exception | insert symbol | {e}")
-                else:
-                    print(f"Symbol {symbol} did not return candles")
+            # commandResponse = self.client.commandExecute(
+            #     "getTickPrices",
+            #     arguments={
+            #         "level": -1,
+            #         "symbols": [symbol],
+            #         "timestamp": date_to_xtb_time(start_date),
+            #     },
+            # )
+            # if commandResponse["status"] == False:
+            #     error_code = commandResponse["errorCode"]
+            #     print(f"Login failed. Error code: {error_code}")
+            # else:
+            #     returnData = commandResponse["returnData"]
+            #     ticks = return_as_df(returnData["quotations"])
+            #     if not candles is None:
+            #         ticks = cast_ticks_to_types(ticks)
+            #         ticks["tick_level"] = ticks["level"]
+            #         for column in list(ticks.columns):
+            #             if column in [
+            #                 "symbol",
+            #                 "timestamp",
+            #                 "ask",
+            #                 "askVolume",
+            #                 "bid",
+            #                 "bidVolume",
+            #                 "high",
+            #                 "low",
+            #                 "tick_level",
+            #                 "spreadTable",
+            #                 "spreadRaw",
+            #             ]:
+            #                 pass
+            #             else:
+            #                 ticks = ticks.drop(columns=column)
+            #         try:
+            #             ticks.to_sql(
+            #                 "ticks", self.db_conn, if_exists="append", index=False
+            #             )
+            #         except Exception as e:
+            #             print(f"Exception | insert symbol | {e}")
+            #     else:
+            #         print(f"Symbol {symbol} did not return candles")
 
     def evaluate_stocks(self):
         cur = self.db_conn.cursor()
