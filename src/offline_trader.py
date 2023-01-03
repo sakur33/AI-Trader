@@ -27,7 +27,13 @@ logger = logging.getLogger()
 
 
 def main():
-    trader = Trader(name="Test-trader", capital=1000, max_risk=0.05, trader_type="FX")
+    trader = Trader(
+        name="Test-trader",
+        trader_name="trader2",
+        capital=1000,
+        max_risk=0.05,
+        trader_type="FX",
+    )
 
     loginResponse = trader.client.execute(
         loginCommand(userId=trader.user, password=trader.passw)
@@ -47,14 +53,7 @@ def main():
 
     # TODO to run once the market is closed
 
-    commandResponse = trader.client.commandExecute("getAllSymbols")
-
-    if commandResponse["status"] == False:
-        error_code = commandResponse["errorCode"]
-        print(f"Login failed. Error code: {error_code}")
-        symbols_df = None
-    else:
-        symbols_df = return_as_df(commandResponse["returnData"])
+    symbols_df = trader.client.commandExecute("getAllSymbols")
 
     trader.insert_symbols(symbols_df)
     symbols_df = trader.look_for_suitable_symbols_v1(symbols_df)

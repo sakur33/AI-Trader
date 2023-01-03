@@ -133,8 +133,18 @@ def loginCommand(userId, password, appName=""):
 
 # Convert return data into pandas dataframe
 def return_as_df(returnData):
-    if len(returnData) != 0:
+    if isinstance(returnData, list):
         columns = returnData[0].keys()
+        df_dict = {}
+        for col in columns:
+            df_dict[col] = []
+        for r_dict in returnData:
+            for col in columns:
+                df_dict[col].append(r_dict[col])
+        df = pd.DataFrame.from_dict(df_dict)
+        return df
+    elif isinstance(returnData, dict):
+        columns = returnData.keys()
         df_dict = {}
         for col in columns:
             df_dict[col] = []

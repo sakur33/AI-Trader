@@ -25,10 +25,10 @@ minimun_trade = 10
 
 
 class Trader:
-    def __init__(self, name, capital, max_risk, trader_type) -> None:
+    def __init__(self, name, trader_name, capital, max_risk, trader_type) -> None:
         self.traderid = today_int
-        self.user = creds["trader1"]["user"]
-        self.passw = creds["trader1"]["passw"]
+        self.user = creds[trader_name]["user"]
+        self.passw = creds[trader_name]["passw"]
         self.name = name
         self.capital = capital
         self.max_risk = max_risk
@@ -198,7 +198,9 @@ class Trader:
                 "symbol": symbol,
             }
             commandResponse = self.client.commandExecute(
-                "getChartLastRequest", arguments={"info": CHART_RANGE_INFO_RECORD}
+                "getChartLastRequest",
+                arguments={"info": CHART_RANGE_INFO_RECORD},
+                return_df=False,
             )
             if commandResponse["status"] == False:
                 error_code = commandResponse["errorCode"]
