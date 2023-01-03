@@ -7,3 +7,4 @@ creds.py
 *.db
 data
 */__pycache__/*
+__pycache__
