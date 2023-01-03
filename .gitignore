@@ -2,4 +2,8 @@
 .venv
 creds.py
 *.pickle
+*.pyc
+*.pyo
+*.db
 data
+*/__pycache__/*
