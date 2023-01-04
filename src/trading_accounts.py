@@ -223,59 +223,13 @@ class Trader:
                         print(f"Exception | insert symbol | {e}")
                 else:
                     print(f"Symbol {symbol} did not return candles")
-            # get ticks
-            # commandResponse = self.client.commandExecute(
-            #     "getTickPrices",
-            #     arguments={
-            #         "level": -1,
-            #         "symbols": [symbol],
-            #         "timestamp": date_to_xtb_time(start_date),
-            #     },
-            # )
-            # if commandResponse["status"] == False:
-            #     error_code = commandResponse["errorCode"]
-            #     print(f"Login failed. Error code: {error_code}")
-            # else:
-            #     returnData = commandResponse["returnData"]
-            #     ticks = return_as_df(returnData["quotations"])
-            #     if not candles is None:
-            #         ticks = cast_ticks_to_types(ticks)
-            #         ticks["tick_level"] = ticks["level"]
-            #         for column in list(ticks.columns):
-            #             if column in [
-            #                 "symbol",
-            #                 "timestamp",
-            #                 "ask",
-            #                 "askVolume",
-            #                 "bid",
-            #                 "bidVolume",
-            #                 "high",
-            #                 "low",
-            #                 "tick_level",
-            #                 "spreadTable",
-            #                 "spreadRaw",
-            #             ]:
-            #                 pass
-            #             else:
-            #                 ticks = ticks.drop(columns=column)
-            #         try:
-            #             ticks.to_sql(
-            #                 "ticks", self.db_conn, if_exists="append", index=False
-            #             )
-            #         except Exception as e:
-            #             print(f"Exception | insert symbol | {e}")
-            #     else:
-            #         print(f"Symbol {symbol} did not return candles")
 
     def evaluate_stocks(self):
         cur = self.db_conn.cursor()
         cur.execute("SELECT DISTINCT(symbol_name) FROM stocks")
         symbols = cur.fetchall()
-        period = 24 * 10
         parameters = {"short_ma": list(range(1, 20)), "long_ma": list(range(21, 200))}
-        profits = []
-        period = 24 * 10
-        parameters = {"short_ma": list(range(1, 20)), "long_ma": list(range(21, 200))}
+        period = 10 * 24
         profits = []
         for symbol in symbols:
             candles = pd.read_sql(
