@@ -1,0 +1,1028 @@
+2023-01-18 20:55:26,912 : INFO : MainThread : __main__ ONLINE TRADER
+2023-01-18 20:55:26,962 : INFO : MainThread : trading_accounts Trader already exists | tradername: Test-trader
+2023-01-18 20:55:27,089 : INFO : MainThread : xAPIConnector 
+Socket connected
+2023-01-18 20:55:27,089 : INFO : MainThread : xAPIConnector 
+Sent: b'{"command": "login", "arguments": {"userId": "14206469", "password": "-MpWKQ63@+2d_yP", "appName": ""}}'
+2023-01-18 20:55:27,329 : INFO : MainThread : root Login successful
+2023-01-18 20:55:27,330 : INFO : Thread-1 (ping_client) : xAPIConnector 
+Sent: b'{"command": "ping", "arguments": {}}'
+2023-01-18 20:55:27,446 : INFO : Thread-1 (ping_client) : trading_accounts Ping sent | True
+2023-01-18 20:55:27,479 : INFO : MainThread : xAPIConnector 
+Socket connected
+2023-01-18 20:55:27,480 : INFO : MainThread : xAPIConnector 
+Sent: b'{"command": "getCandles", "streamSessionId": "e41f13fffecd98b0-00006b46-0037d548-cee08611185a0c8b-157874a3", "symbol": "AUDCAD"}'
+2023-01-18 20:55:27,588 : INFO : MainThread : xAPIConnector 
+Sent: b'{"command": "getKeepAlive", "streamSessionId": "e41f13fffecd98b0-00006b46-0037d548-cee08611185a0c8b-157874a3"}'
+2023-01-18 20:55:30,335 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674071730941}}
+2023-01-18 20:55:33,331 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674071733941}}
+2023-01-18 20:55:36,345 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674071736941}}
+2023-01-18 20:55:39,328 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674071739941}}
+2023-01-18 20:55:42,333 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674071742940}}
+2023-01-18 20:55:45,328 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674071745941}}
+2023-01-18 20:55:48,324 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674071748931}}
+2023-01-18 20:55:51,331 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674071751940}}
+2023-01-18 20:55:54,330 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674071754941}}
+2023-01-18 20:55:57,339 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674071757941}}
+2023-01-18 20:56:00,109 : INFO : Thread-3 (candle_processor) : trading_accounts Candle
+2023-01-18 20:56:00,125 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'candle', 'data': {'ctm': 1674071700000, 'ctmString': 'Jan 18, 2023, 8:55:00 PM', 'open': 0.93617, 'close': 0.93603, 'high': 0.9362, 'low': 0.93603, 'vol': 398.0, 'quoteId': 5, 'symbol': 'AUDCAD'}}
+2023-01-18 20:56:00,172 : DEBUG : Thread-3 (candle_processor) : trading_accounts Start step
+2023-01-18 20:56:00,188 : INFO : Thread-3 (candle_processor) : trading_accounts Session step: 800
+2023-01-18 20:56:00,297 : INFO : Thread-3 (candle_processor) : xAPIConnector 
+Sent: b'{"command": "getTickPrices", "arguments": {"level": 0, "symbols": ["AUDCAD"], "timestamp": 1674071700000}}'
+2023-01-18 20:56:00,328 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674071760941}}
+2023-01-18 20:56:00,452 : INFO : Thread-3 (candle_processor) : trading_accounts Step count (801) > long_ma (500)
+   Is bought: False
+   Is short: False
+   Previous: 
+  Time: 2023-01-18 20:54:00 
+  Short_ma: 0.9362900000000001
+       Long_ma: 0.939345049900199
+   Current:  
+  Time: 2023-01-18 20:55:00 
+   Short_ma: 0.9362416666666666
+  Long_ma: 0.9393403592814366
+2023-01-18 20:56:00,468 : INFO : Thread-3 (candle_processor) : trading_accounts Down Crossover
+2023-01-18 20:56:00,500 : INFO : Thread-3 (candle_processor) : trading_accounts Crossover angle too small
+2023-01-18 20:56:00,531 : INFO : Thread-3 (candle_processor) : trading_accounts   Angle: -4.167572252356281e-08
+2023-01-18 20:56:00,563 : INFO : Thread-3 (candle_processor) : trading_accounts   Min angle: 5.0
+2023-01-18 20:56:00,595 : DEBUG : Thread-3 (candle_processor) : trading_accounts End step
+2023-01-18 20:56:03,337 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674071763941}}
+2023-01-18 20:56:06,326 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674071766941}}
+2023-01-18 20:56:09,335 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674071769941}}
+2023-01-18 20:56:12,333 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674071772941}}
+2023-01-18 20:56:15,329 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674071775941}}
+2023-01-18 20:56:18,336 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674071778944}}
+2023-01-18 20:56:21,333 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674071781941}}
+2023-01-18 20:56:24,343 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674071784950}}
+2023-01-18 20:56:27,327 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674071787941}}
+2023-01-18 20:56:30,327 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674071790941}}
+2023-01-18 20:56:33,335 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674071793941}}
+2023-01-18 20:56:36,335 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674071796940}}
+2023-01-18 20:56:39,345 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674071799951}}
+2023-01-18 20:56:42,327 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674071802941}}
+2023-01-18 20:56:45,333 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674071805941}}
+2023-01-18 20:56:48,331 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674071808941}}
+2023-01-18 20:56:51,330 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674071811941}}
+2023-01-18 20:56:54,355 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674071814971}}
+2023-01-18 20:56:57,331 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674071817941}}
+2023-01-18 20:56:59,746 : INFO : Thread-5 (candle_processor) : trading_accounts Candle
+2023-01-18 20:56:59,762 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'candle', 'data': {'ctm': 1674071760000, 'ctmString': 'Jan 18, 2023, 8:56:00 PM', 'open': 0.93605, 'close': 0.93605, 'high': 0.93608, 'low': 0.93595, 'vol': 354.0, 'quoteId': 5, 'symbol': 'AUDCAD'}}
+2023-01-18 20:56:59,902 : DEBUG : Thread-5 (candle_processor) : trading_accounts Start step
+2023-01-18 20:56:59,917 : INFO : Thread-5 (candle_processor) : trading_accounts Session step: 801
+2023-01-18 20:57:00,028 : INFO : Thread-5 (candle_processor) : xAPIConnector 
+Sent: b'{"command": "getTickPrices", "arguments": {"level": 0, "symbols": ["AUDCAD"], "timestamp": 1674071760000}}'
+2023-01-18 20:57:00,199 : INFO : Thread-5 (candle_processor) : trading_accounts Step count (802) > long_ma (500)
+   Is bought: False
+   Is short: False
+   Previous: 
+  Time: 2023-01-18 20:55:00 
+  Short_ma: 0.9362416666666666
+       Long_ma: 0.9393403592814366
+   Current:  
+  Time: 2023-01-18 20:56:00 
+   Short_ma: 0.9362116666666666
+  Long_ma: 0.9393357285429135
+2023-01-18 20:57:00,230 : INFO : Thread-5 (candle_processor) : trading_accounts Down Crossover
+2023-01-18 20:57:00,262 : INFO : Thread-5 (candle_processor) : trading_accounts Crossover angle too small
+2023-01-18 20:57:00,293 : INFO : Thread-5 (candle_processor) : trading_accounts   Angle: -2.422586019993593e-08
+2023-01-18 20:57:00,324 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674071820941}}
+2023-01-18 20:57:00,324 : INFO : Thread-5 (candle_processor) : trading_accounts   Min angle: 5.0
+2023-01-18 20:57:00,416 : DEBUG : Thread-5 (candle_processor) : trading_accounts End step
+2023-01-18 20:57:03,324 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674071823931}}
+2023-01-18 20:57:06,329 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674071826941}}
+2023-01-18 20:57:09,330 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674071829941}}
+2023-01-18 20:57:12,331 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674071832940}}
+2023-01-18 20:57:15,329 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674071835941}}
+2023-01-18 20:57:18,327 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674071838942}}
+2023-01-18 20:57:21,324 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674071841940}}
+2023-01-18 20:57:24,330 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674071844941}}
+2023-01-18 20:57:27,329 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674071847941}}
+2023-01-18 20:57:30,323 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674071850941}}
+2023-01-18 20:57:33,329 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674071853941}}
+2023-01-18 20:57:36,320 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674071856941}}
+2023-01-18 20:57:39,329 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674071859941}}
+2023-01-18 20:57:42,340 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674071862941}}
+2023-01-18 20:57:45,328 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674071865941}}
+2023-01-18 20:57:48,335 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674071868941}}
+2023-01-18 20:57:51,335 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674071871942}}
+2023-01-18 20:57:54,327 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674071874940}}
+2023-01-18 20:57:57,343 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674071877951}}
+2023-01-18 20:57:59,630 : INFO : Thread-7 (candle_processor) : trading_accounts Candle
+2023-01-18 20:57:59,646 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'candle', 'data': {'ctm': 1674071820000, 'ctmString': 'Jan 18, 2023, 8:57:00 PM', 'open': 0.93605, 'close': 0.93619, 'high': 0.93619, 'low': 0.93594, 'vol': 331.0, 'quoteId': 5, 'symbol': 'AUDCAD'}}
+2023-01-18 20:57:59,692 : DEBUG : Thread-7 (candle_processor) : trading_accounts Start step
+2023-01-18 20:57:59,692 : INFO : Thread-7 (candle_processor) : trading_accounts Session step: 802
+2023-01-18 20:57:59,818 : INFO : Thread-7 (candle_processor) : xAPIConnector 
+Sent: b'{"command": "getTickPrices", "arguments": {"level": 0, "symbols": ["AUDCAD"], "timestamp": 1674071820000}}'
+2023-01-18 20:57:59,985 : INFO : Thread-7 (candle_processor) : trading_accounts Step count (803) > long_ma (500)
+   Is bought: False
+   Is short: False
+   Previous: 
+  Time: 2023-01-18 20:56:00 
+  Short_ma: 0.9362116666666666
+       Long_ma: 0.9393357285429135
+   Current:  
+  Time: 2023-01-18 20:57:00 
+   Short_ma: 0.936185
+  Long_ma: 0.9393314970059873
+2023-01-18 20:58:00,016 : INFO : Thread-7 (candle_processor) : trading_accounts Down Crossover
+2023-01-18 20:58:00,048 : INFO : Thread-7 (candle_processor) : trading_accounts Crossover angle too small
+2023-01-18 20:58:00,079 : INFO : Thread-7 (candle_processor) : trading_accounts   Angle: -2.1423970782476567e-08
+2023-01-18 20:58:00,110 : INFO : Thread-7 (candle_processor) : trading_accounts   Min angle: 5.0
+2023-01-18 20:58:00,142 : DEBUG : Thread-7 (candle_processor) : trading_accounts End step
+2023-01-18 20:58:00,329 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674071880940}}
+2023-01-18 20:58:03,333 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674071883940}}
+2023-01-18 20:58:06,324 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674071886941}}
+2023-01-18 20:58:09,331 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674071889941}}
+2023-01-18 20:58:12,320 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674071892941}}
+2023-01-18 20:58:15,329 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674071895941}}
+2023-01-18 20:58:18,333 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674071898942}}
+2023-01-18 20:58:21,328 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674071901941}}
+2023-01-18 20:58:24,339 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674071904941}}
+2023-01-18 20:58:27,323 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674071907941}}
+2023-01-18 20:58:30,327 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674071910941}}
+2023-01-18 20:58:33,321 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674071913941}}
+2023-01-18 20:58:36,313 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674071916931}}
+2023-01-18 20:58:39,328 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674071919941}}
+2023-01-18 20:58:42,325 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674071922941}}
+2023-01-18 20:58:45,319 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674071925941}}
+2023-01-18 20:58:48,330 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674071928941}}
+2023-01-18 20:58:51,324 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674071931941}}
+2023-01-18 20:58:54,325 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674071934941}}
+2023-01-18 20:58:57,326 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674071937940}}
+2023-01-18 20:58:59,919 : INFO : Thread-9 (candle_processor) : trading_accounts Candle
+2023-01-18 20:58:59,934 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'candle', 'data': {'ctm': 1674071880000, 'ctmString': 'Jan 18, 2023, 8:58:00 PM', 'open': 0.9362, 'close': 0.93649, 'high': 0.9365, 'low': 0.9362, 'vol': 410.0, 'quoteId': 5, 'symbol': 'AUDCAD'}}
+2023-01-18 20:59:00,012 : DEBUG : Thread-9 (candle_processor) : trading_accounts Start step
+2023-01-18 20:59:00,028 : INFO : Thread-9 (candle_processor) : trading_accounts Session step: 803
+2023-01-18 20:59:00,138 : INFO : Thread-9 (candle_processor) : xAPIConnector 
+Sent: b'{"command": "getTickPrices", "arguments": {"level": 0, "symbols": ["AUDCAD"], "timestamp": 1674071880000}}'
+2023-01-18 20:59:00,309 : INFO : Thread-9 (candle_processor) : trading_accounts Step count (804) > long_ma (500)
+   Is bought: False
+   Is short: False
+   Previous: 
+  Time: 2023-01-18 20:57:00 
+  Short_ma: 0.936185
+       Long_ma: 0.9393314970059873
+   Current:  
+  Time: 2023-01-18 20:58:00 
+   Short_ma: 0.9362033333333333
+  Long_ma: 0.9393276846307378
+2023-01-18 20:59:00,324 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674071940951}}
+2023-01-18 20:59:00,339 : INFO : Thread-9 (candle_processor) : trading_accounts Down Crossover
+2023-01-18 20:59:00,417 : INFO : Thread-9 (candle_processor) : trading_accounts Crossover angle too small
+2023-01-18 20:59:00,449 : INFO : Thread-9 (candle_processor) : trading_accounts   Angle: 2.11475939352764e-08
+2023-01-18 20:59:00,480 : INFO : Thread-9 (candle_processor) : trading_accounts   Min angle: 5.0
+2023-01-18 20:59:00,512 : DEBUG : Thread-9 (candle_processor) : trading_accounts End step
+2023-01-18 20:59:03,322 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674071943941}}
+2023-01-18 20:59:06,329 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674071946942}}
+2023-01-18 20:59:09,331 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674071949941}}
+2023-01-18 20:59:12,340 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674071952949}}
+2023-01-18 20:59:15,326 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674071955941}}
+2023-01-18 20:59:18,323 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674071958941}}
+2023-01-18 20:59:21,330 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674071961941}}
+2023-01-18 20:59:24,318 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674071964941}}
+2023-01-18 20:59:27,333 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674071967941}}
+2023-01-18 20:59:30,317 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674071970941}}
+2023-01-18 20:59:33,322 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674071973941}}
+2023-01-18 20:59:36,325 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674071976940}}
+2023-01-18 20:59:39,322 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674071979941}}
+2023-01-18 20:59:42,328 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674071982941}}
+2023-01-18 20:59:45,324 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674071985941}}
+2023-01-18 20:59:48,351 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674071988957}}
+2023-01-18 20:59:51,320 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674071991941}}
+2023-01-18 20:59:54,321 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674071994943}}
+2023-01-18 20:59:57,327 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674071997941}}
+2023-01-18 21:00:00,328 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072000941}}
+2023-01-18 21:00:00,849 : INFO : Thread-11 (candle_processor) : trading_accounts Candle
+2023-01-18 21:00:00,864 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'candle', 'data': {'ctm': 1674071940000, 'ctmString': 'Jan 18, 2023, 8:59:00 PM', 'open': 0.93648, 'close': 0.93661, 'high': 0.93667, 'low': 0.93637, 'vol': 476.0, 'quoteId': 5, 'symbol': 'AUDCAD'}}
+2023-01-18 21:00:00,909 : DEBUG : Thread-11 (candle_processor) : trading_accounts Start step
+2023-01-18 21:00:00,909 : INFO : Thread-11 (candle_processor) : trading_accounts Session step: 804
+2023-01-18 21:00:01,003 : INFO : Thread-11 (candle_processor) : xAPIConnector 
+Sent: b'{"command": "getTickPrices", "arguments": {"level": 0, "symbols": ["AUDCAD"], "timestamp": 1674071940000}}'
+2023-01-18 21:00:01,173 : INFO : Thread-11 (candle_processor) : trading_accounts Step count (805) > long_ma (500)
+   Is bought: False
+   Is short: False
+   Previous: 
+  Time: 2023-01-18 20:58:00 
+  Short_ma: 0.9362033333333333
+       Long_ma: 0.9393276846307378
+   Current:  
+  Time: 2023-01-18 20:59:00 
+   Short_ma: 0.9362550000000001
+  Long_ma: 0.939324411177644
+2023-01-18 21:00:01,204 : INFO : Thread-11 (candle_processor) : trading_accounts Down Crossover
+2023-01-18 21:00:01,235 : INFO : Thread-11 (candle_processor) : trading_accounts Crossover angle too small
+2023-01-18 21:00:01,266 : INFO : Thread-11 (candle_processor) : trading_accounts   Angle: 5.246394980375518e-08
+2023-01-18 21:00:01,297 : INFO : Thread-11 (candle_processor) : trading_accounts   Min angle: 5.0
+2023-01-18 21:00:01,313 : DEBUG : Thread-11 (candle_processor) : trading_accounts End step
+2023-01-18 21:00:03,329 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072003941}}
+2023-01-18 21:00:06,324 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072006941}}
+2023-01-18 21:00:09,331 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072009940}}
+2023-01-18 21:00:12,325 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072012941}}
+2023-01-18 21:00:15,328 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072015941}}
+2023-01-18 21:00:18,319 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072018941}}
+2023-01-18 21:00:21,322 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072021941}}
+2023-01-18 21:00:24,329 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072024941}}
+2023-01-18 21:00:27,323 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072027941}}
+2023-01-18 21:00:27,491 : INFO : Thread-1 (ping_client) : xAPIConnector 
+Sent: b'{"command": "ping", "arguments": {}}'
+2023-01-18 21:00:27,662 : INFO : Thread-1 (ping_client) : trading_accounts Ping sent | True
+2023-01-18 21:00:30,320 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072030941}}
+2023-01-18 21:00:33,328 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072033941}}
+2023-01-18 21:00:36,316 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072036941}}
+2023-01-18 21:00:39,325 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072039941}}
+2023-01-18 21:00:42,327 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072042940}}
+2023-01-18 21:00:45,317 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072045941}}
+2023-01-18 21:00:48,322 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072048941}}
+2023-01-18 21:00:51,321 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072051941}}
+2023-01-18 21:00:54,328 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072054941}}
+2023-01-18 21:00:57,313 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072057940}}
+2023-01-18 21:00:59,817 : INFO : Thread-13 (candle_processor) : trading_accounts Candle
+2023-01-18 21:00:59,832 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'candle', 'data': {'ctm': 1674072000000, 'ctmString': 'Jan 18, 2023, 9:00:00 PM', 'open': 0.93657, 'close': 0.93642, 'high': 0.93657, 'low': 0.93632, 'vol': 336.0, 'quoteId': 5, 'symbol': 'AUDCAD'}}
+2023-01-18 21:00:59,925 : DEBUG : Thread-13 (candle_processor) : trading_accounts Start step
+2023-01-18 21:00:59,941 : INFO : Thread-13 (candle_processor) : trading_accounts Session step: 805
+2023-01-18 21:01:00,049 : INFO : Thread-13 (candle_processor) : xAPIConnector 
+Sent: b'{"command": "getTickPrices", "arguments": {"level": 0, "symbols": ["AUDCAD"], "timestamp": 1674072000000}}'
+2023-01-18 21:01:00,222 : INFO : Thread-13 (candle_processor) : trading_accounts Step count (806) > long_ma (500)
+   Is bought: False
+   Is short: False
+   Previous: 
+  Time: 2023-01-18 20:59:00 
+  Short_ma: 0.9362550000000001
+       Long_ma: 0.939324411177644
+   Current:  
+  Time: 2023-01-18 21:00:00 
+   Short_ma: 0.9362983333333333
+  Long_ma: 0.9393207185628736
+2023-01-18 21:01:00,253 : INFO : Thread-13 (candle_processor) : trading_accounts Down Crossover
+2023-01-18 21:01:00,284 : INFO : Thread-13 (candle_processor) : trading_accounts Crossover angle too small
+2023-01-18 21:01:00,315 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072060941}}
+2023-01-18 21:01:00,315 : INFO : Thread-13 (candle_processor) : trading_accounts   Angle: 4.490647256570645e-08
+2023-01-18 21:01:00,407 : INFO : Thread-13 (candle_processor) : trading_accounts   Min angle: 5.0
+2023-01-18 21:01:00,438 : DEBUG : Thread-13 (candle_processor) : trading_accounts End step
+2023-01-18 21:01:03,321 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072063940}}
+2023-01-18 21:01:06,330 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072066941}}
+2023-01-18 21:01:09,311 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072069941}}
+2023-01-18 21:01:12,314 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072072940}}
+2023-01-18 21:01:15,324 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072075941}}
+2023-01-18 21:01:18,312 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072078941}}
+2023-01-18 21:01:21,316 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072081941}}
+2023-01-18 21:01:24,445 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072085058}}
+2023-01-18 21:01:27,312 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072087941}}
+2023-01-18 21:01:30,321 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072090941}}
+2023-01-18 21:01:33,320 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072093941}}
+2023-01-18 21:01:36,318 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072096941}}
+2023-01-18 21:01:39,315 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072099941}}
+2023-01-18 21:01:42,323 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072102940}}
+2023-01-18 21:01:45,319 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072105942}}
+2023-01-18 21:01:48,313 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072108940}}
+2023-01-18 21:01:51,317 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072111941}}
+2023-01-18 21:01:54,325 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072114940}}
+2023-01-18 21:01:57,319 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072117941}}
+2023-01-18 21:01:59,914 : INFO : Thread-15 (candle_processor) : trading_accounts Candle
+2023-01-18 21:01:59,914 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'candle', 'data': {'ctm': 1674072060000, 'ctmString': 'Jan 18, 2023, 9:01:00 PM', 'open': 0.93639, 'close': 0.9365, 'high': 0.9365, 'low': 0.9363, 'vol': 369.0, 'quoteId': 5, 'symbol': 'AUDCAD'}}
+2023-01-18 21:01:59,977 : DEBUG : Thread-15 (candle_processor) : trading_accounts Start step
+2023-01-18 21:01:59,993 : INFO : Thread-15 (candle_processor) : trading_accounts Session step: 806
+2023-01-18 21:02:00,102 : INFO : Thread-15 (candle_processor) : xAPIConnector 
+Sent: b'{"command": "getTickPrices", "arguments": {"level": 0, "symbols": ["AUDCAD"], "timestamp": 1674072060000}}'
+2023-01-18 21:02:00,274 : INFO : Thread-15 (candle_processor) : trading_accounts Step count (807) > long_ma (500)
+   Is bought: False
+   Is short: False
+   Previous: 
+  Time: 2023-01-18 21:00:00 
+  Short_ma: 0.9362983333333333
+       Long_ma: 0.9393207185628736
+   Current:  
+  Time: 2023-01-18 21:01:00 
+   Short_ma: 0.9363766666666667
+  Long_ma: 0.9393170658682628
+2023-01-18 21:02:00,304 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072120941}}
+2023-01-18 21:02:00,304 : INFO : Thread-15 (candle_processor) : trading_accounts Down Crossover
+2023-01-18 21:02:00,398 : INFO : Thread-15 (candle_processor) : trading_accounts Crossover angle too small
+2023-01-18 21:02:00,429 : INFO : Thread-15 (candle_processor) : trading_accounts   Angle: 7.829088967071987e-08
+2023-01-18 21:02:00,460 : INFO : Thread-15 (candle_processor) : trading_accounts   Min angle: 5.0
+2023-01-18 21:02:00,491 : DEBUG : Thread-15 (candle_processor) : trading_accounts End step
+2023-01-18 21:02:03,313 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072123941}}
+2023-01-18 21:02:06,314 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072126941}}
+2023-01-18 21:02:09,324 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072129941}}
+2023-01-18 21:02:12,312 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072132941}}
+2023-01-18 21:02:15,324 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072135941}}
+2023-01-18 21:02:18,316 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072138941}}
+2023-01-18 21:02:21,322 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072141941}}
+2023-01-18 21:02:24,323 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072144941}}
+2023-01-18 21:02:27,319 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072147941}}
+2023-01-18 21:02:30,313 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072150941}}
+2023-01-18 21:02:33,315 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072153941}}
+2023-01-18 21:02:36,322 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072156941}}
+2023-01-18 21:02:39,327 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072159941}}
+2023-01-18 21:02:42,311 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072162941}}
+2023-01-18 21:02:45,318 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072165941}}
+2023-01-18 21:02:48,306 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072168940}}
+2023-01-18 21:02:51,316 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072171941}}
+2023-01-18 21:02:54,320 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072174941}}
+2023-01-18 21:02:57,308 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072177940}}
+2023-01-18 21:02:59,812 : INFO : Thread-17 (candle_processor) : trading_accounts Candle
+2023-01-18 21:02:59,828 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'candle', 'data': {'ctm': 1674072120000, 'ctmString': 'Jan 18, 2023, 9:02:00 PM', 'open': 0.93648, 'close': 0.93638, 'high': 0.9365, 'low': 0.93638, 'vol': 335.0, 'quoteId': 5, 'symbol': 'AUDCAD'}}
+2023-01-18 21:02:59,890 : DEBUG : Thread-17 (candle_processor) : trading_accounts Start step
+2023-01-18 21:02:59,890 : INFO : Thread-17 (candle_processor) : trading_accounts Session step: 807
+2023-01-18 21:02:59,986 : INFO : Thread-17 (candle_processor) : xAPIConnector 
+Sent: b'{"command": "getTickPrices", "arguments": {"level": 0, "symbols": ["AUDCAD"], "timestamp": 1674072120000}}'
+2023-01-18 21:03:00,157 : INFO : Thread-17 (candle_processor) : trading_accounts Step count (808) > long_ma (500)
+   Is bought: False
+   Is short: False
+   Previous: 
+  Time: 2023-01-18 21:01:00 
+  Short_ma: 0.9363766666666667
+       Long_ma: 0.9393170658682628
+   Current:  
+  Time: 2023-01-18 21:02:00 
+   Short_ma: 0.9364316666666666
+  Long_ma: 0.9393128542914165
+2023-01-18 21:03:00,189 : INFO : Thread-17 (candle_processor) : trading_accounts Down Crossover
+2023-01-18 21:03:00,220 : INFO : Thread-17 (candle_processor) : trading_accounts Crossover angle too small
+2023-01-18 21:03:00,251 : INFO : Thread-17 (candle_processor) : trading_accounts   Angle: 5.654289085991012e-08
+2023-01-18 21:03:00,283 : INFO : Thread-17 (candle_processor) : trading_accounts   Min angle: 5.0
+2023-01-18 21:03:00,298 : DEBUG : Thread-17 (candle_processor) : trading_accounts End step
+2023-01-18 21:03:00,314 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072180950}}
+2023-01-18 21:03:03,330 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072183941}}
+2023-01-18 21:03:06,313 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072186940}}
+2023-01-18 21:03:09,321 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072189941}}
+2023-01-18 21:03:12,345 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072192940}}
+2023-01-18 21:03:15,319 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072195951}}
+2023-01-18 21:03:18,315 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072198940}}
+2023-01-18 21:03:21,313 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072201941}}
+2023-01-18 21:03:24,312 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072204941}}
+2023-01-18 21:03:27,316 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072207942}}
+2023-01-18 21:03:30,321 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072210941}}
+2023-01-18 21:03:33,313 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072213940}}
+2023-01-18 21:03:36,314 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072216940}}
+2023-01-18 21:03:39,319 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072219941}}
+2023-01-18 21:03:42,313 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072222941}}
+2023-01-18 21:03:45,314 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072225941}}
+2023-01-18 21:03:48,314 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072228941}}
+2023-01-18 21:03:51,304 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072231940}}
+2023-01-18 21:03:54,322 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072234951}}
+2023-01-18 21:03:57,305 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072237941}}
+2023-01-18 21:03:59,999 : INFO : Thread-19 (candle_processor) : trading_accounts Candle
+2023-01-18 21:04:00,014 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'candle', 'data': {'ctm': 1674072180000, 'ctmString': 'Jan 18, 2023, 9:03:00 PM', 'open': 0.93636, 'close': 0.93631, 'high': 0.93641, 'low': 0.93626, 'vol': 394.0, 'quoteId': 5, 'symbol': 'AUDCAD'}}
+2023-01-18 21:04:00,091 : DEBUG : Thread-19 (candle_processor) : trading_accounts Start step
+2023-01-18 21:04:00,107 : INFO : Thread-19 (candle_processor) : trading_accounts Session step: 808
+2023-01-18 21:04:00,215 : INFO : Thread-19 (candle_processor) : xAPIConnector 
+Sent: b'{"command": "getTickPrices", "arguments": {"level": 0, "symbols": ["AUDCAD"], "timestamp": 1674072180000}}'
+2023-01-18 21:04:00,308 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072240941}}
+2023-01-18 21:04:00,370 : INFO : Thread-19 (candle_processor) : trading_accounts Step count (809) > long_ma (500)
+   Is bought: False
+   Is short: False
+   Previous: 
+  Time: 2023-01-18 21:02:00 
+  Short_ma: 0.9364316666666666
+       Long_ma: 0.9393128542914165
+   Current:  
+  Time: 2023-01-18 21:03:00 
+   Short_ma: 0.9364516666666667
+  Long_ma: 0.9393086427145703
+2023-01-18 21:04:00,400 : INFO : Thread-19 (candle_processor) : trading_accounts Down Crossover
+2023-01-18 21:04:00,431 : INFO : Thread-19 (candle_processor) : trading_accounts Crossover angle too small
+2023-01-18 21:04:00,462 : INFO : Thread-19 (candle_processor) : trading_accounts   Angle: 2.3120352810923232e-08
+2023-01-18 21:04:00,493 : INFO : Thread-19 (candle_processor) : trading_accounts   Min angle: 5.0
+2023-01-18 21:04:00,525 : DEBUG : Thread-19 (candle_processor) : trading_accounts End step
+2023-01-18 21:04:03,317 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072243941}}
+2023-01-18 21:04:06,315 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072246931}}
+2023-01-18 21:04:09,308 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072249941}}
+2023-01-18 21:04:12,310 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072252941}}
+2023-01-18 21:04:15,309 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072255942}}
+2023-01-18 21:04:18,316 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072258941}}
+2023-01-18 21:04:21,319 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072261941}}
+2023-01-18 21:04:24,310 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072264941}}
+2023-01-18 21:04:27,309 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072267941}}
+2023-01-18 21:04:30,312 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072270941}}
+2023-01-18 21:04:33,307 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072273941}}
+2023-01-18 21:04:36,312 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072276941}}
+2023-01-18 21:04:39,317 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072279941}}
+2023-01-18 21:04:42,316 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072282942}}
+2023-01-18 21:04:45,306 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072285941}}
+2023-01-18 21:04:48,316 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072288940}}
+2023-01-18 21:04:51,314 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072291941}}
+2023-01-18 21:04:54,306 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072294941}}
+2023-01-18 21:04:57,329 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072297941}}
+2023-01-18 21:05:00,317 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072300940}}
+2023-01-18 21:05:00,508 : INFO : Thread-21 (candle_processor) : trading_accounts Candle
+2023-01-18 21:05:00,524 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'candle', 'data': {'ctm': 1674072240000, 'ctmString': 'Jan 18, 2023, 9:04:00 PM', 'open': 0.93631, 'close': 0.93635, 'high': 0.93639, 'low': 0.93624, 'vol': 448.0, 'quoteId': 5, 'symbol': 'AUDCAD'}}
+2023-01-18 21:05:00,618 : DEBUG : Thread-21 (candle_processor) : trading_accounts Start step
+2023-01-18 21:05:00,634 : INFO : Thread-21 (candle_processor) : trading_accounts Session step: 809
+2023-01-18 21:05:00,745 : INFO : Thread-21 (candle_processor) : xAPIConnector 
+Sent: b'{"command": "getTickPrices", "arguments": {"level": 0, "symbols": ["AUDCAD"], "timestamp": 1674072240000}}'
+2023-01-18 21:05:00,916 : INFO : Thread-21 (candle_processor) : trading_accounts Step count (810) > long_ma (500)
+   Is bought: False
+   Is short: False
+   Previous: 
+  Time: 2023-01-18 21:03:00 
+  Short_ma: 0.9364516666666667
+       Long_ma: 0.9393086427145703
+   Current:  
+  Time: 2023-01-18 21:04:00 
+   Short_ma: 0.9364283333333333
+  Long_ma: 0.9393045109780433
+2023-01-18 21:05:00,948 : INFO : Thread-21 (candle_processor) : trading_accounts Down Crossover
+2023-01-18 21:05:00,980 : INFO : Thread-21 (candle_processor) : trading_accounts Crossover angle too small
+2023-01-18 21:05:01,012 : INFO : Thread-21 (candle_processor) : trading_accounts   Angle: -1.833617428203571e-08
+2023-01-18 21:05:01,043 : INFO : Thread-21 (candle_processor) : trading_accounts   Min angle: 5.0
+2023-01-18 21:05:01,074 : DEBUG : Thread-21 (candle_processor) : trading_accounts End step
+2023-01-18 21:05:03,315 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072303941}}
+2023-01-18 21:05:06,307 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072306941}}
+2023-01-18 21:05:09,316 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072309941}}
+2023-01-18 21:05:12,309 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072312941}}
+2023-01-18 21:05:15,310 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072315941}}
+2023-01-18 21:05:18,314 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072318941}}
+2023-01-18 21:05:21,304 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072321941}}
+2023-01-18 21:05:24,304 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072324940}}
+2023-01-18 21:05:27,313 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072327951}}
+2023-01-18 21:05:27,737 : INFO : Thread-1 (ping_client) : xAPIConnector 
+Sent: b'{"command": "ping", "arguments": {}}'
+2023-01-18 21:05:27,909 : INFO : Thread-1 (ping_client) : trading_accounts Ping sent | True
+2023-01-18 21:05:30,317 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072330940}}
+2023-01-18 21:05:33,310 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072333941}}
+2023-01-18 21:05:36,314 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072336941}}
+2023-01-18 21:05:39,312 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072339941}}
+2023-01-18 21:05:42,311 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072342941}}
+2023-01-18 21:05:45,303 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072345940}}
+2023-01-18 21:05:48,312 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072348941}}
+2023-01-18 21:05:51,313 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072351941}}
+2023-01-18 21:05:54,312 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072354941}}
+2023-01-18 21:05:57,312 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072357941}}
+2023-01-18 21:06:00,309 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072360941}}
+2023-01-18 21:06:00,434 : INFO : Thread-23 (candle_processor) : trading_accounts Candle
+2023-01-18 21:06:00,434 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'candle', 'data': {'ctm': 1674072300000, 'ctmString': 'Jan 18, 2023, 9:05:00 PM', 'open': 0.93634, 'close': 0.93632, 'high': 0.93638, 'low': 0.9363, 'vol': 381.0, 'quoteId': 5, 'symbol': 'AUDCAD'}}
+2023-01-18 21:06:00,482 : DEBUG : Thread-23 (candle_processor) : trading_accounts Start step
+2023-01-18 21:06:00,497 : INFO : Thread-23 (candle_processor) : trading_accounts Session step: 810
+2023-01-18 21:06:00,607 : INFO : Thread-23 (candle_processor) : xAPIConnector 
+Sent: b'{"command": "getTickPrices", "arguments": {"level": 0, "symbols": ["AUDCAD"], "timestamp": 1674072300000}}'
+2023-01-18 21:06:00,781 : INFO : Thread-23 (candle_processor) : trading_accounts Step count (811) > long_ma (500)
+   Is bought: False
+   Is short: False
+   Previous: 
+  Time: 2023-01-18 21:04:00 
+  Short_ma: 0.9364283333333333
+       Long_ma: 0.9393045109780433
+   Current:  
+  Time: 2023-01-18 21:05:00 
+   Short_ma: 0.9363800000000001
+  Long_ma: 0.9393006187624746
+2023-01-18 21:06:00,812 : INFO : Thread-23 (candle_processor) : trading_accounts Down Crossover
+2023-01-18 21:06:00,843 : INFO : Thread-23 (candle_processor) : trading_accounts Crossover angle too small
+2023-01-18 21:06:00,859 : INFO : Thread-23 (candle_processor) : trading_accounts   Angle: -4.243814141246762e-08
+2023-01-18 21:06:00,891 : INFO : Thread-23 (candle_processor) : trading_accounts   Min angle: 5.0
+2023-01-18 21:06:00,923 : DEBUG : Thread-23 (candle_processor) : trading_accounts End step
+2023-01-18 21:06:03,312 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072363941}}
+2023-01-18 21:06:06,313 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072366941}}
+2023-01-18 21:06:09,308 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072369941}}
+2023-01-18 21:06:12,311 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072372941}}
+2023-01-18 21:06:15,298 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072375941}}
+2023-01-18 21:06:18,311 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072378942}}
+2023-01-18 21:06:21,301 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072381941}}
+2023-01-18 21:06:24,302 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072384941}}
+2023-01-18 21:06:27,299 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072387941}}
+2023-01-18 21:06:30,303 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072390941}}
+2023-01-18 21:06:33,301 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072393941}}
+2023-01-18 21:06:36,308 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072396940}}
+2023-01-18 21:06:39,306 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072399941}}
+2023-01-18 21:06:42,315 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072402941}}
+2023-01-18 21:06:45,310 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072405949}}
+2023-01-18 21:06:48,319 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072408940}}
+2023-01-18 21:06:51,298 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072411940}}
+2023-01-18 21:06:54,308 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072414941}}
+2023-01-18 21:06:57,298 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072417940}}
+2023-01-18 21:06:59,572 : INFO : Thread-25 (candle_processor) : trading_accounts Candle
+2023-01-18 21:06:59,588 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'candle', 'data': {'ctm': 1674072360000, 'ctmString': 'Jan 18, 2023, 9:06:00 PM', 'open': 0.93631, 'close': 0.93629, 'high': 0.9364, 'low': 0.93626, 'vol': 428.0, 'quoteId': 5, 'symbol': 'AUDCAD'}}
+2023-01-18 21:06:59,650 : DEBUG : Thread-25 (candle_processor) : trading_accounts Start step
+2023-01-18 21:06:59,665 : INFO : Thread-25 (candle_processor) : trading_accounts Session step: 811
+2023-01-18 21:06:59,791 : INFO : Thread-25 (candle_processor) : xAPIConnector 
+Sent: b'{"command": "getTickPrices", "arguments": {"level": 0, "symbols": ["AUDCAD"], "timestamp": 1674072360000}}'
+2023-01-18 21:06:59,963 : INFO : Thread-25 (candle_processor) : trading_accounts Step count (812) > long_ma (500)
+   Is bought: False
+   Is short: False
+   Previous: 
+  Time: 2023-01-18 21:05:00 
+  Short_ma: 0.9363800000000001
+       Long_ma: 0.9393006187624746
+   Current:  
+  Time: 2023-01-18 21:06:00 
+   Short_ma: 0.9363583333333333
+  Long_ma: 0.9392966067864267
+2023-01-18 21:07:00,008 : INFO : Thread-25 (candle_processor) : trading_accounts Down Crossover
+2023-01-18 21:07:00,040 : INFO : Thread-25 (candle_processor) : trading_accounts Crossover angle too small
+2023-01-18 21:07:00,056 : INFO : Thread-25 (candle_processor) : trading_accounts   Angle: -1.6858987684510964e-08
+2023-01-18 21:07:00,088 : INFO : Thread-25 (candle_processor) : trading_accounts   Min angle: 5.0
+2023-01-18 21:07:00,118 : DEBUG : Thread-25 (candle_processor) : trading_accounts End step
+2023-01-18 21:07:00,305 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072420941}}
+2023-01-18 21:07:03,299 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072423941}}
+2023-01-18 21:07:06,306 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072426941}}
+2023-01-18 21:07:09,303 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072429940}}
+2023-01-18 21:07:12,300 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072432940}}
+2023-01-18 21:07:15,314 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072435951}}
+2023-01-18 21:07:18,303 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072438941}}
+2023-01-18 21:07:21,298 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072441941}}
+2023-01-18 21:07:24,301 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072444941}}
+2023-01-18 21:07:27,308 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072447941}}
+2023-01-18 21:07:30,300 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072450940}}
+2023-01-18 21:07:33,298 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072453940}}
+2023-01-18 21:07:36,312 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072456941}}
+2023-01-18 21:07:39,306 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072459941}}
+2023-01-18 21:07:42,304 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072462941}}
+2023-01-18 21:07:45,298 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072465941}}
+2023-01-18 21:07:48,297 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072468941}}
+2023-01-18 21:07:51,299 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072471941}}
+2023-01-18 21:07:54,309 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072474941}}
+2023-01-18 21:07:57,297 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072477941}}
+2023-01-18 21:07:59,596 : INFO : Thread-27 (candle_processor) : trading_accounts Candle
+2023-01-18 21:07:59,612 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'candle', 'data': {'ctm': 1674072420000, 'ctmString': 'Jan 18, 2023, 9:07:00 PM', 'open': 0.93628, 'close': 0.93631, 'high': 0.93635, 'low': 0.93623, 'vol': 409.0, 'quoteId': 5, 'symbol': 'AUDCAD'}}
+2023-01-18 21:07:59,692 : DEBUG : Thread-27 (candle_processor) : trading_accounts Start step
+2023-01-18 21:07:59,708 : INFO : Thread-27 (candle_processor) : trading_accounts Session step: 812
+2023-01-18 21:07:59,818 : INFO : Thread-27 (candle_processor) : xAPIConnector 
+Sent: b'{"command": "getTickPrices", "arguments": {"level": 0, "symbols": ["AUDCAD"], "timestamp": 1674072420000}}'
+2023-01-18 21:07:59,992 : INFO : Thread-27 (candle_processor) : trading_accounts Step count (813) > long_ma (500)
+   Is bought: False
+   Is short: False
+   Previous: 
+  Time: 2023-01-18 21:06:00 
+  Short_ma: 0.9363583333333333
+       Long_ma: 0.9392966067864267
+   Current:  
+  Time: 2023-01-18 21:07:00 
+   Short_ma: 0.9363266666666665
+  Long_ma: 0.9392926546906183
+2023-01-18 21:08:00,023 : INFO : Thread-27 (candle_processor) : trading_accounts Down Crossover
+2023-01-18 21:08:00,054 : INFO : Thread-27 (candle_processor) : trading_accounts Crossover angle too small
+2023-01-18 21:08:00,084 : INFO : Thread-27 (candle_processor) : trading_accounts   Angle: -2.6465465686683544e-08
+2023-01-18 21:08:00,100 : INFO : Thread-27 (candle_processor) : trading_accounts   Min angle: 5.0
+2023-01-18 21:08:00,132 : DEBUG : Thread-27 (candle_processor) : trading_accounts End step
+2023-01-18 21:08:00,305 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072480941}}
+2023-01-18 21:08:03,310 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072483940}}
+2023-01-18 21:08:06,323 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072486962}}
+2023-01-18 21:08:09,300 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072489941}}
+2023-01-18 21:08:12,301 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072492940}}
+2023-01-18 21:08:15,314 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072495951}}
+2023-01-18 21:08:18,305 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072498941}}
+2023-01-18 21:08:21,305 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072501941}}
+2023-01-18 21:08:24,298 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072504941}}
+2023-01-18 21:08:27,296 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072507941}}
+2023-01-18 21:08:30,297 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072510940}}
+2023-01-18 21:08:33,299 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072513941}}
+2023-01-18 21:08:36,293 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072516941}}
+2023-01-18 21:08:39,293 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072519941}}
+2023-01-18 21:08:42,305 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072522941}}
+2023-01-18 21:08:45,291 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072525941}}
+2023-01-18 21:08:48,292 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072528941}}
+2023-01-18 21:08:51,304 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072531941}}
+2023-01-18 21:08:54,301 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072534941}}
+2023-01-18 21:08:57,299 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072537941}}
+2023-01-18 21:08:59,732 : INFO : Thread-29 (candle_processor) : trading_accounts Candle
+2023-01-18 21:08:59,732 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'candle', 'data': {'ctm': 1674072480000, 'ctmString': 'Jan 18, 2023, 9:08:00 PM', 'open': 0.9363, 'close': 0.9362, 'high': 0.9363, 'low': 0.93619, 'vol': 335.0, 'quoteId': 5, 'symbol': 'AUDCAD'}}
+2023-01-18 21:08:59,795 : DEBUG : Thread-29 (candle_processor) : trading_accounts Start step
+2023-01-18 21:08:59,811 : INFO : Thread-29 (candle_processor) : trading_accounts Session step: 813
+2023-01-18 21:08:59,923 : INFO : Thread-29 (candle_processor) : xAPIConnector 
+Sent: b'{"command": "getTickPrices", "arguments": {"level": 0, "symbols": ["AUDCAD"], "timestamp": 1674072480000}}'
+2023-01-18 21:09:00,095 : INFO : Thread-29 (candle_processor) : trading_accounts Step count (814) > long_ma (500)
+   Is bought: False
+   Is short: False
+   Previous: 
+  Time: 2023-01-18 21:07:00 
+  Short_ma: 0.9363266666666665
+       Long_ma: 0.9392926546906183
+   Current:  
+  Time: 2023-01-18 21:08:00 
+   Short_ma: 0.9362966666666668
+  Long_ma: 0.9392886427145705
+2023-01-18 21:09:00,126 : INFO : Thread-29 (candle_processor) : trading_accounts Down Crossover
+2023-01-18 21:09:00,157 : INFO : Thread-29 (candle_processor) : trading_accounts Crossover angle too small
+2023-01-18 21:09:00,173 : INFO : Thread-29 (candle_processor) : trading_accounts   Angle: -2.481673483883981e-08
+2023-01-18 21:09:00,203 : INFO : Thread-29 (candle_processor) : trading_accounts   Min angle: 5.0
+2023-01-18 21:09:00,219 : DEBUG : Thread-29 (candle_processor) : trading_accounts End step
+2023-01-18 21:09:00,298 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072540941}}
+2023-01-18 21:09:03,295 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072543940}}
+2023-01-18 21:09:06,313 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072546951}}
+2023-01-18 21:09:09,300 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072549941}}
+2023-01-18 21:09:12,294 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072552941}}
+2023-01-18 21:09:15,291 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072555941}}
+2023-01-18 21:09:18,300 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072558941}}
+2023-01-18 21:09:21,298 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072561941}}
+2023-01-18 21:09:24,290 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072564941}}
+2023-01-18 21:09:27,297 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072567941}}
+2023-01-18 21:09:30,303 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072570941}}
+2023-01-18 21:09:33,293 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072573941}}
+2023-01-18 21:09:36,300 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072576941}}
+2023-01-18 21:09:39,303 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072579941}}
+2023-01-18 21:09:42,297 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072582941}}
+2023-01-18 21:09:45,302 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072585941}}
+2023-01-18 21:09:48,301 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072588941}}
+2023-01-18 21:09:51,297 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072591931}}
+2023-01-18 21:09:54,293 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072594941}}
+2023-01-18 21:09:57,299 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072597941}}
+2023-01-18 21:09:59,513 : INFO : Thread-31 (candle_processor) : trading_accounts Candle
+2023-01-18 21:09:59,528 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'candle', 'data': {'ctm': 1674072540000, 'ctmString': 'Jan 18, 2023, 9:09:00 PM', 'open': 0.9362, 'close': 0.93609, 'high': 0.93626, 'low': 0.93605, 'vol': 396.0, 'quoteId': 5, 'symbol': 'AUDCAD'}}
+2023-01-18 21:09:59,591 : DEBUG : Thread-31 (candle_processor) : trading_accounts Start step
+2023-01-18 21:09:59,606 : INFO : Thread-31 (candle_processor) : trading_accounts Session step: 814
+2023-01-18 21:09:59,731 : INFO : Thread-31 (candle_processor) : xAPIConnector 
+Sent: b'{"command": "getTickPrices", "arguments": {"level": 0, "symbols": ["AUDCAD"], "timestamp": 1674072540000}}'
+2023-01-18 21:09:59,905 : INFO : Thread-31 (candle_processor) : trading_accounts Step count (815) > long_ma (500)
+   Is bought: False
+   Is short: False
+   Previous: 
+  Time: 2023-01-18 21:08:00 
+  Short_ma: 0.9362966666666668
+       Long_ma: 0.9392886427145705
+   Current:  
+  Time: 2023-01-18 21:09:00 
+   Short_ma: 0.93626
+  Long_ma: 0.9392846107784425
+2023-01-18 21:09:59,936 : INFO : Thread-31 (candle_processor) : trading_accounts Down Crossover
+2023-01-18 21:09:59,968 : INFO : Thread-31 (candle_processor) : trading_accounts Crossover angle too small
+2023-01-18 21:09:59,999 : INFO : Thread-31 (candle_processor) : trading_accounts   Angle: -3.116387209035857e-08
+2023-01-18 21:10:00,030 : INFO : Thread-31 (candle_processor) : trading_accounts   Min angle: 5.0
+2023-01-18 21:10:00,060 : DEBUG : Thread-31 (candle_processor) : trading_accounts End step
+2023-01-18 21:10:00,297 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072600940}}
+2023-01-18 21:10:03,313 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072603954}}
+2023-01-18 21:10:06,287 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072606931}}
+2023-01-18 21:10:09,298 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072609942}}
+2023-01-18 21:10:12,289 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072612940}}
+2023-01-18 21:10:15,309 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072615950}}
+2023-01-18 21:10:18,298 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072618942}}
+2023-01-18 21:10:21,290 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072621941}}
+2023-01-18 21:10:24,299 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072624940}}
+2023-01-18 21:10:27,302 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072627951}}
+2023-01-18 21:10:27,975 : INFO : Thread-1 (ping_client) : xAPIConnector 
+Sent: b'{"command": "ping", "arguments": {}}'
+2023-01-18 21:10:28,145 : INFO : Thread-1 (ping_client) : trading_accounts Ping sent | True
+2023-01-18 21:10:30,297 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072630941}}
+2023-01-18 21:10:33,299 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072633940}}
+2023-01-18 21:10:36,292 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072636941}}
+2023-01-18 21:10:39,299 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072639941}}
+2023-01-18 21:10:42,312 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072642941}}
+2023-01-18 21:10:45,297 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072645942}}
+2023-01-18 21:10:48,295 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072648941}}
+2023-01-18 21:10:51,290 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072651941}}
+2023-01-18 21:10:54,298 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072654941}}
+2023-01-18 21:10:57,298 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072657941}}
+2023-01-18 21:10:59,675 : INFO : Thread-33 (candle_processor) : trading_accounts Candle
+2023-01-18 21:10:59,691 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'candle', 'data': {'ctm': 1674072600000, 'ctmString': 'Jan 18, 2023, 9:10:00 PM', 'open': 0.9361, 'close': 0.93613, 'high': 0.93615, 'low': 0.93597, 'vol': 497.0, 'quoteId': 5, 'symbol': 'AUDCAD'}}
+2023-01-18 21:10:59,801 : DEBUG : Thread-33 (candle_processor) : trading_accounts Start step
+2023-01-18 21:10:59,817 : INFO : Thread-33 (candle_processor) : trading_accounts Session step: 815
+2023-01-18 21:10:59,928 : INFO : Thread-33 (candle_processor) : xAPIConnector 
+Sent: b'{"command": "getTickPrices", "arguments": {"level": 0, "symbols": ["AUDCAD"], "timestamp": 1674072600000}}'
+2023-01-18 21:11:00,101 : INFO : Thread-33 (candle_processor) : trading_accounts Step count (816) > long_ma (500)
+   Is bought: False
+   Is short: False
+   Previous: 
+  Time: 2023-01-18 21:09:00 
+  Short_ma: 0.93626
+       Long_ma: 0.9392846107784425
+   Current:  
+  Time: 2023-01-18 21:10:00 
+   Short_ma: 0.9362233333333333
+  Long_ma: 0.9392799600798398
+2023-01-18 21:11:00,131 : INFO : Thread-33 (candle_processor) : trading_accounts Down Crossover
+2023-01-18 21:11:00,163 : INFO : Thread-33 (candle_processor) : trading_accounts Crossover angle too small
+2023-01-18 21:11:00,195 : INFO : Thread-33 (candle_processor) : trading_accounts   Angle: -3.05729974515607e-08
+2023-01-18 21:11:00,226 : INFO : Thread-33 (candle_processor) : trading_accounts   Min angle: 5.0
+2023-01-18 21:11:00,257 : DEBUG : Thread-33 (candle_processor) : trading_accounts End step
+2023-01-18 21:11:00,289 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072660941}}
+2023-01-18 21:11:03,293 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072663940}}
+2023-01-18 21:11:06,286 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072666941}}
+2023-01-18 21:11:09,291 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072669940}}
+2023-01-18 21:11:12,294 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072672941}}
+2023-01-18 21:11:15,287 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072675941}}
+2023-01-18 21:11:18,299 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072678941}}
+2023-01-18 21:11:21,303 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072681941}}
+2023-01-18 21:11:24,292 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072684941}}
+2023-01-18 21:11:27,294 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072687941}}
+2023-01-18 21:11:30,292 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072690941}}
+2023-01-18 21:11:33,291 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072693941}}
+2023-01-18 21:11:36,306 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072696940}}
+2023-01-18 21:11:39,303 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072699950}}
+2023-01-18 21:11:42,286 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072702941}}
+2023-01-18 21:11:45,290 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072705941}}
+2023-01-18 21:11:48,297 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072708940}}
+2023-01-18 21:11:51,293 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072711941}}
+2023-01-18 21:11:54,298 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072714941}}
+2023-01-18 21:11:57,298 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072717941}}
+2023-01-18 21:11:59,968 : INFO : Thread-35 (candle_processor) : trading_accounts Candle
+2023-01-18 21:11:59,983 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'candle', 'data': {'ctm': 1674072660000, 'ctmString': 'Jan 18, 2023, 9:11:00 PM', 'open': 0.93615, 'close': 0.93606, 'high': 0.93616, 'low': 0.93606, 'vol': 392.0, 'quoteId': 5, 'symbol': 'AUDCAD'}}
+2023-01-18 21:12:00,030 : DEBUG : Thread-35 (candle_processor) : trading_accounts Start step
+2023-01-18 21:12:00,046 : INFO : Thread-35 (candle_processor) : trading_accounts Session step: 816
+2023-01-18 21:12:00,155 : INFO : Thread-35 (candle_processor) : xAPIConnector 
+Sent: b'{"command": "getTickPrices", "arguments": {"level": 0, "symbols": ["AUDCAD"], "timestamp": 1674072660000}}'
+2023-01-18 21:12:00,295 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072720941}}
+2023-01-18 21:12:00,311 : INFO : Thread-35 (candle_processor) : trading_accounts Step count (817) > long_ma (500)
+   Is bought: False
+   Is short: False
+   Previous: 
+  Time: 2023-01-18 21:10:00 
+  Short_ma: 0.9362233333333333
+       Long_ma: 0.9392799600798398
+   Current:  
+  Time: 2023-01-18 21:11:00 
+   Short_ma: 0.9361800000000001
+  Long_ma: 0.9392753493013968
+2023-01-18 21:12:00,342 : INFO : Thread-35 (candle_processor) : trading_accounts Down Crossover
+2023-01-18 21:12:00,374 : INFO : Thread-35 (candle_processor) : trading_accounts Crossover angle too small
+2023-01-18 21:12:00,390 : INFO : Thread-35 (candle_processor) : trading_accounts   Angle: -3.6977316119463716e-08
+2023-01-18 21:12:00,421 : INFO : Thread-35 (candle_processor) : trading_accounts   Min angle: 5.0
+2023-01-18 21:12:00,452 : DEBUG : Thread-35 (candle_processor) : trading_accounts End step
+2023-01-18 21:12:03,286 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072723941}}
+2023-01-18 21:12:06,286 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072726940}}
+2023-01-18 21:12:09,296 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072729940}}
+2023-01-18 21:12:12,299 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072732951}}
+2023-01-18 21:12:15,291 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072735941}}
+2023-01-18 21:12:18,288 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072738941}}
+2023-01-18 21:12:21,296 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072741941}}
+2023-01-18 21:12:24,287 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072744941}}
+2023-01-18 21:12:27,295 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072747941}}
+2023-01-18 21:12:30,288 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072750941}}
+2023-01-18 21:12:33,291 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072753941}}
+2023-01-18 21:12:36,295 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072756941}}
+2023-01-18 21:12:39,288 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072759941}}
+2023-01-18 21:12:42,315 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072762967}}
+2023-01-18 21:12:45,284 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072765940}}
+2023-01-18 21:12:48,286 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072768940}}
+2023-01-18 21:12:51,304 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072771951}}
+2023-01-18 21:12:54,295 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072774940}}
+2023-01-18 21:12:57,302 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072777941}}
+2023-01-18 21:13:00,280 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072780941}}
+2023-01-18 21:13:00,703 : INFO : Thread-37 (candle_processor) : trading_accounts Candle
+2023-01-18 21:13:00,718 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'candle', 'data': {'ctm': 1674072720000, 'ctmString': 'Jan 18, 2023, 9:12:00 PM', 'open': 0.93606, 'close': 0.93601, 'high': 0.9361, 'low': 0.93601, 'vol': 254.0, 'quoteId': 5, 'symbol': 'AUDCAD'}}
+2023-01-18 21:13:00,796 : DEBUG : Thread-37 (candle_processor) : trading_accounts Start step
+2023-01-18 21:13:00,812 : INFO : Thread-37 (candle_processor) : trading_accounts Session step: 817
+2023-01-18 21:13:00,938 : INFO : Thread-37 (candle_processor) : xAPIConnector 
+Sent: b'{"command": "getTickPrices", "arguments": {"level": 0, "symbols": ["AUDCAD"], "timestamp": 1674072720000}}'
+2023-01-18 21:13:01,110 : INFO : Thread-37 (candle_processor) : trading_accounts Step count (818) > long_ma (500)
+   Is bought: False
+   Is short: False
+   Previous: 
+  Time: 2023-01-18 21:11:00 
+  Short_ma: 0.9361800000000001
+       Long_ma: 0.9392753493013968
+   Current:  
+  Time: 2023-01-18 21:12:00 
+   Short_ma: 0.9361333333333333
+  Long_ma: 0.9392703193612769
+2023-01-18 21:13:01,142 : INFO : Thread-37 (candle_processor) : trading_accounts Down Crossover
+2023-01-18 21:13:01,174 : INFO : Thread-37 (candle_processor) : trading_accounts Crossover angle too small
+2023-01-18 21:13:01,206 : INFO : Thread-37 (candle_processor) : trading_accounts   Angle: -3.976014506472431e-08
+2023-01-18 21:13:01,237 : INFO : Thread-37 (candle_processor) : trading_accounts   Min angle: 5.0
+2023-01-18 21:13:01,268 : DEBUG : Thread-37 (candle_processor) : trading_accounts End step
+2023-01-18 21:13:03,284 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072783941}}
+2023-01-18 21:13:06,293 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072786940}}
+2023-01-18 21:13:09,287 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072789941}}
+2023-01-18 21:13:12,284 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072792940}}
+2023-01-18 21:13:15,283 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072795941}}
+2023-01-18 21:13:18,291 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072798941}}
+2023-01-18 21:13:21,294 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072801941}}
+2023-01-18 21:13:24,283 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072804941}}
+2023-01-18 21:13:27,285 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072807941}}
+2023-01-18 21:13:30,283 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072810940}}
+2023-01-18 21:13:33,296 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072813951}}
+2023-01-18 21:13:36,293 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072816941}}
+2023-01-18 21:13:39,280 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072819941}}
+2023-01-18 21:13:42,299 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072822941}}
+2023-01-18 21:13:45,290 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072825941}}
+2023-01-18 21:13:48,292 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072828941}}
+2023-01-18 21:13:51,279 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072831941}}
+2023-01-18 21:13:54,289 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072834945}}
+2023-01-18 21:13:57,282 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072837941}}
+2023-01-18 21:13:59,977 : INFO : Thread-39 (candle_processor) : trading_accounts Candle
+2023-01-18 21:13:59,993 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'candle', 'data': {'ctm': 1674072780000, 'ctmString': 'Jan 18, 2023, 9:13:00 PM', 'open': 0.93605, 'close': 0.9359, 'high': 0.93605, 'low': 0.93589, 'vol': 341.0, 'quoteId': 5, 'symbol': 'AUDCAD'}}
+2023-01-18 21:14:00,040 : DEBUG : Thread-39 (candle_processor) : trading_accounts Start step
+2023-01-18 21:14:00,056 : INFO : Thread-39 (candle_processor) : trading_accounts Session step: 818
+2023-01-18 21:14:00,164 : INFO : Thread-39 (candle_processor) : xAPIConnector 
+Sent: b'{"command": "getTickPrices", "arguments": {"level": 0, "symbols": ["AUDCAD"], "timestamp": 1674072780000}}'
+2023-01-18 21:14:00,286 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072840941}}
+2023-01-18 21:14:00,334 : INFO : Thread-39 (candle_processor) : trading_accounts Step count (819) > long_ma (500)
+   Is bought: False
+   Is short: False
+   Previous: 
+  Time: 2023-01-18 21:12:00 
+  Short_ma: 0.9361333333333333
+       Long_ma: 0.9392703193612769
+   Current:  
+  Time: 2023-01-18 21:13:00 
+   Short_ma: 0.936065
+  Long_ma: 0.9392653493013967
+2023-01-18 21:14:00,366 : INFO : Thread-39 (candle_processor) : trading_accounts Down Crossover
+2023-01-18 21:14:00,397 : INFO : Thread-39 (candle_processor) : trading_accounts Crossover angle too small
+2023-01-18 21:14:00,428 : INFO : Thread-39 (candle_processor) : trading_accounts   Angle: -6.050746908319051e-08
+2023-01-18 21:14:00,459 : INFO : Thread-39 (candle_processor) : trading_accounts   Min angle: 5.0
+2023-01-18 21:14:00,491 : DEBUG : Thread-39 (candle_processor) : trading_accounts End step
+2023-01-18 21:14:03,288 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072843941}}
+2023-01-18 21:14:06,281 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072846941}}
+2023-01-18 21:14:09,279 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072849941}}
+2023-01-18 21:14:12,288 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072852941}}
+2023-01-18 21:14:15,278 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072855941}}
+2023-01-18 21:14:18,286 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072858941}}
+2023-01-18 21:14:21,298 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072861941}}
+2023-01-18 21:14:24,285 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072864941}}
+2023-01-18 21:14:27,293 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072867941}}
+2023-01-18 21:14:30,282 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072870941}}
+2023-01-18 21:14:33,282 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072873941}}
+2023-01-18 21:14:36,287 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072876941}}
+2023-01-18 21:14:39,277 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072879940}}
+2023-01-18 21:14:42,284 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072882941}}
+2023-01-18 21:14:45,283 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072885941}}
+2023-01-18 21:14:48,280 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072888941}}
+2023-01-18 21:14:51,289 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072891941}}
+2023-01-18 21:14:54,284 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072894940}}
+2023-01-18 21:14:57,291 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072897941}}
+2023-01-18 21:15:00,185 : INFO : Thread-41 (candle_processor) : trading_accounts Candle
+2023-01-18 21:15:00,201 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'candle', 'data': {'ctm': 1674072840000, 'ctmString': 'Jan 18, 2023, 9:14:00 PM', 'open': 0.93591, 'close': 0.93598, 'high': 0.93601, 'low': 0.93587, 'vol': 440.0, 'quoteId': 5, 'symbol': 'AUDCAD'}}
+2023-01-18 21:15:00,231 : DEBUG : Thread-41 (candle_processor) : trading_accounts Start step
+2023-01-18 21:15:00,247 : INFO : Thread-41 (candle_processor) : trading_accounts Session step: 819
+2023-01-18 21:15:00,279 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072900940}}
+2023-01-18 21:15:00,374 : INFO : Thread-41 (candle_processor) : xAPIConnector 
+Sent: b'{"command": "getTickPrices", "arguments": {"level": 0, "symbols": ["AUDCAD"], "timestamp": 1674072840000}}'
+2023-01-18 21:15:00,547 : INFO : Thread-41 (candle_processor) : trading_accounts Step count (820) > long_ma (500)
+   Is bought: False
+   Is short: False
+   Previous: 
+  Time: 2023-01-18 21:13:00 
+  Short_ma: 0.936065
+       Long_ma: 0.9392653493013967
+   Current:  
+  Time: 2023-01-18 21:14:00 
+   Short_ma: 0.9360283333333332
+  Long_ma: 0.9392604191616761
+2023-01-18 21:15:00,577 : INFO : Thread-41 (candle_processor) : trading_accounts Down Crossover
+2023-01-18 21:15:00,608 : INFO : Thread-41 (candle_processor) : trading_accounts Crossover angle too small
+2023-01-18 21:15:00,638 : INFO : Thread-41 (candle_processor) : trading_accounts   Angle: -3.030615084035391e-08
+2023-01-18 21:15:00,669 : INFO : Thread-41 (candle_processor) : trading_accounts   Min angle: 5.0
+2023-01-18 21:15:00,701 : DEBUG : Thread-41 (candle_processor) : trading_accounts End step
+2023-01-18 21:15:03,299 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072903951}}
+2023-01-18 21:15:06,306 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072906959}}
+2023-01-18 21:15:09,277 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072909940}}
+2023-01-18 21:15:12,286 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072912941}}
+2023-01-18 21:15:15,281 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072915941}}
+2023-01-18 21:15:18,287 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072918941}}
+2023-01-18 21:15:21,287 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072921941}}
+2023-01-18 21:15:24,280 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072924941}}
+2023-01-18 21:15:27,283 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072927941}}
+2023-01-18 21:15:28,221 : INFO : Thread-1 (ping_client) : xAPIConnector 
+Sent: b'{"command": "ping", "arguments": {}}'
+2023-01-18 21:15:28,394 : INFO : Thread-1 (ping_client) : trading_accounts Ping sent | True
+2023-01-18 21:15:30,277 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072930941}}
+2023-01-18 21:15:33,278 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072933941}}
+2023-01-18 21:15:36,277 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072936940}}
+2023-01-18 21:15:39,284 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072939941}}
+2023-01-18 21:15:42,282 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072942941}}
+2023-01-18 21:15:45,280 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072945941}}
+2023-01-18 21:15:48,278 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072948941}}
+2023-01-18 21:15:51,322 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072951971}}
+2023-01-18 21:15:54,289 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072954941}}
+2023-01-18 21:15:57,278 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072957941}}
+2023-01-18 21:16:00,283 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072960941}}
+2023-01-18 21:16:01,297 : INFO : Thread-43 (candle_processor) : trading_accounts Candle
+2023-01-18 21:16:01,313 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'candle', 'data': {'ctm': 1674072900000, 'ctmString': 'Jan 18, 2023, 9:15:00 PM', 'open': 0.936, 'close': 0.93602, 'high': 0.93606, 'low': 0.93597, 'vol': 490.0, 'quoteId': 5, 'symbol': 'AUDCAD'}}
+2023-01-18 21:16:01,376 : DEBUG : Thread-43 (candle_processor) : trading_accounts Start step
+2023-01-18 21:16:01,392 : INFO : Thread-43 (candle_processor) : trading_accounts Session step: 820
+2023-01-18 21:16:01,486 : INFO : Thread-43 (candle_processor) : xAPIConnector 
+Sent: b'{"command": "getTickPrices", "arguments": {"level": 0, "symbols": ["AUDCAD"], "timestamp": 1674072900000}}'
+2023-01-18 21:16:01,659 : INFO : Thread-43 (candle_processor) : trading_accounts Step count (821) > long_ma (500)
+   Is bought: False
+   Is short: False
+   Previous: 
+  Time: 2023-01-18 21:14:00 
+  Short_ma: 0.9360283333333332
+       Long_ma: 0.9392604191616761
+   Current:  
+  Time: 2023-01-18 21:15:00 
+   Short_ma: 0.9360166666666667
+  Long_ma: 0.9392557485029934
+2023-01-18 21:16:01,691 : INFO : Thread-43 (candle_processor) : trading_accounts Down Crossover
+2023-01-18 21:16:01,723 : INFO : Thread-43 (candle_processor) : trading_accounts Crossover angle too small
+2023-01-18 21:16:01,755 : INFO : Thread-43 (candle_processor) : trading_accounts   Angle: -6.680695515209199e-09
+2023-01-18 21:16:01,770 : INFO : Thread-43 (candle_processor) : trading_accounts   Min angle: 5.0
+2023-01-18 21:16:01,786 : DEBUG : Thread-43 (candle_processor) : trading_accounts End step
+2023-01-18 21:16:03,274 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072963941}}
+2023-01-18 21:16:06,285 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072966941}}
+2023-01-18 21:16:09,275 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072969941}}
+2023-01-18 21:16:12,275 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072972941}}
+2023-01-18 21:16:15,274 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072975941}}
+2023-01-18 21:16:18,346 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072979001}}
+2023-01-18 21:16:21,283 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072981941}}
+2023-01-18 21:16:24,321 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072984988}}
+2023-01-18 21:16:27,283 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072987941}}
+2023-01-18 21:16:30,282 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072990940}}
+2023-01-18 21:16:33,283 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072993951}}
+2023-01-18 21:16:36,264 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072996931}}
+2023-01-18 21:16:39,279 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674072999941}}
+2023-01-18 21:16:42,279 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674073002945}}
+2023-01-18 21:16:45,285 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674073005940}}
+2023-01-18 21:16:48,293 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674073008951}}
+2023-01-18 21:16:51,272 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674073011941}}
+2023-01-18 21:16:54,284 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674073014940}}
+2023-01-18 21:16:57,285 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674073017941}}
+2023-01-18 21:16:59,847 : INFO : Thread-45 (candle_processor) : trading_accounts Candle
+2023-01-18 21:16:59,847 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'candle', 'data': {'ctm': 1674072960000, 'ctmString': 'Jan 18, 2023, 9:16:00 PM', 'open': 0.93602, 'close': 0.9361, 'high': 0.9361, 'low': 0.93601, 'vol': 391.0, 'quoteId': 5, 'symbol': 'AUDCAD'}}
+2023-01-18 21:16:59,910 : DEBUG : Thread-45 (candle_processor) : trading_accounts Start step
+2023-01-18 21:16:59,910 : INFO : Thread-45 (candle_processor) : trading_accounts Session step: 821
+2023-01-18 21:17:00,005 : INFO : Thread-45 (candle_processor) : xAPIConnector 
+Sent: b'{"command": "getTickPrices", "arguments": {"level": 0, "symbols": ["AUDCAD"], "timestamp": 1674072960000}}'
+2023-01-18 21:17:00,164 : INFO : Thread-45 (candle_processor) : trading_accounts Step count (822) > long_ma (500)
+   Is bought: False
+   Is short: False
+   Previous: 
+  Time: 2023-01-18 21:15:00 
+  Short_ma: 0.9360166666666667
+       Long_ma: 0.9392557485029934
+   Current:  
+  Time: 2023-01-18 21:16:00 
+   Short_ma: 0.9360116666666666
+  Long_ma: 0.9392510978043906
+2023-01-18 21:17:00,196 : INFO : Thread-45 (candle_processor) : trading_accounts Down Crossover
+2023-01-18 21:17:00,212 : INFO : Thread-45 (candle_processor) : trading_accounts Crossover angle too small
+2023-01-18 21:17:00,243 : INFO : Thread-45 (candle_processor) : trading_accounts   Angle: -3.3355826411451805e-10
+2023-01-18 21:17:00,259 : INFO : Thread-45 (candle_processor) : trading_accounts   Min angle: 5.0
+2023-01-18 21:17:00,275 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674073020941}}
+2023-01-18 21:17:00,290 : DEBUG : Thread-45 (candle_processor) : trading_accounts End step
+2023-01-18 21:17:03,284 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674073023941}}
+2023-01-18 21:17:06,281 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674073026941}}
+2023-01-18 21:17:09,271 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674073029940}}
+2023-01-18 21:17:12,285 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674073032951}}
+2023-01-18 21:17:15,275 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674073035941}}
+2023-01-18 21:17:18,271 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674073038941}}
+2023-01-18 21:17:21,276 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674073041941}}
+2023-01-18 21:17:24,281 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674073044941}}
+2023-01-18 21:17:27,276 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674073047941}}
+2023-01-18 21:17:30,268 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674073050941}}
+2023-01-18 21:17:33,272 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674073053941}}
+2023-01-18 21:17:36,268 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674073056941}}
+2023-01-18 21:17:39,278 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674073059941}}
+2023-01-18 21:17:42,335 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674073062941}}
+2023-01-18 21:17:45,298 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674073065971}}
+2023-01-18 21:17:48,372 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674073068941}}
+2023-01-18 21:17:51,317 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674073071980}}
+2023-01-18 21:17:54,275 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674073074941}}
+2023-01-18 21:17:57,269 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674073077941}}
+2023-01-18 21:18:00,280 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674073080941}}
+2023-01-18 21:18:01,562 : INFO : Thread-47 (candle_processor) : trading_accounts Candle
+2023-01-18 21:18:01,577 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'candle', 'data': {'ctm': 1674073020000, 'ctmString': 'Jan 18, 2023, 9:17:00 PM', 'open': 0.93607, 'close': 0.93603, 'high': 0.9361, 'low': 0.93595, 'vol': 377.0, 'quoteId': 5, 'symbol': 'AUDCAD'}}
+2023-01-18 21:18:01,657 : DEBUG : Thread-47 (candle_processor) : trading_accounts Start step
+2023-01-18 21:18:01,673 : INFO : Thread-47 (candle_processor) : trading_accounts Session step: 822
+2023-01-18 21:18:01,784 : INFO : Thread-47 (candle_processor) : xAPIConnector 
+Sent: b'{"command": "getTickPrices", "arguments": {"level": 0, "symbols": ["AUDCAD"], "timestamp": 1674073020000}}'
+2023-01-18 21:18:01,942 : INFO : Thread-47 (candle_processor) : trading_accounts Step count (823) > long_ma (500)
+   Is bought: False
+   Is short: False
+   Previous: 
+  Time: 2023-01-18 21:16:00 
+  Short_ma: 0.9360116666666666
+       Long_ma: 0.9392510978043906
+   Current:  
+  Time: 2023-01-18 21:17:00 
+   Short_ma: 0.9360066666666667
+  Long_ma: 0.9392460479041911
+2023-01-18 21:18:01,973 : INFO : Thread-47 (candle_processor) : trading_accounts Down Crossover
+2023-01-18 21:18:01,989 : INFO : Thread-47 (candle_processor) : trading_accounts Crossover angle too small
+2023-01-18 21:18:02,020 : INFO : Thread-47 (candle_processor) : trading_accounts   Angle: 4.7651180602933727e-11
+2023-01-18 21:18:02,052 : INFO : Thread-47 (candle_processor) : trading_accounts   Min angle: 5.0
+2023-01-18 21:18:02,084 : DEBUG : Thread-47 (candle_processor) : trading_accounts End step
+2023-01-18 21:18:03,323 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674073083992}}
+2023-01-18 21:18:06,277 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674073086941}}
+2023-01-18 21:18:09,283 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674073089941}}
+2023-01-18 21:18:12,281 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674073092942}}
+2023-01-18 21:18:15,276 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674073095941}}
+2023-01-18 21:18:18,401 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674073099071}}
+2023-01-18 21:18:21,271 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674073101941}}
+2023-01-18 21:18:24,266 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674073104941}}
+2023-01-18 21:18:27,278 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674073107941}}
+2023-01-18 21:18:30,271 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674073110940}}
+2023-01-18 21:18:33,267 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674073113940}}
+2023-01-18 21:18:36,276 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674073116951}}
+2023-01-18 21:18:39,274 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674073119941}}
+2023-01-18 21:18:42,269 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674073122931}}
+2023-01-18 21:18:45,277 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674073125941}}
+2023-01-18 21:18:48,269 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674073128941}}
+2023-01-18 21:18:51,264 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674073131941}}
+2023-01-18 21:18:54,285 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674073134959}}
+2023-01-18 21:18:57,264 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674073137941}}
+2023-01-18 21:18:59,679 : INFO : Thread-49 (candle_processor) : trading_accounts Candle
+2023-01-18 21:18:59,695 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'candle', 'data': {'ctm': 1674073080000, 'ctmString': 'Jan 18, 2023, 9:18:00 PM', 'open': 0.93604, 'close': 0.93605, 'high': 0.93615, 'low': 0.936, 'vol': 423.0, 'quoteId': 5, 'symbol': 'AUDCAD'}}
+2023-01-18 21:18:59,742 : DEBUG : Thread-49 (candle_processor) : trading_accounts Start step
+2023-01-18 21:18:59,742 : INFO : Thread-49 (candle_processor) : trading_accounts Session step: 823
+2023-01-18 21:18:59,869 : INFO : Thread-49 (candle_processor) : xAPIConnector 
+Sent: b'{"command": "getTickPrices", "arguments": {"level": 0, "symbols": ["AUDCAD"], "timestamp": 1674073080000}}'
+2023-01-18 21:19:00,044 : INFO : Thread-49 (candle_processor) : trading_accounts Step count (824) > long_ma (500)
+   Is bought: False
+   Is short: False
+   Previous: 
+  Time: 2023-01-18 21:17:00 
+  Short_ma: 0.9360066666666667
+       Long_ma: 0.9392460479041911
+   Current:  
+  Time: 2023-01-18 21:18:00 
+   Short_ma: 0.9360133333333334
+  Long_ma: 0.93924117764471
+2023-01-18 21:19:00,060 : INFO : Thread-49 (candle_processor) : trading_accounts Down Crossover
+2023-01-18 21:19:00,076 : INFO : Thread-49 (candle_processor) : trading_accounts Crossover angle too small
+2023-01-18 21:19:00,108 : INFO : Thread-49 (candle_processor) : trading_accounts   Angle: 1.1016952947001643e-08
+2023-01-18 21:19:00,140 : INFO : Thread-49 (candle_processor) : trading_accounts   Min angle: 5.0
+2023-01-18 21:19:00,172 : DEBUG : Thread-49 (candle_processor) : trading_accounts End step
+2023-01-18 21:19:00,267 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674073140941}}
+2023-01-18 21:19:03,272 : DEBUG : Thread-2 (_readStream) : xAPIConnector {'command': 'keepAlive', 'data': {'timestamp': 1674073143941}}

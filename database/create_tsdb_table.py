@@ -7,9 +7,20 @@ host = "localhost"
 port = 5432
 CONNECTION = f"dbname=postgres user={user} password={password} host={host} port={port}"
 
-with psycopg2.connect(CONNECTION) as conn:
-    cursor = conn.cursor()
-    cursor.execute(
-        "CREATE TABLE ticks (timestamp timestamptz NOT NULL,symbol varchar(50) NOT NULL,ask double PRECISION NULL,bid double PRECISION NULL,high double PRECISION NULL,low double PRECISION NULL,askVolume integer NULL,bidVolume integer NULL,tick_level integer NULL,quoteId integer NULL,spreadTable double PRECISION NULL,spreadRaw double PRECISION NULL);"
-    )
-    conn.commit()
+fd = open("./scripts/V2023.01.05.19.30.15_create-tables_tsdb.sql", "r")
+sqlFile = fd.read()
+fd.close()
+
+sqlCommands = sqlFile.split(";")
+
+for command in sqlCommands[:-1]:
+    # This will skip and report errors
+    # For example, if the tables do not yet exist, this will skip over
+    # the DROP TABLE commands
+    try:
+        with psycopg2.connect(CONNECTION) as conn:
+            cursor = conn.cursor()
+            cursor.execute(command)
+            conn.commit()
+    except Exception as e:
+        print(f"Create tables tsdb error | {e}")

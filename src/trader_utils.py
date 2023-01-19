@@ -1,3 +1,4 @@
+import datetime as dt
 from datetime import datetime, timedelta
 from sklearn.base import BaseEstimator, DensityMixin
 import glob
@@ -36,16 +37,24 @@ def get_today_ms():
     return t_str, t_int
 
 
-def xtb_time_to_date(time):
+def xtb_time_to_date(time, local_tz=None):
     initial = INITIAL_TIME
     date = initial + timedelta(milliseconds=time)
-    return date.strftime("%Y-%m-%d %H:%M:%S.%f")
+    if local_tz:
+        local_tz = datetime.now().astimezone().tzinfo
+        date_str = (
+            date.replace(tzinfo=TIMEZONE).astimezone().strftime("%Y-%m-%d %H:%M:%S.%f")
+        )
+        return date_str
+    else:
+        return date.strftime("%Y-%m-%d %H:%M:%S.%f")
 
 
 def date_to_xtb_time(target):
     target = target.astimezone(TIMEZONE)
-    diff = (target - INITIAL_TIME).days * 24 * 3600 * 1000
-    return diff
+    days_diff = (target - INITIAL_TIME).days * 24 * 3600 * 1000
+    seconds_diff = (target - INITIAL_TIME).seconds * 1000
+    return days_diff + seconds_diff
 
 
 # STOCK DATA RELATED
@@ -61,15 +70,19 @@ def adapt_data(df):
     return df
 
 
-def cast_candles_to_types(df, digits):
+def cast_candles_to_types(df, digits, dates=True):
     if df is not None:
         df["ctm"] = pd.to_numeric(df["ctm"])
         # Dec 4, 2022, 11:00:00 PM
-        df["ctmString"] = pd.to_datetime(
-            df["ctmString"], format="%b %d, %Y, %I:%M:%S %p"
-        )
-        df["ctmString"] = df["ctmString"].dt.strftime("%m/%d/%Y %H:%M:%S")
-        df["ctmString"] = pd.to_datetime(df["ctmString"])
+        if dates:
+            df["ctmString"] = pd.to_datetime(
+                df["ctmString"], format="%b %d, %Y, %I:%M:%S %p"
+            )
+            df["ctmString"] = df["ctmString"].dt.strftime("%m/%d/%Y %H:%M:%S")
+            df["ctmString"] = pd.to_datetime(df["ctmString"])
+        else:
+            df["ctmString"] = pd.to_datetime(df["ctmString"])
+
         df["open"] = pd.to_numeric(df["open"])
         df["close"] = pd.to_numeric(df["close"])
         df["high"] = pd.to_numeric(df["high"])
@@ -442,15 +455,13 @@ def buy_position(transactions, tick, tick_day, is_short=False, fig=None):
     return transactions, is_bought, is_short, buy_price, fig
 
 
-def test_trend(df, period):
-    start_date = df["ctmString"][-period].strftime("%Y-%m-%d")
-    MA = df["close"].rolling(period).mean()
-    MA = MA.dropna()
-
+def test_trend(df, ma_period="5D"):
+    start_date = df["ctmString"][0].strftime("%Y-%m-%d")
+    MA = df["close"].rolling(ma_period).mean()
     MA = MA.dropna()
 
     trend = []
-    for step in range(1, period):
+    for step in range(1, int(ma_period[:-1])):
         if MA.values[-(step + 1)] < MA.values[-step]:
             trend.append(1)
         else:
@@ -621,6 +632,35 @@ def trading_loss(y, y_pred, **kwargs):
     return np.sum(y_pred - y_true)
 
 
+# def create_pdf(sd, mean, alfa):
+#     #invertire il segno di alfa
+#     x = skewnorm.rvs(alfa, size=1000000)
+#     def calc(k, sd, mean):
+#       return (k*sd)+mean
+#     x = calc(x, sd, mean) #standard distribution
+#     return x
+
+# def create_empty_df(days, start=datetime.today()):
+#     #creare un empty DataFrame con le date
+#     empty = pd.Series(
+#         pd.date_range(start=start, periods=days, freq="D")
+#     )
+#     empty = pd.DataFrame(empty)
+#     #si tagliano ore, minuti, secondi
+#     empty
+
+#     #si tagliano ore, minuti, secondi
+#     empty.index = [str(x)[0:empty.shape[0]] for x in list(empty.pop(0))]
+#     empty
+
+#     #final dataset con values
+#     stock = pd.DataFrame([x for x in range(0, empty.shape[0])])
+#     stock.index = empty.index
+#     return stock
+
+# def sinmulate_stock(initial_price, drift, volatility, trend, days):
+
+
 class TradingEstimator(BaseEstimator, DensityMixin):
     def __init__(
         self,
@@ -628,8 +668,13 @@ class TradingEstimator(BaseEstimator, DensityMixin):
         capital,
         symbol,
         short_enabled,
+        leverage,
+        contractSize,
+        lotStep,
         short_ma=None,
         long_ma=None,
+        min_angle=None,
+        out=None,
         show=False,
         fig=False,
     ) -> None:
@@ -640,7 +685,12 @@ class TradingEstimator(BaseEstimator, DensityMixin):
         self.symbol = symbol
         self.short_ma = short_ma
         self.long_ma = long_ma
+        self.min_angle = min_angle
+        self.out = out
         self.short_enabled = short_enabled
+        self.leverage = leverage
+        self.contractSize = contractSize
+        self.lotStep = lotStep
         self.show = show
         if not fig:
             self.fig = fig
@@ -660,25 +710,40 @@ class TradingEstimator(BaseEstimator, DensityMixin):
     def score(self, X, y=None):
         return self.back_test(X)
 
-    def back_test(self, df=None):
+    def test(self, X, parameters, test_period="1D", show=False):
+        self.short_ma = parameters["short_ma"]
+        self.long_ma = parameters["long_ma"]
+        self.min_angle = parameters["min_angle"]
+        self.out = parameters["out"]
+        return self.back_test(X, test_period=test_period, show=show)
+
+    def back_test(self, df=None, test_period=None, show=False):
         if df is None:
             df = self.candles
         period = self.period
         capital = self.capital
         symbol = self.symbol
+        min_angle = self.min_angle
+        out = self.out
         short_ma = self.short_ma
         long_ma = self.long_ma
         trend = 0
         short_enabled = self.short_enabled
-        show = self.show
-        fig = self.fig
+        show = show
 
         df = add_rolling_means(df, short=short_ma, long=long_ma)
+        if test_period is not None:
+            df = df.iloc[int(df.shape[0] * period) :, :]
+        else:
+            df = df.iloc[: int(df.shape[0] * period), :]
         if show:
-            fig = plot_stock(df, symbol=symbol, return_fig=True, fig=None)
-        start_date = df["ctmString"][-period].strftime("%Y-%m-%d")
+            plot_stock(df, symbol=symbol)
+
+        start_date = df["ctmString"][0].strftime("%Y-%m-%d")
         is_bought = False
         is_short = False
+        in_up_crossover = False
+        in_down_crossover = False
         profits = []
         profit = 0
         potential_profits = [0]
@@ -691,10 +756,11 @@ class TradingEstimator(BaseEstimator, DensityMixin):
             print(f"    Capital at risk: {capital}")
             print(f"    Trend: {trend}")
 
-        for step in range(df.shape[0] - period, df.shape[0]):
+        for step in range(df.shape[0]):
             prev_tick = df.iloc[step - 1, :]
             tick = df.iloc[step, :]
             tick_day = str(tick["ctmString"])
+
             if is_bought:
                 diff = tick["low"] - prev_tick["low"]
                 profit = tick["low"] - buy_price
@@ -706,9 +772,8 @@ class TradingEstimator(BaseEstimator, DensityMixin):
                     print(f"Diff {diff}")
                     print(f"Potential profits {potential_profits}")
 
-                if is_short:
-                    profit = -1 * profit
-                if profit < -(buy_price * 0.05):
+                if profit < -(buy_price * out):
+                    # If the profit has gone down by a 5%, we get out
                     (
                         is_bought,
                         is_short,
@@ -718,41 +783,73 @@ class TradingEstimator(BaseEstimator, DensityMixin):
 
                 elif profit > 0:
                     potential_profits.append(diff)
-                    if is_short:
-                        if (prev_tick["low"] - buy_price) < (
-                            tick["low"] - buy_price
-                        ) * 1.05:
-                            (
-                                is_bought,
-                                is_short,
-                                profits,
-                                potential_profits,
-                            ) = self.sell_position(profits, profit)
-                            if show:
-                                print("Sold because of upward trend")
-                    else:
-                        if (prev_tick["low"] - buy_price) > (
-                            tick["low"] - buy_price
-                        ) * 1.05:
-                            (
-                                is_bought,
-                                is_short,
-                                profits,
-                                potential_profits,
-                            ) = self.sell_position(profits, profit)
-                            if show:
-                                print("Sold because of downward trend")
+
+                    if (prev_tick["low"] - buy_price) > (tick["low"] - buy_price) * (
+                        1 + out
+                    ):
+                        # If the current movement has decreased over 5% from the previous one, we get out
+                        (
+                            is_bought,
+                            is_short,
+                            profits,
+                            potential_profits,
+                        ) = self.sell_position(profits, profit)
+                        if show:
+                            print("Sold because of downward trend")
+                else:
+                    potential_profits.append(diff)
+
+            if is_short:
+                diff = prev_tick["low"] - tick["low"]
+                profit = buy_price - tick["low"]
+                if show:
+                    print(f"Tick: {start_date}")
+                    print(f"Sell Price {tick['low']}")
+                    print(f"Buy price {buy_price}")
+                    print(f"Profit {profit}")
+                    print(f"Diff {diff}")
+                    print(f"Potential profits {potential_profits}")
+
+                if profit < -(buy_price * out):
+                    # If the profit has gone down by a 5%, we get out
+                    (
+                        is_bought,
+                        is_short,
+                        profits,
+                        potential_profits,
+                    ) = self.sell_position(profits, profit)
+
+                elif profit > 0:
+                    potential_profits.append(diff)
+
+                    if (prev_tick["low"] - buy_price) > (tick["low"] - buy_price) * (
+                        1 + out
+                    ):
+                        # If the current movement has decreased over 5% from the previous one, we get out
+                        (
+                            is_bought,
+                            is_short,
+                            profits,
+                            potential_profits,
+                        ) = self.sell_position(profits, profit)
+                        if show:
+                            print("Sold because of downward trend")
                 else:
                     potential_profits.append(diff)
 
             if (
-                (prev_tick["MA_short"] < prev_tick["MA_long"])
-                and (tick["MA_short"] > tick["MA_long"])
-                or (prev_tick["MA_short"] > prev_tick["MA_long"])
-                and (tick["MA_short"] < tick["MA_long"])
+                (
+                    (prev_tick["MA_short"] < prev_tick["MA_long"])
+                    and (tick["MA_short"] > tick["MA_long"])
+                    or (prev_tick["MA_short"] > prev_tick["MA_long"])
+                    and (tick["MA_short"] < tick["MA_long"])
+                )
+                or (in_up_crossover and not is_bought)
+                or (in_down_crossover and not is_bought)
             ):
                 if show:
                     print(f"CROSSOVER at {tick_day}")
+
                 balance = np.sum(profits) + capital
                 c_price = tick["high"]
 
@@ -774,28 +871,40 @@ class TradingEstimator(BaseEstimator, DensityMixin):
                     [step / df.shape[0], tick["MA_long"] / df["MA_long"][:step].max()],
                 )
                 crossover_angle = get_angle_between_lines(ma_short_slope, ma_long_slope)
+
                 if show:
                     print(f"    Balance: {balance}")
                     print(f"    Price: {c_price}")
                     print(f"    Crossover angle: {crossover_angle}")
 
-            if (prev_tick["MA_short"] < prev_tick["MA_long"]) and (
-                tick["MA_short"] > tick["MA_long"]
-            ):
+            if (
+                (prev_tick["MA_short"] < prev_tick["MA_long"])
+                and (tick["MA_short"] > tick["MA_long"])
+            ) or (in_up_crossover and not is_bought):
                 if show:
                     print(f"Short term upward crossover")
-                if np.abs(crossover_angle) > 40:
+                if is_bought:
+                    (
+                        is_bought,
+                        is_short,
+                        profits,
+                        potential_profits,
+                    ) = self.sell_position(profits, profit)
+                if np.abs(crossover_angle) > min_angle:
                     if np.sum(profits) + capital > tick["high"]:
                         (is_bought, is_short, buy_price) = self.buy_position(tick)
                     else:
                         if show:
                             print(f"Not enough money to buy")
                 else:
+                    in_up_crossover = True
                     if show:
                         print(f"Crossover angle to small {crossover_angle}")
 
-            if (prev_tick["MA_short"] > prev_tick["MA_long"]) and (
-                tick["MA_short"] < tick["MA_long"]
+            if (
+                (prev_tick["MA_short"] > prev_tick["MA_long"])
+                and (tick["MA_short"] < tick["MA_long"])
+                or (in_down_crossover and not is_short)
             ):
                 if show:
                     print(f"Short term downward crossover")
@@ -807,7 +916,7 @@ class TradingEstimator(BaseEstimator, DensityMixin):
                         potential_profits,
                     ) = self.sell_position(profits, profit)
                 if short_enabled:
-                    if np.abs(crossover_angle) > 40:
+                    if np.abs(crossover_angle) > min_angle:
                         if np.sum(profits) + capital > tick["high"]:
                             (is_bought, is_short, buy_price) = self.buy_position(
                                 tick, short_enabled
@@ -816,6 +925,7 @@ class TradingEstimator(BaseEstimator, DensityMixin):
                             if show:
                                 print(f"Not enough money to buy")
                     else:
+                        in_down_crossover = True
                         if show:
                             print(f"Crossover angle to small {crossover_angle}")
 
@@ -855,4 +965,7 @@ class TradingEstimator(BaseEstimator, DensityMixin):
     def buy_position(self, tick, is_short=False):
         is_bought = True
         buy_price = tick["high"]
+        cost = (
+            tick["high"] * self.contractSize / ((1 / self.leverage) * 100)
+        ) * self.lotStep
         return is_bought, is_short, buy_price

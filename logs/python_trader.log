@@ -1,0 +1,11 @@
+2023-01-14 10:06:29,336 : INFO : MainThread : __main__ ONLINE TRADER
+2023-01-14 10:06:29,379 : INFO : MainThread : trading_accounts Trader already exists | tradername: Test-trader
+2023-01-14 10:06:29,596 : INFO : MainThread : xAPIConnector 
+Socket connected
+2023-01-14 10:06:29,596 : INFO : MainThread : xAPIConnector 
+Sent: b'{"command": "login", "arguments": {"userId": "14206469", "password": "-MpWKQ63@+2d_yP", "appName": ""}}'
+2023-01-14 10:06:29,987 : DEBUG : MainThread : xAPIConnector Received: {'status': True, 'streamSessionId': 'e41f13fffecd98b0-00006b46-000ce1bf-16a5bf0c52eb41a1-a29dba44'}
+2023-01-14 10:06:30,176 : INFO : MainThread : xAPIConnector 
+Socket connected
+2023-01-14 10:06:30,182 : INFO : MainThread : xAPIConnector 
+Sent: b'{"command": "getCandles", "streamSessionId": "e41f13fffecd98b0-00006b46-000ce1bf-16a5bf0c52eb41a1-a29dba44", "symbol": "ETHEREUM"}'
