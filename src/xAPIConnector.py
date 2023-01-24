@@ -248,10 +248,7 @@ class APIStreamClient(JsonSocket):
         while self._running:
             msg = self._readObj()
             if msg["command"] == "tickPrices":
-                # t = Thread(target=self._tickFun, args=(msg,))
-                # t.start()
-                # #logger.debug(msg)
-                pass
+                self._tickFun(msg)
             elif msg["command"] == "trade":
                 self._tradeFun(msg)
             elif msg["command"] == "balance":
@@ -263,11 +260,8 @@ class APIStreamClient(JsonSocket):
             elif msg["command"] == "news":
                 self._newsFun(msg)
             elif msg["command"] == "candle":
-                t = Thread(target=self._candleFun, args=(msg,))
-                t.start()
-                # #logger.debug(msg)
+                self._candleFun(msg)
             elif msg["command"] == "keepAlive":
-                # #logger.debug(msg)
                 pass
 
     def disconnect(self):

@@ -52,7 +52,6 @@ def main():
     symbols_df = trader.look_for_suitable_symbols_v1(symbols_df)
     trader.update_stocks(symbols_df, period=1, days=14)
 
-    quit()
     trader.evaluate_stocks(
         params={
             "repetitions": 500,
