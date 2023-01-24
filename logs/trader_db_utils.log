@@ -1,0 +1,7 @@
+2023-01-23 21:07:04,508 : INFO : MainThread : trader_db_utils {'trader_db_utils'}
+2023-01-23 21:07:04,550 : INFO : MainThread : __main__ __main__
+2023-01-23 21:07:04,552 : INFO : MainThread : trader_db_utils INSERT INTO traders (tradername, creation_date, initial_capital, max_risk) VALUES ('TestTrader','2023-01-23 21:07:04.552978',1000,0.05);
+2023-01-23 21:07:04,557 : INFO : MainThread : trading_accounts Trader created id: (15, )
+2023-01-23 21:07:05,298 : INFO : MainThread : root Login successful
+2023-01-23 21:07:05,299 : INFO : Thread-1 (ping_client) : trading_accounts Exception at ping: EOF occurred in violation of protocol (_ssl.c:2396)
+2023-01-23 21:07:05,628 : INFO : Thread-1 (ping_client) : root Login successful

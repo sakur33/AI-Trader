@@ -19,11 +19,16 @@ CREATE TABLE trades(
     tradeid INT IDENTITY (1, 1),
     traderid INT NOT NULL,
     symbol VARCHAR(50) NOT NULL,
+    trade_type VARCHAR(5) NOT NULL,
     time_entry datetime2 NOT NULL,
     time_close datetime2 NULL,
-    shares INT NOT NULL,
+    volume DECIMAL(10, 5) NOT NULL,
     entry_price DECIMAL(10, 5) NOT NULL,
-    out_price DECIMAL(10, 5) NULL
+    entry_position DECIMAL(10, 5) NOT NULL,
+    close_price DECIMAL(10, 5) NOT NULL,
+    close_position DECIMAL(10, 5) NOT NULL,
+    entry_slipage DECIMAL(10, 5) NOT NULL,
+    close_slipage DECIMAL(10, 5) NOT NULL,
 );
 CREATE TABLE balance(
     transactionid INT IDENTITY (1, 1),

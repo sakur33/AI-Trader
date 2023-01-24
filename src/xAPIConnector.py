@@ -30,9 +30,9 @@ logger = logging.getLogger(__name__)
 # logging.basicConfig(format=FORMAT)
 
 # if DEBUG:
-#     logger.setLevel(logging.DEBUG)
+#     #logger.setLevel(logging.DEBUG)
 # else:
-#     logger.setLevel(logging.INFO)
+#     #logger.setLevel(logging.INFO)
 
 
 class TransactionSide(object):
@@ -71,10 +71,10 @@ class JsonSocket(object):
             try:
                 self.socket.connect((self.address, self.port))
             except socket.error as msg:
-                logger.error("SockThread Error: %s" % msg)
+                # logger.error("SockThread Error: %s" % msg)
                 time.sleep(0.25)
                 continue
-            logger.info("\nSocket connected")
+            # logger.info("\nSocket connected")
             return True
         return False
 
@@ -88,12 +88,12 @@ class JsonSocket(object):
             msg = msg.encode("utf-8")
             while sent < len(msg):
                 sent += self.conn.send(msg[sent:])
-                logger.info("\nSent: " + str(msg))
+                # logger.info("\nSent: " + str(msg))
                 time.sleep(API_SEND_TIMEOUT / 1000)
 
     def _read(self, bytesSize=4096):
         if not self.socket:
-            logger.info("Socket connection broken")
+            # logger.info("Socket connection broken")
             raise RuntimeError("socket connection broken")
         while True:
             char = self.conn.recv(bytesSize).decode()
@@ -108,7 +108,7 @@ class JsonSocket(object):
                     break
             except ValueError as e:
                 continue
-        # logger.debug("Received: " + str(resp))
+        # #logger.debug("Received: " + str(resp))
         return resp
 
     def _readObj(self):
@@ -116,10 +116,10 @@ class JsonSocket(object):
         return msg
 
     def close(self):
-        logger.info("Closing socket")
+        # logger.info("Closing socket")
         self._closeSocket()
         if self.socket is not self.conn:
-            logger.info("Closing connection socket")
+            # logger.info("Closing connection socket")
             self._closeConnection()
 
     def _closeSocket(self):
@@ -191,7 +191,7 @@ class APIClient(JsonSocket):
         commandResponse = self.execute(baseCommand(commandName, arguments))
         if commandResponse["status"] == False:
             error_code = commandResponse["errorCode"]
-            logger.info(f"\nLogin failed. Error code: {error_code}")
+            # logger.info(f"\nLogin failed. Error code: {error_code}")
             df = None
         else:
             if return_df:
@@ -250,7 +250,8 @@ class APIStreamClient(JsonSocket):
             if msg["command"] == "tickPrices":
                 # t = Thread(target=self._tickFun, args=(msg,))
                 # t.start()
-                logger.debug(msg)
+                # #logger.debug(msg)
+                pass
             elif msg["command"] == "trade":
                 self._tradeFun(msg)
             elif msg["command"] == "balance":
@@ -264,9 +265,10 @@ class APIStreamClient(JsonSocket):
             elif msg["command"] == "candle":
                 t = Thread(target=self._candleFun, args=(msg,))
                 t.start()
-                logger.debug(msg)
+                # #logger.debug(msg)
             elif msg["command"] == "keepAlive":
-                logger.debug(msg)
+                # #logger.debug(msg)
+                pass
 
     def disconnect(self):
         self._running = False

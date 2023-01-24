@@ -17,6 +17,7 @@ from ta.trend import MACD
 from ta.momentum import StochasticOscillator
 from scipy.signal import argrelextrema
 from sklearn.model_selection import GridSearchCV
+from forex_python.converter import CurrencyRates
 import json
 import warnings
 
@@ -24,6 +25,31 @@ warnings.filterwarnings(action="ignore", message="Mean of empty slice")
 
 TIMEZONE = pytz.timezone("GMT")
 INITIAL_TIME = datetime(1970, 1, 1, 00, 00, 00, 000000, tzinfo=TIMEZONE)
+
+
+class CustomJSONizer(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.bool_):
+            return bool(obj)
+        elif isinstance(obj, np.int64):
+            return int(obj)
+        else:
+            try:
+                return super().default(obj)
+            except Exception as e:
+                return "Class"
+
+
+def calculate_position(price, vol, contractSize=100000, leverage=5, currency="EUR"):
+    position = contractSize * vol * price
+    margin = position * (leverage / 100)
+    return convert_currency(margin, currency)
+
+
+def convert_currency(amount, in_currency, out_currency="EUR"):
+    c = CurrencyRates()
+    return c.convert(in_currency, out_currency, amount) * 1.07
+
 
 # DATE MANAGING
 def get_today():
@@ -55,6 +81,10 @@ def date_to_xtb_time(target):
     days_diff = (target - INITIAL_TIME).days * 24 * 3600 * 1000
     seconds_diff = (target - INITIAL_TIME).seconds * 1000
     return days_diff + seconds_diff
+
+
+def min_max_norm(x, _min, _max):
+    return (x - _min) / (_max - _min)
 
 
 # STOCK DATA RELATED

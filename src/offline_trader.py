@@ -2,6 +2,7 @@ from xAPIConnector import *
 from trader_utils import *
 import logging
 from trading_accounts import Trader
+from trader_db_utils import *
 import time
 import os
 
@@ -18,12 +19,12 @@ docs_path = curr_path + "../../docs/"
 database_path = curr_path + "../../database/"
 logs_path = curr_path + "../../logs/"
 
-if os.path.exists(f"{logs_path}python_offline_trader.log"):
-    os.remove(f"{logs_path}python_offline_trader.log")
+if os.path.exists(f"{logs_path}{__name__}.log"):
+    os.remove(f"{logs_path}{__name__}.log")
 logging.basicConfig(
     level=logging.DEBUG,
     format="%(asctime)s : %(levelname)s : %(threadName)s : %(name)s %(message)s",
-    filename=f"{logs_path}python_offline_trader.log",
+    filename=f"{logs_path}{__name__}.log",
 )
 
 console = logging.StreamHandler()
@@ -35,41 +36,23 @@ console.setFormatter(formatter)
 logging.getLogger("").addHandler(console)
 
 logger = logging.getLogger(__name__)
-logger.info("ONLINE TRADER")
+logger.info(f"{__name__}")
 
 
 def main():
     trader = Trader(
         name="TestTrader",
-        trader_name="trader2",
         capital=1000,
         max_risk=0.05,
         trader_type="FX",
     )
 
-    loginResponse = trader.client.execute(
-        loginCommand(userId=trader.user, password=trader.passw)
-    )
-    status = loginResponse["status"]
-    print(f"Login Response: {status}")
-
-    # check if user logged in correctly
-    if loginResponse["status"] == False:
-        error_code = loginResponse["errorCode"]
-        print(f"Login failed. Error code: {error_code}")
-        return
-
-    # get ssId from login response
-    ssid = loginResponse["streamSessionId"]
-    trader.ssid = ssid
-
-    # TODO to run once the market is closed
-
     symbols_df = trader.client.commandExecute("getAllSymbols")
-    trader.insert_symbols(symbols_df)
+    insert_symbols(symbols_df)
     symbols_df = trader.look_for_suitable_symbols_v1(symbols_df)
-    trader.update_stocks(symbols_df, period=1, days=7)
+    trader.update_stocks(symbols_df, period=1, days=14)
 
+    quit()
     trader.evaluate_stocks(
         params={
             "repetitions": 500,

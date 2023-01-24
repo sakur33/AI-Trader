@@ -2,14 +2,13 @@ import os
 import pandas as pd
 from trader_utils import *
 from sqlalchemy import create_engine
-import urllib
 from xAPIConnector import *
 from creds import creds
-import pyodbc
-import psycopg2
 from sklearn.metrics import make_scorer
 from sklearn.model_selection import RandomizedSearchCV
 import threading
+from trader_db_utils import *
+from tqdm import tqdm
 
 logger = logging.getLogger(__name__)
 
@@ -23,6 +22,7 @@ model_path = curr_path + "../../model/"
 result_path = curr_path + "../../result/"
 docs_path = curr_path + "../../docs/"
 database_path = curr_path + "../../database/"
+logs_path = curr_path + "../../logs/"
 
 minimun_trade = 10
 
@@ -30,193 +30,63 @@ minimun_trade = 10
 
 
 class Trader:
-    def __init__(self, name, trader_name, capital, max_risk, trader_type) -> None:
-        self.user = creds[trader_name]["user"]
-        self.passw = creds[trader_name]["passw"]
+    def __init__(self, name, capital, max_risk, trader_type) -> None:
+        self.user = creds[name]["user"]
+        self.passw = creds[name]["passw"]
         self.name = name
         self.capital = capital
         self.max_risk = max_risk
-        self.db_conn = self.create_db_conn()
-        self.db_engine = self.create_db_engine()
-        self.ts_conn = self.create_ts_conn()
-        self.create_trader()
-
-        self.client = APIClient()
-        loginResponse = self.client.execute(
-            loginCommand(userId=self.user, password=self.passw)
-        )
-        status = loginResponse["status"]
-        if status:
-            logging.info(f"Login successful")
-
+        self.trader_type = trader_type
+        traderid = get_trader_id(name)
+        if traderid is None:
+            traderid = insert_trader(name, capital, max_risk)
+            logger.info(f"Trader created id: {traderid}")
         else:
-            error_code = loginResponse["errorCode"]
-            logging.info(f"Login error | {error_code}")
-            quit()
+            logger.info(f"Trader exists id: {traderid}")
+        self.traderid = traderid
+        self.apiClientLogin()
 
-        self.ssid = loginResponse["streamSessionId"]
         self.client_session_start = datetime.now()
         pingFun = threading.Thread(target=self.ping_client)
         pingFun.setDaemon(True)
         pingFun.start()
 
-        self.streaming_start_time = None
-        self.stream_client = None
-        self.trader_type = trader_type
-        self.sessions = {}
-        self.operation_count = 0
-        self.order_n = None
-        self.session_status = False
-
-    def make_trade(self, symbol_info, current_price, stop_loss=None, take_profit=None):
-        # TODO implement make trade:
-        pass
-
-    def create_db_conn(self):
-        conn = None
-        # Trusted Connection to Named Instance
-        try:
-            conn = pyodbc.connect(
-                driver="{ODBC Driver 17 for SQL Server}",
-                server="localhost",
-                port=1433,
-                database="master",
-                user="sa",
-                password="yourStrong(!)Password",
-            )
-        except Exception as e:
-            logger.info(f"Exception | create_db_conn | {e}")
-        return conn
-
-    def create_db_engine(self):
-        quoted = urllib.parse.quote_plus(
-            "DRIVER={ODBC Driver 17 for SQL Server};"
-            "SERVER=localhost;"
-            "DATABASE=master;"
-            "UID=sa;"
-            "PWD=yourStrong(!)Password"
+    def apiClientLogin(self):
+        client = APIClient()
+        loginResponse = client.execute(
+            loginCommand(userId=self.user, password=self.passw)
         )
-        engine = create_engine("mssql+pyodbc:///?odbc_connect={}".format(quoted))
-        return engine
+        status = loginResponse["status"]
+        if status:
+            logging.info(f"Login successful")
+        else:
+            error_code = loginResponse["errorCode"]
+            logging.info(f"Login error | {error_code}")
+            quit()
 
-    def create_ts_conn(self):
-        dbname = "postgres"
-        user = "postgres"
-        password = "1234"
-        host = "localhost"
-        port = 5432
-        connection = (
-            f"dbname ={dbname} user={user} password={password} host={host} port={port}"
-        )
-        conn = psycopg2.connect(connection)
-        return conn
-
-    def create_ts_engine():
-        # TODO implement ts engine
-        pass
-
-    def create_trader(self):
-        conn = self.db_conn
-        sql = f"SELECT tradername FROM traders WHERE tradername = '{self.name}'"
-        try:
-            cur = conn.cursor()
-            cur.execute(sql)
-            names = cur.fetchall()
-            if len(names) == 0:
-                self.insert_trader()
-                logger.info(f"New Trader Created | tradername: {self.name}")
-            else:
-                logger.info(f"Trader already exists | tradername: {self.name}")
-
-        except Exception as e:
-            logger.info(f"Exception | create trader | {e}")
-
-    def insert_trader(self):
-        conn = self.db_conn
-        sql = f"INSERT INTO traders (tradername, creation_date, initial_capital, max_risk) VALUES ('{self.name}','{todayms}',{self.capital},{self.max_risk});"
-        logger.info(sql)
-        try:
-            cur = conn.cursor()
-            cur.execute(sql)
-            conn.commit()
-            logger.info(f"Trader inserted | traderid: {self.traderid}")
-        except Exception as e:
-            logger.info(f"Exception | insert_trader | {e}")
-
-    def insert_trade(
-        self,
-        tradeid,
-        date_entry,
-        symbol,
-        shares,
-        entry_price,
-        entry_stop_loss,
-        entry_take_profit,
-        out_price,
-    ):
-        conn = self.db_conn
-        sql = f"INSERT INTO trades (tradeid, traderid, date_entry, symbol, shares, entry_price, entry_stop_loss, entry_take_profit, out_price) VALUES ({tradeid},{self.traderid},{date_entry},{symbol},{shares},{entry_price},{entry_stop_loss},{entry_take_profit},{out_price});"
-        try:
-            cur = conn.cursor()
-            cur.execute(sql)
-            conn.commit()
-        except Exception as e:
-            logger.info(f"Exception | insert_trade | {e}")
-
-    def insert_symbols(self, df):
-
-        df["min_price"] = (
-            (df["ask"] * df["contractSize"]) / ((1 / df["leverage"]) * 100)
-        ) * df["lotStep"]
-        try:
-            df.to_sql("symbols", schema="dbo", con=self.db_engine, if_exists="replace")
-        except Exception as e:
-            logger.info(f"Exception | insert symbol | {e}")
-
-    def insert_trans(self, conn, tradeid, trans_date, trans_type, balance):
-        sql = f"INSERT INTO balance (traderid, tradeid, trans_date, trans_type, balance) VALUES ({self.traderid},{tradeid},{trans_date},{trans_type},{balance});"
-        try:
-            cur = conn.cursor()
-            cur.execute(sql)
-            conn.commit()
-        except Exception as e:
-            logger.info(f"Exception | insert_trans | {e}")
-
-    def insert_params(self, day, symbol, score, short_ma, long_ma, out, min_angle):
-        sql = f"INSERT INTO trading_params(symbol_name, date, score, short_ma, long_ma, out, min_angle)VALUES('{symbol}', '{day}', {score}, {short_ma}, {long_ma}, {out}, {min_angle});"
-        try:
-            cur = self.db_conn.cursor()
-            cur.execute(sql)
-            self.db_conn.commit()
-        except Exception as e:
-            logger.info(f"Exception | insert_trading_params | {e}")
-
-    def get_profit_losses(self):
-        # TODO implement query to get profits and losses
-        pass
+        self.client = client
+        self.ssid = loginResponse["streamSessionId"]
 
     def ping_client(self):
         while True:
-            commandResponse = self.client.commandExecute(
-                "ping",
-                return_df=False,
-            )
-            logger.info(f"Ping sent | {commandResponse['status']}")
             time.sleep(60 * 5)
+            try:
+                commandResponse = self.client.commandExecute(
+                    "ping",
+                    return_df=False,
+                )
+            except Exception as e:
+                logger.info(f"Exception at ping: {e}")
 
     def start_streaming(self):
         self.stream_client = APIStreamClient(
             ssId=self.ssid,
             tickFun=self.tick_processor,
             candleFun=self.candle_processor,
-            tradeFun=self.trade_processor,
-            profitFun=self.profit_processor,
-            tradeStatusFun=self.trade_status_processor,
             keepAliveFun=self.keepAlive,
         )
 
     def keepAlive(self):
-        # logger.debug("Keep Alive")
         pass
 
     def start_trading_session(self, params):
@@ -236,11 +106,14 @@ class Trader:
             contractSize=df_symbol["contractSize"][0],
             lotStep=df_symbol["lotStep"][0],
             lotMin=df_symbol["lotMin"][0],
+            currency=df_symbol["currency"][0],
             apiClient=self.client,
+            apiStream=self.stream_client,
             ts_conn=self.ts_conn,
             db_conn=self.db_conn,
             db_engine=self.db_engine,
-            trader_name=self.name,
+            name=self.name,
+            trader_name=self.trader_name,
         )
 
         return session
@@ -257,79 +130,40 @@ class Trader:
             )
 
     def tick_processor(self, msg):
-        tick_df = return_as_df([msg["data"]])
-        tick_df["timestamp"] = xtb_time_to_date(
-            int(tick_df["timestamp"].values[0]), local_tz=True
-        )
-        cursor = self.ts_conn.cursor()
-        try:
-            cursor.execute(
-                f"INSERT INTO ticks (timestamp, symbol, ask, bid, high, low, askVolume, bidVolume, tick_level, quoteId, spreadTable, spreadRaw) VALUES ('{tick_df['timestamp'].values[0]}', '{tick_df['symbol'].values[0]}', {tick_df['ask'].values[0]}, {tick_df['bid'].values[0]}, {tick_df['high'].values[0]}, {tick_df['low'].values[0]}, {tick_df['askVolume'].values[0]}, {tick_df['bidVolume'].values[0]}, {tick_df['level'].values[0]}, {tick_df['quoteId'].values[0]}, {tick_df['spreadTable'].values[0]}, {tick_df['spreadRaw'].values[0]});"
-            )
-        except (Exception, psycopg2.Error) as error:
-            logger.info(error.pgerror)
-        self.ts_conn.commit()
-        if self.sessions[tick_df["symbol"][0]].start_time is None:
-            self.sessions[tick_df["symbol"][0]].start_time = tick_df["timestamp"][0]
+        tick = msg["data"]
+        tick["timestamp"] = xtb_time_to_date(int(tick["timestamp"]), local_tz=True)
+        inserTick = threading.Thread(target=insert_tick, args=(tick,))
+        inserTick.start()
 
     def candle_processor(self, msg):
-        logger.info("Candle")
-        cursor = self.ts_conn.cursor()
-        candle_df = return_as_df([msg["data"]])
-        candle_df["ctmString"] = pd.to_datetime(
-            candle_df["ctmString"], format="%b %d, %Y, %I:%M:%S %p"
-        ).dt.strftime("%Y-%m-%d %H:%M:%S.%f")
-        try:
-            cursor.execute(
-                f"INSERT INTO candles (symbol, ctm, ctmString, low, high, open, close, vol, quoteId) VALUES ('{candle_df['symbol'].values[0]}', {candle_df['ctm'].values[0]}, '{candle_df['ctmString'].values[0]}', {candle_df['low'].values[0]}, {candle_df['high'].values[0]}, {candle_df['open'].values[0]}, {candle_df['close'].values[0]}, {candle_df['vol'].values[0]}, {candle_df['quoteId'].values[0]});"
-            )
-        except (Exception, psycopg2.Error) as error:
-            logger.info(f"Error inserting candles | {error}")
-        self.ts_conn.commit()
-        if self.sessions[candle_df["symbol"][0]].start_time is None:
-            self.sessions[candle_df["symbol"][0]].start_time = candle_df["ctmString"][0]
-
-        candleFun = threading.Thread(
-            target=self.sessions[candle_df["symbol"][0]].step()
+        candle = msg["data"]
+        candle["ctmString"] = (
+            pd.to_datetime(candle["ctmString"], format="%b %d, %Y, %I:%M:%S %p")
+            .dt.strftime("%Y-%m-%d %H:%M:%S.%f")
+            .strftime("%Y-%m-%d %H:%M:%S.%f")
         )
-        candleFun.start()
-
-    def trade_processor(self, msg):
-        logger.info("TRADE: ", msg)
-        trades = return_as_df([msg["data"]])
-
-    def balance_processor(self, msg):
-        logger.info("BALANCE: ", msg)
-        logger.info("\n")
-
-    def trade_status_processor(self, msg):
-        logger.info("TRADE STATUS: ", msg)
-        logger.info("\n")
-
-    def profit_processor(self, msg):
-        logger.info("PROFIT: ", msg)
-        logger.info("\n")
-
-    def news_processor(self, msg):
-        logger.info("NEWS: ", msg)
-        logger.info("\n")
+        inserCandle = threading.Thread(target=insert_candle, args=(candle,))
+        inserCandle.start()
 
     def look_for_suitable_symbols_v1(self, df):
         # TODO look for suitable symbols
         # Look for symbols with:
-        #   - Tight spread
+        #   - Volatility bigger than spread [DONE LATER]
         #   - Trader_type products
+        #   - Ask comparable to our max_risk
+
         df = df[df["categoryName"] == self.trader_type]
-        #   - ask comparable to our max_risk
-        # ((ask * contract_size) / leverage) * lotStep
+        df["min_price"] = (
+            df["ask"] * df["lotMin"] * df["contractSize"] * (df["leverage"] / 100)
+        )
         df = df[df["min_price"] <= (self.capital * self.max_risk)]
         df["spread_percentage"] = (df["ask"] - df["bid"]) / df["ask"]
         df = df.sort_values(by=["spread_percentage"])
         return df
 
-    def update_stocks(self, df, period, days, save=False):
+    def update_stocks(self, df, period, days=14):
         start_date = datetime.now() - timedelta(days=days)
-        for symbol in list(df["symbol"]):
+        for symbol in tqdm(list(df["symbol"])):
             # get candles
             CHART_RANGE_INFO_RECORD = {
                 "period": period,
@@ -351,17 +185,9 @@ class Trader:
                 if not candles is None:
                     candles = cast_candles_to_types(candles, digits, dates=True)
                     candles = adapt_data(candles)
-                    try:
-                        candles["symbol_name"] = symbol
-                        candles["period"] = period
-                        candles.to_sql(
-                            "stocks",
-                            con=self.db_engine,
-                            if_exists="append",
-                            index=False,
-                        )
-                    except Exception as e:
-                        logger.info(f"Exception | insert symbol | {e}")
+                    candles["symbol"] = symbol
+                    for index, row in candles.iterrows():
+                        insert_candle(row.to_dict())
                 else:
                     logger.info(f"Symbol {symbol} did not return candles")
 
@@ -549,17 +375,25 @@ class TradingSession:
         contractSize,
         lotStep,
         lotMin,
+        currency,
         apiClient,
+        apiStream,
         ts_conn,
         db_conn,
         db_engine,
+        name,
         trader_name,
     ) -> None:
         self.symbol = symbol
-        self.short_ma = short_ma
-        self.long_ma = long_ma
-        self.out = out
-        self.min_angle = min_angle
+        self.short_ma = 1
+        self.long_ma = 10
+        self.exit = 0.01
+        self.out = 0.001
+        self.min_angle = 5
+        self.step_count = 0
+        self.in_up_crossover = False
+        self.in_down_crossover = False
+
         self.capital = capital
         self.short_enabled = short_enabled
         self.leverage = leverage
@@ -567,209 +401,264 @@ class TradingSession:
         self.lotStep = lotStep
         self.lotMin = lotMin
         self.apiClient = apiClient
+        self.apiStreamClient = apiStream
         self.ts_conn = ts_conn
         self.db_engine = db_engine
         self.db_conn = db_conn
-        self.trader_name = trader_name
+        self.name = name
         self.is_bought = False
         self.is_short = False
-        self.in_up_crossover = False
-        self.in_down_crossover = False
+        self.profit = None
+        self.prev_profit = None
         self.profits = []
         self.potential_profits = []
         self.buy_price = None
+        self.open_price = None
+        self.current_position = None
+        self.current_price = None
         self.buy_volume = None
-        self.buy_multiplier = (
-            self.contractSize / ((1 / self.leverage) * 100)
-        ) * self.lotStep
-        self.prev_candle_count = 0
         self.start_time = None
-        self.step_count = 0
+        self.currency = currency
+        self.trader_name = trader_name
+        self.user = creds[trader_name]["user"]
+        self.passw = creds[trader_name]["passw"]
         self.insert_trade_session()
 
     def step(self):
-        logger.debug("Start step")
-        logger.info(f"Session step: {self.step_count}")
         self.step_count += 1
         if self.step_count > self.long_ma:
 
             candles = self.get_candles()
-            c_tick = self.get_ticks(int(candles["ctm"].values[0]))
+            timestamp = int(candles["ctm"].values[0])
+            c_tick = self.get_ticks(timestamp)
             c_candle = candles.iloc[0, :]
             prev_candle = candles.iloc[-1, :]
+            angle_diff = self.get_angle_between_slopes(prev_candle, c_candle)
 
-            logger.info(
-                f"Step count ({self.step_count}) > long_ma ({self.long_ma})\n   Is bought: {self.is_bought}\n   Is short: {self.is_short}\n   Previous: \n  Time: {prev_candle['ctmstring']} \n  Short_ma: {prev_candle['short_ma']}\n       Long_ma: {prev_candle['long_ma']}\n   Current:  \n  Time: {c_candle['ctmstring']} \n   Short_ma: {c_candle['short_ma']}\n  Long_ma: {c_candle['long_ma']}"
-            )
+            if c_candle["short_ma"] < c_candle["long_ma"]:
+                self.in_down_crossover = True
+            elif c_candle["short_ma"] > c_candle["long_ma"]:
+                self.in_up_crossover = True
+
             if self.is_bought:
-
                 diff = c_candle["low"] - prev_candle["low"]
-                profit = c_candle["low"] - self.buy_price
-                prev_profit = prev_candle["low"] - self.buy_price
+                profit, prev_profit = self.evaluate_profit(timestamp)
 
-                logger.info(f"Is Bought")
-                logger.info(f"Buy price {self.buy_price}")
-                logger.info(f"Profit {profit}")
-                logger.info(f"Diff {diff}")
-                logger.info(f"Potential profits {self.potential_profits}")
+                logger.info(
+                    f"Is Bought\nBuy price {self.buy_price}\nProfit {profit}\nDiff {diff}\nPotential profits {self.potential_profits}"
+                )
 
-                if profit < -(self.buy_price * self.out):
-                    self.sell_position()
+                if profit < -(self.buy_price * self.exit):
+                    self.sell_position(profit=profit, c_tick=c_tick)
 
                 elif profit > 0:
                     self.potential_profits.append(diff)
-                    if (prev_profit) > ((profit) * 1 + self.out):
-                        self.sell_position()
+                    if (prev_profit) > ((profit) * (1 + self.out)):
+                        self.sell_position(profit=profit, c_tick=c_tick)
 
                 else:
                     self.potential_profits.append(diff)
 
             if self.is_short:
                 diff = prev_candle["low"] - c_candle["low"]
-                profit = self.buy_price - c_candle["low"]
-                prev_profit = self.buy_price - prev_candle["low"]
+                profit, prev_profit = self.evaluate_profit(timestamp)
 
-                logger.info(f"Is Short")
-                logger.info(f"Buy price {self.buy_price}")
-                logger.info(f"Profit {profit}")
-                logger.info(f"Diff {diff}")
-                logger.info(f"Potential profits {self.potential_profits}")
+                logger.info(
+                    f"Is Short\nBuy price {self.buy_price}\nProfit {profit}\nDiff {diff}\nPotential profits {self.potential_profits}"
+                )
 
                 if profit < -(self.buy_price * self.out):
-                    self.sell_position()
+                    self.sell_position(profit=profit, c_tick=c_tick)
 
                 elif profit > 0:
                     self.potential_profits.append(diff)
-                    if (prev_profit) > ((profit) * 1 + self.out):
-                        self.sell_position()
+                    if (prev_profit) > ((profit) * (1 + self.out)):
+                        self.sell_position(profit=profit, c_tick=c_tick)
                 else:
                     self.potential_profits.append(diff)
 
             if self.crossover(prev_candle, c_candle):
+                self.in_down_crossover = False
+                logger.info(f"Up Crossover")
+                if angle_diff > self.min_angle:
+                    if self.enough_money(c_tick):
+                        if not self.is_bought and not self.is_short:
+                            self.buy_position(c_tick=c_tick)
+                        else:
+                            logger.info("Already positioned")
+                            # TODO: implement multitrade
+                    else:
+                        logger.info(f"Not enough money")
+                        pass
+                        # TODO: NOT ENOUGH MONEY (END SESSION?)
+            else:
+                logger.info(f"Down Crossover")
+                self.in_up_crossover = False
+                if self.short_enabled:
+                    if angle_diff < -self.min_angle:
 
-                ma_short_slope, ma_long_slope = self.get_slope(prev_candle, c_candle)
-                crossover_angle = self.get_angle_between_slopes(
-                    ma_short_slope, ma_long_slope
-                )
-                if self.up_crossover(prev_candle, c_candle):
-                    logger.info(f"Up Crossover")
-                    if self.is_bought:
-                        self.sell_position()
-
-                    if np.abs(crossover_angle) > self.min_angle:
                         if self.enough_money(c_tick):
-                            self.buy_position()
+                            if not self.is_bought and not self.is_short:
+                                self.buy_position(c_tick=c_tick, short=True)
+                            else:
+                                logger.info("Already positioned")
                         else:
                             logger.info(f"Not enough money")
                             pass
                             # TODO: NOT ENOUGH MONEY (END SESSION?)
-                    else:
-                        self.in_up_crossover = True
-                        logger.info(f"Crossover angle too small")
-                        logger.info(f"  Angle: {crossover_angle}")
-                        logger.info(f"  Min angle: {self.min_angle}")
-                        # TODO: CROSSOVER ANGLE TOO SMALL (?)
 
-                if self.down_crossover(prev_candle, c_candle):
-                    logger.info(f"Down Crossover")
-                    if self.is_bought:
-                        self.sell_position()
+            logger.info(
+                f"\n**************************\nStep count ({self.step_count}) > long_ma ({self.long_ma})\n Is bought: {self.is_bought}\n Is short: {self.is_short}\n Up cross: {self.in_up_crossover}\n Down cross: {self.in_down_crossover}\n Previous:\n     Time: {prev_candle['ctmstring']}\n      Short_ma: {prev_candle['short_ma']}\n       Long_ma: {prev_candle['long_ma']}\n Current:\n      Time: {c_candle['ctmstring']}\n            Short_ma: {c_candle['short_ma']}\n            Long_ma: {c_candle['long_ma']}\n Angle: {angle_diff}\n Min_angle: {self.min_angle}\n Entry Price: {self.open_price}\n Entry Position: {self.buy_price}\n Current Price: {self.current_price}\n Current Position: {self.current_position}\n Profit: {self.profit}\n Prev. Profit: {self.prev_profit}\n**************************"
+            )
+        self.store_vars()
 
-                    if self.short_enabled:
-                        if np.abs(crossover_angle) > self.min_angle:
-                            if self.enough_money(c_tick):
-                                self.buy_position(c_tick)
-                            else:
-                                logger.info(f"Not enough money")
-                                pass
-                                # TODO: NOT ENOUGH MONEY (END SESSION?)
-                        else:
-                            self.in_down_crossover = True
-                            logger.info(f"Crossover angle too small")
-                            logger.info(f"  Angle: {crossover_angle}")
-                            logger.info(f"  Min angle: {self.min_angle}")
-                            # TODO: CROSSOVER ANGLE TOO SMALL (?)
-                            pass
+    def store_vars(self):
+        vars = json.dumps(self.__dict__, cls=CustomJSONizer)
+        if not os.path.exists(data_path + self.symbol):
+            os.mkdir(data_path + self.symbol)
+        with open(
+            data_path
+            + self.symbol
+            + "/"
+            + "class_attrs_s"
+            + str(self.step_count)
+            + ".json",
+            "w",
+        ) as f:
+            f.write(vars)
 
-        logger.debug("End step")
+    def load_vars(self):
+        with open(data_path + self.symbol + "class_attrs.json") as f:
+            vars = json.load(f)
+        for key, value in vars:
+            print(f"{key}: {value}")
 
-    def get_trade(self, opened=False):
-        commandResponse = self.apiClient.commandExecute(
-            "tradeTransactionStatus",
-            arguments={"order": self.order_n},
-            return_df=False,
-        )
-        trans_status = commandResponse["returnData"]
-        commandResponse = self.apiClient.commandExecute(
-            "getTrades",
-            arguments={"openedOnly": opened},
-            return_df=False,
-        )
-        trade_records = commandResponse["returnData"]
-        for trade_record in trade_records:
-            if trade_record["order2"] == trans_status["order"]:
-                trade = trade_record
-
-        return trade
-
-    def sell_position(self, profit, c_tick):
-        logger.info("Enters self.sell position")
+    def sell_position(self, profit, c_tick, short=False):
+        logger.info("\n******\nSELL\n******")
+        if short:
+            buy_trans = TransactionSide.BUY
+        else:
+            buy_trans = TransactionSide.SELL
         self.is_bought = False
         self.is_short = False
         self.profits.append(profit)
         self.potential_profits = [0]
         self.buy_volume = None
         self.buy_price = None
+        self.in_down_crossover = False
+        self.in_up_crossover = False
         position = self.get_trade(opened=True)
-        commandResponse = self.apiClient.commandExecute(
-            "tradeTransaction",
-            arguments={
-                "tradeTransInfo": {
-                    "cmd": TransactionSide.SELL,
-                    "customComment": self.trader_name,
-                    "expiration": 0,
-                    "offset": 0,
-                    "order": position["order"],
-                    "price": c_tick["bid"][0],
-                    "sl": 0.0,
-                    "symbol": c_tick["symbol"][0],
-                    "tp": 0.0,
-                    "type": TransactionType.ORDER_CLOSE,
-                    "volume": self.volume,
-                }
-            },
-            return_df=False,
-        )
-        logger.info(commandResponse)
-        self.update_trade()
+        try:
+            commandResponse = self.apiClient.commandExecute(
+                "tradeTransaction",
+                arguments={
+                    "tradeTransInfo": {
+                        "cmd": buy_trans,
+                        "customComment": self.name,
+                        "expiration": 0,
+                        "offset": 0,
+                        "order": position["order"],
+                        "price": c_tick["ask"][0],
+                        "sl": 0.0,
+                        "symbol": c_tick["symbol"][0],
+                        "tp": 0.0,
+                        "type": TransactionType.ORDER_CLOSE,
+                        "volume": self.volume,
+                    }
+                },
+                return_df=False,
+            )
+            self.sell_order_n = commandResponse["returnData"]["order"]
+        except Exception as e:
+            logger.info(f"Exception at sell position: {e}")
+            self.apiClientLogin()
+            commandResponse = self.apiClient.commandExecute(
+                "tradeTransaction",
+                arguments={
+                    "tradeTransInfo": {
+                        "cmd": buy_trans,
+                        "customComment": self.name,
+                        "expiration": 0,
+                        "offset": 0,
+                        "order": position["order"],
+                        "price": c_tick["bid"][0],
+                        "sl": 0.0,
+                        "symbol": c_tick["symbol"][0],
+                        "tp": 0.0,
+                        "type": TransactionType.ORDER_CLOSE,
+                        "volume": self.volume,
+                    }
+                },
+                return_df=False,
+            )
+            self.sell_order_n = commandResponse["returnData"]["order"]
+        self.order_n = None
+        self.sell_price = c_tick["ask"][0]
+        t = Thread(target=self.insert_trade)
+        t.start()
 
-    def buy_position(self, c_tick):
-        logger.info("Enters self.buy position")
-        self.is_bought = True
-        self.buy_price = c_tick["ask"][0]
-        commandResponse = self.apiClient.commandExecute(
-            "tradeTransaction",
-            arguments={
-                "tradeTransInfo": {
-                    "cmd": TransactionSide.BUY,
-                    "customComment": "No comment",
-                    "expiration": date_to_xtb_time(
-                        datetime.now() + timedelta(seconds=5)
-                    ),
-                    "offset": 0,
-                    "order": 0,
-                    "price": c_tick["ask"][0],
-                    "sl": 0.0,
-                    "symbol": c_tick["symbol"][0],
-                    "tp": 0.0,
-                    "type": TransactionType.ORDER_OPEN,
-                    "volume": self.get_max_volume(c_tick["ask"][0]),
-                }
-            },
-            return_df=False,
-        )
-        logger.info(commandResponse)
-        self.order_n = commandResponse["returnData"]["order"]
+    def buy_position(self, c_tick, short=False):
+        if short:
+            self.is_short = short
+            self.trade_type = "SHORT"
+            buy_trans = TransactionSide.SELL
+            logger.info("\n******\nSHORT\n******")
+        else:
+            self.is_bought = True
+            self.trade_type = "BUY"
+            buy_trans = TransactionSide.BUY
+            logger.info("\n******\nBUY\n******")
+
+        self.in_down_crossover = False
+        self.in_up_crossover = False
+        try:
+            commandResponse = self.apiClient.commandExecute(
+                "tradeTransaction",
+                arguments={
+                    "tradeTransInfo": {
+                        "cmd": buy_trans,
+                        "customComment": "No comment",
+                        "expiration": 0,
+                        "offset": 0,
+                        "order": 0,
+                        "price": c_tick["bid"][0],
+                        "sl": 0.0,
+                        "symbol": c_tick["symbol"][0],
+                        "tp": 0.0,
+                        "type": TransactionType.ORDER_OPEN,
+                        "volume": self.get_max_volume(c_tick["ask"][0]),
+                    }
+                },
+                return_df=False,
+            )
+            self.order_n = commandResponse["returnData"]["order"]
+        except Exception as e:
+            logger.info(f"Exception at buy position: {e}")
+            self.apiClientLogin()
+            commandResponse = self.apiClient.commandExecute(
+                "tradeTransaction",
+                arguments={
+                    "tradeTransInfo": {
+                        "cmd": buy_trans,
+                        "customComment": "No comment",
+                        "expiration": date_to_xtb_time(
+                            datetime.now() + timedelta(seconds=5)
+                        ),
+                        "offset": 0,
+                        "order": 0,
+                        "price": c_tick["ask"][0],
+                        "sl": 0.0,
+                        "symbol": c_tick["symbol"][0],
+                        "tp": 0.0,
+                        "type": TransactionType.ORDER_OPEN,
+                        "volume": self.get_max_volume(c_tick["ask"][0]),
+                    }
+                },
+                return_df=False,
+            )
+            self.order_n = commandResponse["returnData"]["order"]
+        self.buy_price, open_price = self.get_open_price()
+        self.entry_slipage = c_tick["ask"][0] - open_price
 
     def enough_money(self, c_tick):
         if np.sum(self.profits) + self.capital > (
@@ -781,19 +670,10 @@ class TradingSession:
         else:
             return False
 
-    def crossover(self, prev_canlde, c_candle):
-        if (
-            (
-                (prev_canlde["short_ma"] < prev_canlde["long_ma"])
-                and (c_candle["short_ma"] > c_candle["long_ma"])
-                or (prev_canlde["short_ma"] > prev_canlde["long_ma"])
-                and (c_candle["short_ma"] < c_candle["long_ma"])
-            )
-            or (self.in_up_crossover and not self.is_bought)
-            or (self.in_down_crossover and not self.is_short)
-        ):
+    def crossover(self, prev_candle, c_candle):
+        if self.up_crossover(prev_candle, c_candle):
             return True
-        else:
+        elif self.down_crossover(prev_candle, c_candle):
             return False
 
     def up_crossover(self, prev_candle, c_candle):
@@ -815,57 +695,73 @@ class TradingSession:
         else:
             return False
 
+    def get_max_values(self):
+        try:
+            commandResponse = self.apiClient.commandExecute(
+                commandName="getSymbol",
+                arguments={"symbol": self.symbol},
+                return_df=False,
+            )
+            min_close = commandResponse["returnData"]["low"]
+            max_close = commandResponse["returnData"]["high"]
+        except Exception as e:
+            logger.info(f"Exception at get max values: {e}")
+            self.apiClientLogin()
+            commandResponse = self.apiClient.commandExecute(
+                commandName="getSymbol",
+                arguments={"symbol": self.symbol},
+                return_df=False,
+            )
+            min_close = commandResponse["returnData"]["low"]
+            max_close = commandResponse["returnData"]["high"]
+        min_ctm = 0
+        max_ctm = self.long_ma
+        return min_ctm, max_ctm, min_close, max_close
+
     def get_slope(self, prev_candle, c_candle):
-        p1 = [prev_candle["ctm"], prev_candle["short_ma"]]
-        p2 = [c_candle["ctm"], c_candle["short_ma"]]
+        min_ctm, max_ctm, min_close, max_close = self.get_max_values()
+        prev_ctm = min_max_norm(self.step_count - 1, min_ctm, max_ctm)
+        c_ctm = min_max_norm(self.step_count, min_ctm, max_ctm)
+        prev_short = min_max_norm(prev_candle["short_ma"], min_close, max_close)
+        c_short = min_max_norm(c_candle["short_ma"], min_close, max_close)
+        prev_long = min_max_norm(prev_candle["long_ma"], min_close, max_close)
+        c_long = min_max_norm(c_candle["long_ma"], min_close, max_close)
+
+        p1 = [prev_ctm, prev_short]
+        p2 = [c_ctm, c_short]
         x1, y1 = p1
         x2, y2 = p2
         ma_short_slope = (y2 - y1) / (x2 - x1)
 
-        p1 = [prev_candle["ctm"], prev_candle["long_ma"]]
-        p2 = [c_candle["ctm"], c_candle["long_ma"]]
+        p1 = [prev_ctm, prev_long]
+        p2 = [c_ctm, c_long]
         x1, y1 = p1
         x2, y2 = p2
         ma_long_slope = (y2 - y1) / (x2 - x1)
         return ma_short_slope, ma_long_slope
 
-    def get_angle_between_slopes(self, m1, m2):
+    def get_angle_between_slopes(self, prev_candle, c_candle):
+        m1, m2 = self.get_slope(prev_candle, c_candle)
         return np.degrees(np.arctan((m1 - m2) / (1 + (m1 * m2))))
 
     def get_max_volume(self, price):
-        n = 0
+        n = -1
         buy_price = 0
         while buy_price < self.capital:
-            buy_price = (
-                (self.contractSize / ((1 / self.leverage) * 100))
-                * (self.lotMin + n * self.lotStep)
-                * price
-            )
             n += 1
-        if n > 1:
-            volume = self.lotMin + (n - 2) * self.lotStep
-        else:
-            volume = 0
+            buy_price = self.calculate_position(
+                price=price, vol=self.lotMin + n * self.lotStep
+            )
+        volume = self.lotMin + ((n - 1) * self.lotStep)
         self.volume = volume
         return volume
 
     def calculate_position(self, price, vol):
-        position = (self.contractSize / ((1 / self.leverage) * 100)) * (vol) * price
-        return position
-
-    def get_trade(self):
-        commandResponse = self.apiClient.commandExecute(
-            "getTrades",
-            arguments={"openedOnly": False},
-            return_df=False,
-        )
-        trade_records = commandResponse["returnData"]
-        for record in trade_records:
-            if record["order2"] == self.order_n:
-                return record
+        position = self.contractSize * vol * price
+        margin = position * (self.leverage / 100)
+        return convert_currency(margin, self.currency)
 
     def get_candle_count(self):
-        pass
         sql = f"select count(*) from candles WHERE symbol = '{self.symbol}' AND ctmstring > '{self.start_time}';"
         cursor = self.ts_conn.cursor()
         cursor.execute(sql)
@@ -895,40 +791,105 @@ class TradingSession:
         return candles_df
 
     def get_ticks(self, timestamp):
-        tick_df = self.apiClient.commandExecute(
-            commandName="getTickPrices",
-            arguments={"level": 0, "symbols": [self.symbol], "timestamp": timestamp},
-            return_df=False,
-        )
-        tick_df = return_as_df(tick_df["returnData"]["quotations"])
-        # sql = f"SELECT * FROM ticks WHERE symbol = '{self.symbol}' ORDER BY timestamp limit 1;"
-        # cursor = self.ts_conn.cursor()
-        # cursor.execute(sql)
-        # ticks = cursor.fetchall()
-        # ticks_df = pd.DataFrame(
-        #     columns=[
-        #         "timestamp",
-        #         "symbol",
-        #         "ask",
-        #         "bid",
-        #         "high",
-        #         "low",
-        #         "askvolume",
-        #         "bidvolume",
-        #         "tick_level",
-        #         "quoteid",
-        #         "spreadtable",
-        #         "spreadraw",
-        #     ],
-        #     data=ticks,
-        # )
+        try:
+            tick_df = self.apiClient.commandExecute(
+                commandName="getTickPrices",
+                arguments={
+                    "level": 0,
+                    "symbols": [self.symbol],
+                    "timestamp": timestamp,
+                },
+                return_df=False,
+            )
+            tick_df = return_as_df(tick_df["returnData"]["quotations"])
+        except Exception as e:
+            logger.info(f"Exception at get ticks: {e}")
+            self.apiClientLogin()
+            tick_df = self.apiClient.commandExecute(
+                commandName="getTickPrices",
+                arguments={
+                    "level": 0,
+                    "symbols": [self.symbol],
+                    "timestamp": timestamp,
+                },
+                return_df=False,
+            )
+            tick_df = return_as_df(tick_df["returnData"]["quotations"])
         return tick_df
 
+    def get_trade(self, opened=True):
+        while 1:
+            if opened:
+                try:
+                    commandResponse = self.apiClient.commandExecute(
+                        "getTrades",
+                        arguments={"openedOnly": True},
+                        return_df=False,
+                    )
+                    trade_records = commandResponse["returnData"]
+                except Exception as e:
+                    logger.info(f"Exception at get trade: {e}")
+                    self.apiClientLogin()
+                    commandResponse = self.apiClient.commandExecute(
+                        "getTrades",
+                        arguments={"openedOnly": True},
+                        return_df=False,
+                    )
+                    trade_records = commandResponse["returnData"]
+
+                if isinstance(trade_records, list):
+                    for record in trade_records:
+                        if record["order2"] == self.order_n:
+                            return record
+                else:
+                    if record["order2"] == self.order_n:
+                        return record
+            else:
+                try:
+                    commandResponse = self.apiClient.commandExecute(
+                        "getTradesHistory",
+                        arguments={"end": 0, "start": 0},
+                        return_df=False,
+                    )
+                    trade_records = commandResponse["returnData"]
+                except Exception as e:
+                    logger.info(f"Exception at get trade: {e}")
+                    self.apiClientLogin()
+                    commandResponse = self.apiClient.commandExecute(
+                        "getTradesHistory",
+                        arguments={"end": 0, "start": 0},
+                        return_df=False,
+                    )
+                    trade_records = commandResponse["returnData"]
+                if isinstance(trade_records, list):
+                    for record in trade_records:
+                        if record["order2"] == self.sell_order_n:
+                            return record
+                else:
+                    if record["order2"] == self.sell_order_n:
+                        return record
+
+            time.sleep(0.1)
+
+    def get_open_price(self):
+        trade = self.get_trade(opened=True)
+        open_price = trade["open_price"]
+        self.open_price = open_price
+        open_position = self.calculate_position(price=open_price, vol=self.volume)
+        return open_position, open_price
+
     def insert_trade(self):
-        trade = self.get_trade()
+        trade = self.get_trade(opened=False)
         entry_position = self.calculate_position(trade["open_price"], trade["volume"])
         out_position = self.calculate_position(trade["close_price"], trade["volume"])
-        sql = f"INSERT INTO trades (tradername, symbol, time_entry, time_close, vol, entry_price, out_price, entry_position, out_position)VALUES('{self.trader_name}', '{self.symbol}', '{trade['open_time']}', '{trade['close_time']}', {trade['volume']}, {trade['open_price']}, {trade['close_price']}, {entry_position}, {out_position});"
+
+        out_slipage = (
+            (self.sell_price - trade["close_price"]) * self.contractSize * self.volume
+        )
+        self.entry_slipage = self.entry_slipage * self.contractSize * self.volume
+        open_time = xtb_time_to_date(trade["open_time"])
+        close_time = xtb_time_to_date(trade["close_time"])
+        sql = f"INSERT INTO trades (trader_name, symbol, trade_type, time_entry, time_close, volume, entry_price, entry_position ,close_price, close_position, entry_slipage, close_slipage, profit)VALUES('{self.name}', '{self.symbol}','{self.trade_type}', '{open_time}', '{close_time}', {trade['volume']}, {trade['open_price']}, {entry_position}, {trade['close_price']}, {out_position}, {self.entry_slipage}, {out_slipage}, {trade['profit']});"
         cursor = self.db_conn.cursor()
         cursor.execute(sql)
         self.db_conn.commit()
@@ -944,3 +905,51 @@ class TradingSession:
         cursor = self.ts_conn.cursor()
         cursor.execute(sql)
         self.ts_conn.commit()
+
+    def evaluate_profit(self, timestamp):
+        tick = self.get_ticks(timestamp=timestamp)
+        if self.profit is not None:
+            prev_profit = self.profit
+        else:
+            prev_profit = 0
+        self.current_position = self.calculate_position(
+            price=tick["ask"][0], vol=self.volume
+        )
+        self.current_price = tick["ask"][0]
+        profit = (
+            (self.current_price - self.open_price) * self.contractSize * self.volume
+        )
+
+        if self.is_short:
+            self.profit = -1 * profit
+        else:
+            self.profit = profit
+        self.prev_profit = prev_profit
+        return self.profit, prev_profit
+
+    def apiClientLogin(self):
+        self.apiClient = APIClient()
+        loginResponse = self.apiClient.execute(
+            loginCommand(userId=self.user, password=self.passw)
+        )
+        status = loginResponse["status"]
+        if status:
+            logging.info(f"Login successful")
+
+        else:
+            error_code = loginResponse["errorCode"]
+            logging.info(f"Login error | {error_code}")
+            quit()
+
+        self.ssid = loginResponse["streamSessionId"]
+
+    def apiStreamingStart(self):
+        self.apiStreamClient = APIStreamClient(
+            ssId=self.ssid,
+            tickFun=Trader.tick_processor,
+            candleFun=Trader.candle_processor,
+            tradeFun=Trader.trade_processor,
+            profitFun=Trader.profit_processor,
+            tradeStatusFun=Trader.trade_status_processor,
+            keepAliveFun=Trader.keepAlive,
+        )

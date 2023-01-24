@@ -1,0 +1,37 @@
+from xAPIConnector import *
+from trader_utils import *
+import logging
+from trading_accounts import Trader
+import time
+import os
+
+
+today = get_today()
+todayms = get_today_ms()
+curr_path = os.path.dirname(os.path.realpath(__file__))
+data_path = curr_path + "../../data/"
+symbol_path = curr_path + "../../symbols/"
+cluster_path = curr_path + "../../clusters/"
+model_path = curr_path + "../../model/"
+result_path = curr_path + "../../result/"
+docs_path = curr_path + "../../docs/"
+database_path = curr_path + "../../database/"
+logs_path = curr_path + "../../logs/"
+
+trader = Trader(
+    name="TestTrader",
+    trader_name="trader2",
+    capital=1000,
+    max_risk=0.05,
+    trader_type="FX",
+)
+
+commandResponse = trader.client.commandExecute(
+    "getTradesHistory",
+    arguments={"end": 0, "start": 0},
+    return_df=False,
+)
+trade_records = commandResponse["returnData"]
+
+for trade in trade_records:
+    trader.insert_trade()
