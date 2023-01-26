@@ -7,7 +7,7 @@ logs_path = curr_path + "../../logs/"
 logging.basicConfig(
     level=logging.DEBUG,
     format="%(asctime)s : %(levelname)s : %(threadName)s : %(name)s %(message)s",
-    filename=f"{logs_path}{__name__}.log",
+    filename=f"{logs_path}main_logger.log",
 )
 
 console = logging.StreamHandler()

@@ -8,3 +8,4 @@ creds.py
 data
 */__pycache__/*
 __pycache__
+.log
