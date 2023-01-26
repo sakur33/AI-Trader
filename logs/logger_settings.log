@@ -1,0 +1,9 @@
+2023-01-26 14:23:02,255 : DEBUG : MainThread : tensorflow Falling back to TensorFlow client; we recommended you install the Cloud TPU client directly with pip install cloud-tpu-client.
+2023-01-26 14:23:02,458 : DEBUG : MainThread : h5py._conv Creating converter from 7 to 5
+2023-01-26 14:23:02,458 : DEBUG : MainThread : h5py._conv Creating converter from 5 to 7
+2023-01-26 14:23:02,458 : DEBUG : MainThread : h5py._conv Creating converter from 7 to 5
+2023-01-26 14:23:02,458 : DEBUG : MainThread : h5py._conv Creating converter from 5 to 7
+2023-01-26 14:23:03,295 : INFO : MainThread : __main__ __main__
+2023-01-26 14:23:03,297 : INFO : MainThread : trading_accounts Trader exists id: 16
+2023-01-26 14:23:04,049 : INFO : MainThread : root Login successful
+2023-01-26 14:23:04,051 : INFO : Thread-1 (ping_client) : trader_api_utils Exception at ping: EOF occurred in violation of protocol (_ssl.c:2396)

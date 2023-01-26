@@ -19,24 +19,11 @@ docs_path = curr_path + "../../docs/"
 database_path = curr_path + "../../database/"
 logs_path = curr_path + "../../logs/"
 
-if os.path.exists(f"{logs_path}python_online_trader.log"):
-    os.remove(f"{logs_path}python_online_trader.log")
-logging.basicConfig(
-    level=logging.DEBUG,
-    format="%(asctime)s : %(levelname)s : %(threadName)s : %(name)s %(message)s",
-    filename=f"{logs_path}python_online_trader.log",
-)
-
-console = logging.StreamHandler()
-console.setLevel(logging.INFO)
-formatter = logging.Formatter(
-    "%(asctime)s : %(levelname)s : %(threadName)s : %(name)s %(message)s"
-)
-console.setFormatter(formatter)
-logging.getLogger("").addHandler(console)
+if os.path.exists(f"{logs_path}{__name__}.log"):
+    os.remove(f"{logs_path}{__name__}.log")
 
 logger = logging.getLogger(__name__)
-logger.info("ONLINE TRADER")
+logger.info(f"{__name__}")
 
 
 def main():

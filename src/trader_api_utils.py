@@ -6,6 +6,8 @@ from trader_utils import *
 from trader_db_utils import *
 from trader_api_utils import *
 
+curr_path = os.path.dirname(os.path.realpath(__file__))
+logs_path = curr_path + "../../logs/"
 if os.path.exists(f"{logs_path}{__name__}.log"):
     os.remove(f"{logs_path}{__name__}.log")
 logger = logging.getLogger(__name__)
@@ -52,13 +54,9 @@ class ApiSessionManager:
 
     def ping_client(self):
         while True:
-            try:
-                commandResponse = self.client.commandExecute(
-                    "ping",
-                    return_df=False,
-                )
-            except Exception as e:
-                logger.info(f"Exception at ping: {e}")
+            commandResponse = self.client.commandExecute(
+                commandName="ping",
+            )
             time.sleep(60 * 5)
 
     def set_streamClient(self, symbol=None):
@@ -114,6 +112,7 @@ class ApiSessionManager:
                 logger.info(f"Symbol {symbol} did not return candles")
 
     def get_symbols(self):
-        symbols_df = self.client.commandExecute("getAllSymbols")
+        commandResponse = self.client.commandExecute("getAllSymbols")
+        symbols_df = return_as_df(commandResponse["returnData"])
         insert_symbols(symbols_df)
         return symbols_df

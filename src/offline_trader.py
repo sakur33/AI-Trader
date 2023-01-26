@@ -1,5 +1,5 @@
 import os
-import logging
+import logger_settings
 
 from trading_accounts import *
 from trader_db_utils import *
@@ -22,19 +22,6 @@ logs_path = curr_path + "../../logs/"
 
 if os.path.exists(f"{logs_path}{__name__}.log"):
     os.remove(f"{logs_path}{__name__}.log")
-logging.basicConfig(
-    level=logging.DEBUG,
-    format="%(asctime)s : %(levelname)s : %(threadName)s : %(name)s %(message)s",
-    filename=f"{logs_path}{__name__}.log",
-)
-
-console = logging.StreamHandler()
-console.setLevel(logging.INFO)
-formatter = logging.Formatter(
-    "%(asctime)s : %(levelname)s : %(threadName)s : %(name)s %(message)s"
-)
-console.setFormatter(formatter)
-logging.getLogger("").addHandler(console)
 
 logger = logging.getLogger(__name__)
 logger.info(f"{__name__}")

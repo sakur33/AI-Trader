@@ -165,7 +165,7 @@ def get_symbol_info(symbol):
     sql = f"SELECT TOP(1) * FROM symbols WHERE symbol = '{symbol}' order by time DESC"
     try:
         symbol_info = pd.read_sql_query(sql, con=DB_ENGINE)
-        symbol_info = symbol_info.dict()
+        symbol_info = symbol_info.to_dict()
     except Exception as e:
         logger.info(f"Exception | get_symbol_info | {e}")
         symbol_info = None

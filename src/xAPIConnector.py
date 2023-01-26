@@ -188,17 +188,13 @@ class APIClient(JsonSocket):
     def disconnect(self):
         self.close()
 
-    def commandExecute(self, commandName, arguments=None, return_df=True):
+    def commandExecute(self, commandName, arguments=None):
         commandResponse = self.execute(baseCommand(commandName, arguments))
         if commandResponse["status"] == False:
             error_code = commandResponse["errorCode"]
-            # logger.info(f"\nLogin failed. Error code: {error_code}")
-            df = None
+            logger.error(f"\nLogin failed. Error code: {error_code}")
         else:
-            if return_df:
-                return return_as_df(commandResponse["returnData"])
-            else:
-                return commandResponse
+            return commandResponse
 
 
 class APIStreamClient(JsonSocket):
