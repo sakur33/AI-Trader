@@ -1,0 +1,10 @@
+2023-01-26 14:36:02,700 : DEBUG : MainThread : tensorflow Falling back to TensorFlow client; we recommended you install the Cloud TPU client directly with pip install cloud-tpu-client.
+2023-01-26 14:36:02,897 : DEBUG : MainThread : h5py._conv Creating converter from 7 to 5
+2023-01-26 14:36:02,897 : DEBUG : MainThread : h5py._conv Creating converter from 5 to 7
+2023-01-26 14:36:02,897 : DEBUG : MainThread : h5py._conv Creating converter from 7 to 5
+2023-01-26 14:36:02,897 : DEBUG : MainThread : h5py._conv Creating converter from 5 to 7
+2023-01-26 14:36:03,688 : INFO : MainThread : __main__ __main__
+2023-01-26 14:36:03,689 : INFO : MainThread : trading_accounts Trader exists id: 16
+2023-01-26 14:36:04,127 : INFO : MainThread : root Login successful
+2023-01-26 14:36:09,334 : ERROR : MainThread : xAPIConnector Exception reading Object: 'utf-8' codec can't decode byte 0x80 in position 0: invalid start byte
+2023-01-26 14:36:09,337 : ERROR : Thread-1 (ping_client) : xAPIConnector Exception reading Object: 'utf-8' codec can't decode bytes in position 1-2: invalid continuation byte

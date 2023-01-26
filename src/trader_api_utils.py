@@ -53,6 +53,7 @@ class ApiSessionManager:
         return loginResponse
 
     def ping_client(self):
+        time.sleep(5)
         while True:
             commandResponse = self.client.commandExecute(
                 commandName="ping",
