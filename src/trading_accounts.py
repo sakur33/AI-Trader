@@ -11,6 +11,8 @@ from trader_db_utils import *
 from trader_api_utils import *
 from tqdm import tqdm
 
+if os.path.exists(f"{logs_path}{__name__}.log"):
+    os.remove(f"{logs_path}{__name__}.log")
 logger = logging.getLogger(__name__)
 
 today = get_today()
@@ -45,6 +47,9 @@ class Trader:
             logger.info(f"Trader exists id: {traderid}")
         self.traderid = traderid
 
+        self.apiSession = ApiSessionManager(self.user, self.passw)
+        self.apiSession.set_apiClient()
+
     def start_trading_session(self, params):
         session = TradingSession(
             name=self.name,
@@ -57,17 +62,6 @@ class Trader:
             min_angle=params["min_angle"],
         )
         return session
-
-    def start_trading_sessions(self, params_df):
-        sessions = {}
-        if isinstance(params_df, pd.DataFrame):
-            for params in params_df.iterrows():
-                sessions[params["symbol"]] = self.start_trading_session(params)
-            self.sessions = sessions
-        else:
-            self.sessions[params_df["symbol_name"]] = self.start_trading_session(
-                params_df
-            )
 
     def look_for_suitable_symbols_v1(self, df):
         # TODO look for suitable symbols
@@ -88,195 +82,26 @@ class Trader:
     def update_stocks(self, df, period, days=14):
         start_date = datetime.now() - timedelta(days=days)
         for symbol in tqdm(list(df["symbol"])):
-            # get candles
-            CHART_RANGE_INFO_RECORD = {
-                "period": period,
-                "start": date_to_xtb_time(start_date),
-                "symbol": symbol,
-            }
-            commandResponse = self.client.commandExecute(
-                "getChartLastRequest",
-                arguments={"info": CHART_RANGE_INFO_RECORD},
-                return_df=False,
-            )
-            if commandResponse["status"] == False:
-                error_code = commandResponse["errorCode"]
-                logger.info(f"Login failed. Error code: {error_code}")
-            else:
-                returnData = commandResponse["returnData"]
-                digits = returnData["digits"]
-                candles = return_as_df(returnData["rateInfos"])
-                if not candles is None:
-                    candles = cast_candles_to_types(candles, digits, dates=True)
-                    candles = adapt_data(candles)
-                    candles["symbol"] = symbol
-                    for index, row in candles.iterrows():
-                        insert_candle(row.to_dict())
-                else:
-                    logger.info(f"Symbol {symbol} did not return candles")
+            self.apiSession.store_past_candles(symbol, start_date, period)
 
-    def evaluate_stocks(
-        self,
-        params=None,
-        verbose=0,
-        show=False,
-    ):
-        if params is None:
-            logger.info("No params to evaluate stocks")
-            quit()
+    def evaluate_stocks(self, date):
         symbols = get_distict_symbols()
-
-        parameters = {
-            "short_ma": list(
-                range(
-                    params["short_ma"][0], params["short_ma"][1], params["short_ma"][2]
-                )
-            ),
-            "long_ma": list(
-                range(params["long_ma"][0], params["long_ma"][1], params["long_ma"][2])
-            ),
-            "min_angle": list(
-                range(
-                    params["min_angle"][0],
-                    params["min_angle"][1],
-                    params["min_angle"][2],
-                )
-            ),
-            "out": list(
-                np.linspace(
-                    params["out"][0],
-                    params["out"][1],
-                    params["out"][2],
-                )
-            ),
-        }
-
-        train_period = params["train_period"]
-        test_period = params["test_period"]
-        profits = []
         for symbol in symbols:
-            candles = pd.read_sql(
-                f"SELECT ctm, ctmString, low, high, [open], [close], vol FROM stocks where symbol_name = '{symbol[0]}'",
-                self.db_conn,
-            )
-            candles = cast_candles_to_types(candles, digits=None, dates=False)
-            cur.execute(
-                f"SELECT TOP(1) shortSelling, leverage, contractSize, lotStep FROM symbols WHERE symbol = '{symbol[0]}' ORDER BY time"
-            )
-            short_enabled, leverage, contractSize, lotStep = cur.fetchall()[0]
-            trading_estimator = TradingEstimator(
-                period=train_period,
-                capital=self.capital * self.max_risk,
-                symbol=symbol[0],
-                short_enabled=short_enabled,
-                leverage=leverage,
-                contractSize=contractSize,
-                lotStep=lotStep,
-            )
-            dates = candles[["ctmString", "ctm"]]
-            dates = dates.set_index(dates["ctmString"])
-            n_days = dates.resample("D").first().shape[0]
-            if n_days >= (train_period + test_period) * 7:
-                logger.info("Tesing parameters")
-                estimator = trading_estimator.fit(candles)
-                clf = RandomizedSearchCV(
-                    estimator,
-                    parameters,
-                    n_iter=params["repetitions"],
-                    verbose=verbose,
-                    cv=2,
-                )
-                clf.fit(candles)
-                score = trading_estimator.test(
-                    candles, clf.best_params_, test_period, show=show
-                )
-                logger.info(" Results from Grid Search ")
+            symbol = symbol[0]
+            symbol_info = get_symbol_info(symbol)
+            symbol_stats = get_symbol_stats(symbol, date)
+            if symbol_info["spreadRaw"] * 1.25 < symbol_stats["std_close"]:
                 logger.info(
-                    f"    The best estimator across ALL searched params: {clf.best_estimator_}"
+                    f"GOOD\nSymbol {symbol}: {symbol_stats['std_close']} / symbol_info['spreadRaw']"
                 )
+            elif symbol_info["spreadRaw"] < symbol_stats["std_close"]:
                 logger.info(
-                    f"    The best score across ALL searched params: {clf.best_score_}"
+                    f"GREATER\nSymbol {symbol}: {symbol_stats['std_close']} / symbol_info['spreadRaw']"
                 )
-                logger.info(
-                    f"    The best parameters across ALL searched params: {clf.best_params_}"
-                )
-                gain = (self.capital * self.max_risk) + (
-                    (score * contractSize / ((1 / leverage) * 100)) * lotStep
-                )
-                logger.info(f"    Score in the last day: {score}")
-                logger.info(f"    Balance of the last day: {gain}")
-
-                if score > 0:
-                    self.insert_params(
-                        day=todayms,
-                        symbol=symbol[0],
-                        score=score,
-                        short_ma=clf.best_params_["short_ma"],
-                        long_ma=clf.best_params_["long_ma"],
-                        out=clf.best_params_["out"],
-                        min_angle=clf.best_params_["min_angle"],
-                    )
-
             else:
-                logger.info(f"Not enough values in candles {candles.shape[0]}")
-        logger.info(f"Profits: {np.nansum(profits)}")
-
-    def trade_logic(self, symbol):
-        trade_params = pd.read_sql(
-            f"select * from trading_params where symbol_name = '{symbol[0]}');",
-            self.db_conn,
-        )
-        candles = pd.read_sql(
-            f"SELECT ctm,ctmstring,low,high,open,close,vol,AVG(close) OVER(ORDER BY ctmstring ROWS BETWEEN {trade_params['short_ma']} PRECEDING AND CURRENT ROW) AS short_ma, AVG(close) OVER(ORDER BY ctmstring ROWS BETWEEN {trade_params['long_ma']} PRECEDING AND CURRENT ROW) AS long_ma FROM candles where symbol = '{symbol[0]}' ORDER BY ctmstring DESC;",
-            self.ts_conn,
-        )
-
-    def buy_position(self, c_tick):
-        commandResponse = self.client.commandExecute(
-            "tradeTransaction",
-            arguments={
-                "tradeTransInfo": {
-                    "cmd": TransactionSide.BUY,
-                    "customComment": "No comment",
-                    "expiration": date_to_xtb_time(
-                        datetime.now() + timedelta(seconds=10)
-                    ),
-                    "offset": 0,
-                    "order": 0,
-                    "price": c_tick["ask"][0],
-                    "sl": 0.0,
-                    "symbol": c_tick["symbol"][0],
-                    "tp": 0.0,
-                    "type": TransactionType.ORDER_OPEN,
-                    "volume": 0.1,
-                }
-            },
-            return_df=False,
-        )
-        logger.info(commandResponse)
-        return commandResponse["returnData"]["order"]
-
-    def sell_position(self, c_tick, order_n):
-        commandResponse = self.client.commandExecute(
-            "tradeTransaction",
-            arguments={
-                "tradeTransInfo": {
-                    "cmd": TransactionSide.SELL,
-                    "customComment": "No comment",
-                    "expiration": 0,
-                    "offset": 0,
-                    "order": order_n,
-                    "price": c_tick["bid"][0],
-                    "sl": 0.0,
-                    "symbol": c_tick["symbol"][0],
-                    "tp": 0.0,
-                    "type": TransactionType.ORDER_CLOSE,
-                    "volume": 0.1,
-                }
-            },
-            return_df=False,
-        )
-        logger.info(commandResponse)
+                logger.info(
+                    f"LESS\nSymbol {symbol}: {symbol_stats['std_close']} / symbol_info['spreadRaw']"
+                )
 
 
 class TradingSession:
@@ -290,6 +115,7 @@ class TradingSession:
         profit_exit,
         loss_exit,
         min_angle,
+        offline=False,
     ) -> None:
 
         # Session params
@@ -301,6 +127,7 @@ class TradingSession:
         self.profit_exit = profit_exit
         self.loss_exit = loss_exit
         self.min_angle = min_angle
+        self.offline = offline
 
         # Symbol information
         symbol_info = get_symbol_info(self.symbol)

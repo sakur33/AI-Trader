@@ -23,6 +23,8 @@ docs_path = curr_path + "../../docs/"
 database_path = curr_path + "../../database/"
 logs_path = curr_path + "../../logs/"
 
+if os.path.exists(f"{logs_path}{__name__}.log"):
+    os.remove(f"{logs_path}{__name__}.log")
 logger = logging.getLogger(__name__)
 
 
@@ -211,13 +213,22 @@ def insert_trade(
         logger.info(f"Exception | insert_trade | {e}")
 
 
-def get_trading_params(self):
+def get_trading_params():
     params = pd.read_sql("SELECT * FROM trading_params ORDER BY score DESC", DB_ENGINE)
     return params
 
 
-def get_distict_symbols(self):
+def get_distict_symbols():
+    sql = "SELECT DISTINCT(symbol_name) FROM stocks"
     cur = DB_CONN.cursor()
-    cur.execute("SELECT DISTINCT(symbol_name) FROM stocks")
+    cur.execute(sql)
+    symbols = cur.fetchall()
+    return symbols
+
+
+def get_symbol_stats(symbol, start_date):
+    sql = f"select avg(close) as avg_close, max(close) as max_close, min(close) as min_close, stddev(close) as std_close from candles where symbol = '{symbol}' and ctmstring > '{start_date}'"
+    cur = DB_CONN.cursor()
+    cur.execute(sql)
     symbols = cur.fetchall()
     return symbols

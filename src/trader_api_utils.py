@@ -1,13 +1,13 @@
 import os
-import pandas as pd
-from trader_utils import *
-from xAPIConnector import *
-from creds import creds
 import threading
+import pandas as pd
+from xAPIConnector import *
+from trader_utils import *
 from trader_db_utils import *
 from trader_api_utils import *
-from tqdm import tqdm
 
+if os.path.exists(f"{logs_path}{__name__}.log"):
+    os.remove(f"{logs_path}{__name__}.log")
 logger = logging.getLogger(__name__)
 
 today = get_today()
@@ -52,7 +52,6 @@ class ApiSessionManager:
 
     def ping_client(self):
         while True:
-            time.sleep(60 * 5)
             try:
                 commandResponse = self.client.commandExecute(
                     "ping",
@@ -60,6 +59,7 @@ class ApiSessionManager:
                 )
             except Exception as e:
                 logger.info(f"Exception at ping: {e}")
+            time.sleep(60 * 5)
 
     def set_streamClient(self, symbol=None):
         stream_client = APIStreamClient(
@@ -85,3 +85,35 @@ class ApiSessionManager:
         )
         inserCandle = threading.Thread(target=insert_candle, args=(candle,))
         inserCandle.start()
+
+    def store_past_candles(self, symbol, start_date, period=1):
+        CHART_RANGE_INFO_RECORD = {
+            "period": period,
+            "start": date_to_xtb_time(start_date),
+            "symbol": symbol,
+        }
+        commandResponse = self.client.commandExecute(
+            "getChartLastRequest",
+            arguments={"info": CHART_RANGE_INFO_RECORD},
+            return_df=False,
+        )
+        if commandResponse["status"] == False:
+            error_code = commandResponse["errorCode"]
+            logger.info(f"Login failed. Error code: {error_code}")
+        else:
+            returnData = commandResponse["returnData"]
+            digits = returnData["digits"]
+            candles = return_as_df(returnData["rateInfos"])
+            if not candles is None:
+                candles = cast_candles_to_types(candles, digits, dates=True)
+                candles = adapt_data(candles)
+                candles["symbol"] = symbol
+                for index, row in candles.iterrows():
+                    insert_candle(row.to_dict())
+            else:
+                logger.info(f"Symbol {symbol} did not return candles")
+
+    def get_symbols(self):
+        symbols_df = self.client.commandExecute("getAllSymbols")
+        insert_symbols(symbols_df)
+        return symbols_df

@@ -1,10 +1,11 @@
-from xAPIConnector import *
-from trader_utils import *
-import logging
-from trading_accounts import Trader
-from trader_db_utils import *
-import time
 import os
+import logging
+
+from trading_accounts import *
+from trader_db_utils import *
+from trader_utils import *
+from trader_api_utils import *
+from xAPIConnector import *
 
 
 today = get_today()
@@ -46,24 +47,12 @@ def main():
         max_risk=0.05,
         trader_type="FX",
     )
-
-    symbols_df = trader.client.commandExecute("getAllSymbols")
-    insert_symbols(symbols_df)
+    symbols_df = trader.apiSession.get_symbols()
     symbols_df = trader.look_for_suitable_symbols_v1(symbols_df)
-    trader.update_stocks(symbols_df, period=1, days=14)
+    # trader.update_stocks(symbols_df, period=1, days=14)
 
     trader.evaluate_stocks(
-        params={
-            "repetitions": 500,
-            "short_ma": [5, 60, 5],
-            "long_ma": [500, 3500, 500],
-            "min_angle": [0, 40, 5],
-            "train_period": 6 / 7,
-            "test_period": 1 / 7,
-            "out": [0.01, 0.5, 12],
-        },
-        verbose=1,
-        show=False,
+        date=(datetime.today() - timedelta(days=14)).strftime("%Y-%m-%d")
     )
 
 

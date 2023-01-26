@@ -1,3 +1,7 @@
-2023-01-23 21:22:08,692 : INFO : MainThread : __main__ __main__
-2023-01-23 21:22:08,693 : INFO : MainThread : trading_accounts Trader exists id: 16
-2023-01-23 21:22:09,070 : INFO : MainThread : root Login successful
+2023-01-26 06:40:23,580 : INFO : MainThread : __main__ __main__
+2023-01-26 06:40:23,582 : INFO : MainThread : trading_accounts Trader exists id: 16
+2023-01-26 06:40:23,892 : INFO : MainThread : root Login successful
+2023-01-26 06:41:26,224 : INFO : MainThread : trader_db_utils Exception | get_symbol_info | (pyodbc.ProgrammingError) ('42000', "[42000] [Microsoft][ODBC Driver 17 for SQL Server][SQL Server]Incorrect syntax near 'AUDCHF'. (102) (SQLExecDirectW)")
+[SQL: SELECT TOP(1) * FROM symbols WHERE symbol = '('AUDCHF', )' order by time DESC]
+(Background on this error at: https://sqlalche.me/e/14/f405)
+2023-01-26 06:42:25,369 : INFO : MainThread : trader_db_utils Exception | get_symbol_info | 'DataFrame' object has no attribute 'dict'

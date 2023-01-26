@@ -1,3 +1,4 @@
+import os
 import json
 import socket
 import logging
@@ -25,14 +26,11 @@ API_SEND_TIMEOUT = 100
 API_MAX_CONN_TRIES = 3
 
 # logger properties
+curr_path = os.path.dirname(os.path.realpath(__file__))
+logs_path = curr_path + "../../logs/"
+if os.path.exists(f"{logs_path}{__name__}.log"):
+    os.remove(f"{logs_path}{__name__}.log")
 logger = logging.getLogger(__name__)
-# FORMAT = "[%(asctime)-15s %(levelname)s %(threadName)s %(name)s][%(funcName)s:%(lineno)d] %(message)s"
-# logging.basicConfig(format=FORMAT)
-
-# if DEBUG:
-#     #logger.setLevel(logging.DEBUG)
-# else:
-#     #logger.setLevel(logging.INFO)
 
 
 class TransactionSide(object):
@@ -71,7 +69,7 @@ class JsonSocket(object):
             try:
                 self.socket.connect((self.address, self.port))
             except socket.error as msg:
-                # logger.error("SockThread Error: %s" % msg)
+                logger.error("SockThread Error: %s" % msg)
                 time.sleep(0.25)
                 continue
             # logger.info("\nSocket connected")
@@ -93,7 +91,7 @@ class JsonSocket(object):
 
     def _read(self, bytesSize=4096):
         if not self.socket:
-            # logger.info("Socket connection broken")
+            logger.error("Socket connection broken")
             raise RuntimeError("socket connection broken")
         while True:
             char = self.conn.recv(bytesSize).decode()
@@ -107,19 +105,22 @@ class JsonSocket(object):
                     self._receivedData = self._receivedData[size:].strip()
                     break
             except ValueError as e:
+                # logger.error(f"ValueError: {e}")
                 continue
-        # #logger.debug("Received: " + str(resp))
         return resp
 
     def _readObj(self):
-        msg = self._read()
+        try:
+            msg = self._read()
+        except Exception as e:
+            logger.error(f"Exception reading Object: {e}")
         return msg
 
     def close(self):
-        # logger.info("Closing socket")
+        logger.info("Closing socket")
         self._closeSocket()
         if self.socket is not self.conn:
-            # logger.info("Closing connection socket")
+            logger.info("Closing connection socket")
             self._closeConnection()
 
     def _closeSocket(self):
