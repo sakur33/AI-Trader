@@ -11,6 +11,8 @@ from trader_db_utils import *
 from trader_api_utils import *
 from tqdm import tqdm
 
+curr_path = os.path.dirname(os.path.realpath(__file__))
+logs_path = curr_path + "../../logs/"
 if os.path.exists(f"{logs_path}{__name__}.log"):
     os.remove(f"{logs_path}{__name__}.log")
 logger = logging.getLogger(__name__)
@@ -86,7 +88,7 @@ class Trader:
 
     def evaluate_stocks(self, date):
         symbols = get_distict_symbols()
-        for symbol in symbols:
+        for symbol in tqdm(symbols):
             symbol = symbol[0]
             symbol_info = get_symbol_info(symbol)
             symbol_stats = get_symbol_stats(symbol, date)
