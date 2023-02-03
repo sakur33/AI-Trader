@@ -1,19 +1,21 @@
-import os
-import logging
+import logging, logging.handlers
 
-curr_path = os.path.dirname(os.path.realpath(__file__))
-logs_path = curr_path + "../../logs/"
 
-logging.basicConfig(
-    level=logging.DEBUG,
-    format="%(asctime)s : %(levelname)s : %(threadName)s : %(name)s %(message)s",
-    filename=f"{logs_path}main_logger.log",
-)
+def setup_logging(logger, path, name, console_debug=False):
+    handler = logging.FileHandler(path + name + ".log")
+    logger.setLevel(logging.INFO)
+    fileformatter = logging.Formatter(
+        "| %(threadName)s | %(asctime)s | %(name)s | %(levelname)s | %(message)s"
+    )
+    handler.setFormatter(fileformatter)
+    logger.addHandler(handler)
 
-console = logging.StreamHandler()
-console.setLevel(logging.INFO)
-formatter = logging.Formatter(
-    "| %(threadName)s | %(asctime)s | %(name)s | %(levelname)s | %(message)s"
-)
-console.setFormatter(formatter)
-logging.getLogger("").addHandler(console)
+    if console_debug:
+        console = logging.StreamHandler()
+        console.setLevel(logging.INFO)
+        formatter = logging.Formatter(
+            "| %(threadName)s | %(asctime)s | %(name)s | %(levelname)s | %(message)s"
+        )
+        console.setFormatter(formatter)
+        logger.addHandler(console)
+    return logger
