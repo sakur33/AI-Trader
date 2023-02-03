@@ -83,6 +83,11 @@ def date_to_xtb_time(target):
     return days_diff + seconds_diff
 
 
+def get_today_timeString():
+    timestamp = datetime.today().astimezone(pytz.timezone("CET"))
+    return timestamp.strftime("%a %b %d %H:%M:%S %Z %Y")
+
+
 def min_max_norm(x, _min, _max):
     return (x - _min) / (_max - _min)
 

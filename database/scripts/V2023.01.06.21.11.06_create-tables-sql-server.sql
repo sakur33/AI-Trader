@@ -103,10 +103,12 @@ CREATE TABLE stocks(
     max DECIMAL(10, 5) NULL
 );
 CREATE TABLE trading_params(
-    symbol_name VARCHAR(50) NOT NULL,
+    symbol VARCHAR(50) NOT NULL,
     date date NOT NULL,
     score DECIMAL(10, 5) NOT NULL,
     short_ma INT NOT NULL,
     long_ma INT NOT NULL,
-    [out] DECIMAL(10, 5) NOT NULL
+    min_angle DECIMAL(10, 5) NOT NULL,
+    profit_exit DECIMAL(10, 5) NOT NULL,
+    loss_exit DECIMAL(10, 5) NOT NULL
 );

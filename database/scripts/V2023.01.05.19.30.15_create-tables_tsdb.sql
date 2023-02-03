@@ -3,8 +3,8 @@
  * Description: create-tables_sqlite
  * ****************************************************************
  */
-CREATE TABLE ticks (
-    timestamp timestamptz NOT NULL,
+CREATE TABLE mili_ticks (
+    timestamp timestamp NOT NULL,
     symbol text NOT NULL,
     ask double PRECISION NULL,
     bid double PRECISION NULL,
@@ -17,8 +17,8 @@ CREATE TABLE ticks (
     spreadTable double PRECISION NULL,
     spreadRaw double PRECISION NULL
 );
-CREATE INDEX ON ticks (symbol, timestamp);
-SELECT create_hypertable('ticks', 'timestamp');
+CREATE INDEX ON mili_ticks (symbol, timestamp);
+SELECT create_hypertable('mili_ticks', 'timestamp');
 CREATE TABLE candles(
     symbol text NOT NULL,
     ctm bigint NOT NULL,
@@ -33,6 +33,7 @@ CREATE TABLE candles(
 CREATE INDEX ON candles (symbol, ctmString);
 SELECT create_hypertable('candles', 'ctmstring');
 create table trade_session(
+    trader_name text NOT NULL,
     ctmString timestamp NOT NULL,
     symbol text NOT NULL,
     state text not NULL
