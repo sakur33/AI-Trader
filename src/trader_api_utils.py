@@ -21,6 +21,7 @@ docs_path = curr_path + "../../docs/"
 database_path = curr_path + "../../database/"
 logs_path = curr_path + "../../logs/"
 
+
 if os.path.exists(f"{logs_path}{__name__}.log"):
     os.remove(f"{logs_path}{__name__}.log")
 
@@ -29,7 +30,7 @@ logger = setup_logging(logger, logs_path, __name__, console_debug=True)
 
 
 class ApiSessionManager:
-    def __init__(self, user, passw) -> None:
+    def __init__(self, user, passw, clock) -> None:
 
         self.user = user
         self.passw = passw
@@ -37,6 +38,8 @@ class ApiSessionManager:
         self.stream_clients = {}
         self.session = None
         self.symbol = None
+        self.cllast_message_time = time.time()
+        self.clock = clock
 
     def set_apiClient(self):
         client = APIClient()
@@ -45,6 +48,7 @@ class ApiSessionManager:
         self.ssid = loginResponse["streamSessionId"]
 
     def login_client(self, client):
+        self.clock.wait_clock()
         loginResponse = client.execute(
             loginCommand(userId=self.user, password=self.passw)
         )
@@ -57,9 +61,10 @@ class ApiSessionManager:
             quit()
         return loginResponse
 
-    def set_streamClient(self, symbol, tick=False, candle=True, trade=True):
+    def set_streamClient(self, symbol, tick=False, candle=True, trade=True, queue=None):
         self.stream_clients = {}
         self.symbol = symbol
+
         if tick:
             stream_client = APIStreamClient(
                 ssId=self.ssid,
@@ -84,6 +89,9 @@ class ApiSessionManager:
             stream_client.subscribeTrades()
             self.stream_clients["trade"] = stream_client
 
+        if queue is not None:
+            self.tick_queue = queue
+
     def set_session(self, session):
         self.session = session
 
@@ -91,7 +99,7 @@ class ApiSessionManager:
         tick = msg["data"]
         logger.debug(f"TICK:{msg}")
         if self.session is not None:
-            self.session.set_last_tick(tick)
+            self.tick_queue.put(tick)
         inserTick = threading.Thread(target=insert_tick, args=(tick,))
         inserTick.setDaemon(True)
         inserTick.start()
@@ -119,6 +127,7 @@ class ApiSessionManager:
             "start": date_to_xtb_time(start_date),
             "symbol": symbol,
         }
+        self.clock.wait_clock()
         commandResponse = self.client.commandExecute(
             "getChartLastRequest", arguments={"info": CHART_RANGE_INFO_RECORD}
         )
@@ -141,6 +150,7 @@ class ApiSessionManager:
 
     def get_symbols(self):
         logger.debug("get_symbols")
+        self.clock.wait_clock()
         symbols = get_symbol_today()
         if not isinstance(symbols, pd.DataFrame):
             commandResponse = self.client.commandExecute("getAllSymbols")
@@ -152,6 +162,7 @@ class ApiSessionManager:
 
     def get_ticks(self, timestamp, symbol):
         try:
+            self.clock.wait_clock()
             tick_df = self.client.commandExecute(
                 commandName="getTickPrices",
                 arguments={
@@ -169,8 +180,9 @@ class ApiSessionManager:
         return tick_df
 
     def get_trades(self):
+        self.clock.wait_clock()
         commandResponse = self.client.commandExecute(
-            "getTrades", arguments={"getTrades": True}
+            "getTrades", arguments={"openedOnly": True}
         )
         if commandResponse["status"] == True:
             trade_records = commandResponse["returnData"]
@@ -185,6 +197,7 @@ class ApiSessionManager:
                     if order_n is not None:
                         if self.is_trade_closed(order_n):
                             return None
+                    self.clock.wait_clock()
                     commandResponse = self.client.commandExecute(
                         "getTrades", arguments={"openedOnly": True}
                     )
@@ -217,6 +230,7 @@ class ApiSessionManager:
                 return record
 
     def get_trade_status(self, order_n):
+        self.clock.wait_clock()
         commandResponse = self.client.commandExecute(
             "tradeTransactionStatus", arguments={"order": order_n}
         )
@@ -227,6 +241,7 @@ class ApiSessionManager:
 
     def get_max_values(self, symbol, long_ma):
         try:
+            self.clock.wait_clock()
             commandResponse = self.client.commandExecute(
                 commandName="getSymbol", arguments={"symbol": symbol}
             )
@@ -246,6 +261,7 @@ class ApiSessionManager:
         try:
             order_status = False
             while order_status == False:
+                self.clock.wait_clock()
                 commandResponse = self.client.commandExecute(
                     "tradeTransaction",
                     arguments={
@@ -257,15 +273,19 @@ class ApiSessionManager:
                             "order": 0,
                             "price": c_tick["bid"],
                             "sl": sl,
-                            "symbol": c_tick["symbol"],
+                            "symbol": c_tick["bid"],
                             "tp": 0.0,
                             "type": TransactionType.ORDER_OPEN,
                             "volume": volume,
                         }
                     },
                 )
-                order_n = commandResponse["returnData"]["order"]
-                order_status = self.get_trade_status(order_n)
+
+                returnData = commandResponse["returnData"]
+                if len(returnData) == 0:
+                    order_status = False
+                else:
+                    order_status = self.get_trade_status(order_n)
                 if order_status == False:
                     if buy_trans == 0:
                         logger.info(
@@ -286,6 +306,7 @@ class ApiSessionManager:
 
     def sell(self, name, buy_trans, position, c_tick, volume):
         try:
+            self.clock.wait_clock()
             commandResponse = self.client.commandExecute(
                 "tradeTransaction",
                 arguments={
@@ -314,6 +335,7 @@ class ApiSessionManager:
 
     def get_balance(self):
         try:
+            self.clock.wait_clock()
             commandResponse = self.client.commandExecute(
                 "getTrades", arguments={"openedOnly": True}
             )

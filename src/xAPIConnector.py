@@ -79,10 +79,6 @@ class JsonSocket(object):
             return True
         return False
 
-    def relaunch_socket(self):
-        logger.info("\n***********\nSOCKET RELAUNCH\n***********\n")
-        self.__init__(self._address, self._port, encrypt=True)
-
     def _sendObj(self, obj):
         msg = json.dumps(obj)
         self._waitingSend(msg)
@@ -96,12 +92,12 @@ class JsonSocket(object):
                 try:
                     sent = self.conn.send(msg[total_sent:])
                     if sent == 0:
-                        self.relaunch_socket()
+                        raise Exception
                     total_sent = total_sent + sent
                     # logger.debug("\nSent: " + str(msg))
                     time.sleep(API_SEND_TIMEOUT / 1000)
                 except (OSError, Exception) as e:
-                    self.relaunch_socket()
+                    raise Exception
 
     def _read(self, bytesSize=4096):
         if not self.socket:
@@ -122,7 +118,7 @@ class JsonSocket(object):
                 # logger.error(f"ValueError: {e}")
                 continue
             except (OSError, Exception) as e:
-                self.relaunch_socket()
+                continue
         return resp
 
     def _readObj(self):
@@ -206,12 +202,11 @@ class APIClient(JsonSocket):
         self.close()
 
     def commandExecute(self, commandName, arguments=None):
-        self.LAST_COMMAND_EXECUTED = time.time()
         commandResponse = self.execute(baseCommand(commandName, arguments))
         if commandResponse["status"] == False:
             error_code = commandResponse["errorCode"]
             logger.error(f"\nLogin failed. Error code: {error_code}")
-
+        self.LAST_COMMAND_EXECUTED = time.time()
         return commandResponse
 
     def ping(self):
