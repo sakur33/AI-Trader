@@ -1,18 +1,18 @@
+import logging
 import os
+import threading
+
 import pandas as pd
-from trader_utils import *
-from sqlalchemy import create_engine
-from xAPIConnector import *
 from creds import creds
+from logger_settings import *
 from sklearn.metrics import make_scorer
 from sklearn.model_selection import RandomizedSearchCV
-import threading
-from trader_db_utils import *
-from trader_api_utils import *
+from sqlalchemy import create_engine
 from tqdm import tqdm
-import os
-from logger_settings import setup_logging
-import logging
+from trader_api_utils import *
+from trader_db_utils import *
+from trader_utils import *
+from xAPIConnector import *
 
 
 class TradingSession:
@@ -26,8 +26,8 @@ class TradingSession:
         profit_exit,
         loss_exit,
         min_angle,
+        apiClient,
         offline=False,
-        apiClient=None,
         test=False,
         tick_queue=None,
         candle_queue=None,
@@ -130,10 +130,6 @@ class TradingSession:
                     # TODO: NOT ENOUGH MONEY (END SESSION?)
 
             logger.info(f"Hist. Profits: {self.hist_profits}")
-            # logger.info(
-            #     f"\n**************************\nStep count ({self.step_count}) > long_ma ({self.long_ma})\n Is bought: {self.is_bought}\n Is short: {self.is_short}\n Up cross: {self.in_up_crossover}\n Down cross: {self.in_down_crossover}\n Previous:\n     Time: {prev_candle['ctmstring']}\n      Short_ma: {prev_candle['short_ma']}\n       Long_ma: {prev_candle['long_ma']}\n Current:\n      Time: {c_candle['ctmstring']}\n            Short_ma: {c_candle['short_ma']}\n            Long_ma: {c_candle['long_ma']}\n Angle: {angle_diff}\n Min_angle: {self.min_angle}\n Entry Price: {self.open_price}\n Entry Position: {self.buy_price}\n Current Price: {self.current_price}\n Current Position: {self.current_position}\n Profit: {self.profit}\n Prev. Profit: {self.prev_profit}\n Pot. Profits: {self.potential_profits}\n\nHistoric Profits: {self.hist_profits}\n**************************"
-            # )
-        self.store_vars()
 
     def store_vars(self):
         vars = json.dumps(self.__dict__, cls=CustomJSONizer)
@@ -286,7 +282,7 @@ class TradingSession:
         # convert_currency(margin, self.currency)
         return margin
 
-    def get_profit(self):
+    def get_profit(self, buy_position):
         trade = self.apiClient.get_trade(opened=False, order_n=buy_position)
         return trade["profit"]
 

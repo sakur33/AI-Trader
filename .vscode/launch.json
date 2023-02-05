@@ -11,6 +11,25 @@
             "program": "${file}",
             "console": "integratedTerminal",
             "justMyCode": true
-        }
+        },
+        {
+            "name": "VueJS: Chrome",
+            "request": "launch",
+            "type": "chrome",
+            "url": "http://localhost:8080",
+            "webRoot": "${workspaceFolder}/frontend",
+            "sourceMapPathOverrides": {
+              "webpack-internal:///./~/*": "${workspaceFolder}/visualizator/node_modules/*",
+              "webpack-internal://?:*/*": "${workspaceFolder}/visualizator/src/*"
+            },
+            "preLaunchTask": "serve"
+          },
+          {
+            "name": "Python",
+            "type": "python",
+            "request": "launch",
+            "module": "main",
+            "cwd": "${workspaceFolder}/backend"
+          }
     ]
 }

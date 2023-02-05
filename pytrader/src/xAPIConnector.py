@@ -1,7 +1,7 @@
 import os
 import json
 import socket
-from logger_settings import setup_logging
+from logger_settings import *
 import logging
 import time
 import ssl
@@ -27,8 +27,6 @@ API_SEND_TIMEOUT = 100
 API_MAX_CONN_TRIES = 3
 
 # logger properties
-curr_path = os.path.dirname(os.path.realpath(__file__))
-logs_path = curr_path + "../../logs/"
 if os.path.exists(f"{logs_path}{__name__}.log"):
     os.remove(f"{logs_path}{__name__}.log")
 

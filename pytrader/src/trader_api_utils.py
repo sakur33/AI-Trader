@@ -6,20 +6,9 @@ from trader_utils import *
 from trader_db_utils import *
 from trader_api_utils import *
 from ssl import SSLError
-from logger_settings import setup_logging
+from logger_settings import *
 import logging
-
-today = get_today()
-todayms, today_int = get_today_ms()
-curr_path = os.path.dirname(os.path.realpath(__file__))
-data_path = curr_path + "../../data/"
-symbol_path = curr_path + "../../symbols/"
-cluster_path = curr_path + "../../clusters/"
-model_path = curr_path + "../../model/"
-result_path = curr_path + "../../result/"
-docs_path = curr_path + "../../docs/"
-database_path = curr_path + "../../database/"
-logs_path = curr_path + "../../logs/"
+from custom_exceptions import *
 
 
 if os.path.exists(f"{logs_path}{__name__}.log"):
@@ -55,11 +44,10 @@ class ApiSessionManager:
         status = loginResponse["status"]
         if status:
             logger.info(f"Login successful")
+            return loginResponse
         else:
             error_code = loginResponse["errorCode"]
-            logger.info(f"Login error | {error_code}")
-            quit()
-        return loginResponse
+            raise LoginError(error_code)
 
     def set_streamClient(
         self,

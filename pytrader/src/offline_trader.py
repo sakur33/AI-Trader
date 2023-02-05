@@ -1,32 +1,20 @@
 import os
-import logger_settings
+from logger_settings import *
 
 from trading_accounts import *
 from trader_db_utils import *
 from trader_utils import *
 from trader_api_utils import *
 from xAPIConnector import *
-from multiprocessing import SimpleQueue
 from connection_clock import Clock
+from multiprocessing import SimpleQueue
 
-today = get_today()
-todayms = get_today_ms()
-curr_path = os.path.dirname(os.path.realpath(__file__))
-data_path = curr_path + "../../data/"
-symbol_path = curr_path + "../../symbols/"
-cluster_path = curr_path + "../../clusters/"
-model_path = curr_path + "../../model/"
-result_path = curr_path + "../../result/"
-docs_path = curr_path + "../../docs/"
-database_path = curr_path + "../../database/"
-logs_path = curr_path + "../../logs/"
 
 if os.path.exists(f"{logs_path}{__name__}.log"):
     os.remove(f"{logs_path}{__name__}.log")
 
 logger = logging.getLogger(__name__)
-logger.info(f"{__name__}")
-logger.addHandler(logging.FileHandler(f"{logs_path}{__name__}.log"))
+logger = setup_logging(logger, logs_path, __name__, console_debug=True)
 
 
 def main():

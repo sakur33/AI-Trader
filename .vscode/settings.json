@@ -1,6 +1,32 @@
 {
+  "files.eol": "\n",
+  "makefile.extensionOutputFolder": "./.vscode",
+  "python.analysis.extraPaths": ["./backend"],
+  "files.exclude": {
+    "**/__pycache__": true,
+    "**/.mypy_cache": true,
+    "**/.pytest_cache": true
+  },
   "python.formatting.provider": "black",
-  // "editor.wordWrap": "wordWrapColumn",
-  // "editor.wordWrapColumn": 75,
-  // "editor.formatOnSave": true
+  "editor.formatOnSave": true,
+  "python.languageServer": "None",
+  // "python.linting.pylintEnabled": true,
+  // "python.linting.enabled": true,
+  "python.analysis.typeCheckingMode": "basic",
+  "python.defaultInterpreterPath": "${workspaceFolder}/.env",
+  // "python.linting.pylintArgs": [
+  //   "--init-hook",
+  //   "import sys; sys.path.insert(0, './pytrader')"
+  // ],
+  // "isort.args": ["--profile", "black"],
+  // "[python]": {
+  //   "editor.codeActionsOnSave": {
+  //     "source.organizeImports": true
+  //   }
+  // },
+  // "[javascript, typescript, vue]": {
+  //   "editor.codeActionsOnSave": {
+  //     "source.fixAll.eslint": true
+  //   }
+  // }
 }

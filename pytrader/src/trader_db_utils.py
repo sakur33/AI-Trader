@@ -12,20 +12,9 @@ from sklearn.metrics import make_scorer
 from sklearn.model_selection import RandomizedSearchCV
 import threading
 import re
-from logger_settings import setup_logging
+from logger_settings import *
 import logging
 
-today = get_today()
-todayms, today_int = get_today_ms()
-curr_path = os.path.dirname(os.path.realpath(__file__))
-data_path = curr_path + "../../data/"
-symbol_path = curr_path + "../../symbols/"
-cluster_path = curr_path + "../../clusters/"
-model_path = curr_path + "../../model/"
-result_path = curr_path + "../../result/"
-docs_path = curr_path + "../../docs/"
-database_path = curr_path + "../../database/"
-logs_path = curr_path + "../../logs/"
 
 if os.path.exists(f"{logs_path}{__name__}.log"):
     os.remove(f"{logs_path}{__name__}.log")
@@ -409,7 +398,7 @@ def get_last_two_candles(symbol, short_ma, long_ma):
 def get_symbol_info(symbol):
     sql = f"SELECT TOP(1) * FROM symbols WHERE symbol = '{symbol}' order by time DESC"
     try:
-        symbol_info = execut_query(sql, DB_CONN)
+        symbol_info = execut_query(sql, DB_CONN, mode="dict")
     except Exception as e:
         logger.info(f"Exception | get_symbol_info | {e}")
         symbol_info = None
