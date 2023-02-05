@@ -1,3 +1,20 @@
+import os
+import pandas as pd
+from trader_utils import *
+from sqlalchemy import create_engine
+from xAPIConnector import *
+from creds import creds
+from sklearn.metrics import make_scorer
+from sklearn.model_selection import RandomizedSearchCV
+import threading
+from trader_db_utils import *
+from trader_api_utils import *
+from tqdm import tqdm
+import os
+from logger_settings import setup_logging
+import logging
+
+
 class TradingSession:
     def __init__(
         self,
@@ -13,6 +30,7 @@ class TradingSession:
         apiClient=None,
         test=False,
         tick_queue=None,
+        candle_queue=None,
         clock=None,
     ) -> None:
 
@@ -37,6 +55,7 @@ class TradingSession:
         self.offline = offline
         self.apiClient = apiClient
         self.tick_queue = tick_queue
+        self.candle_queue = candle_queue
         self.clock = clock
 
         # Symbol information
@@ -341,7 +360,7 @@ class TradingSession:
 
     def calculate_last_percentage(self, list_of_profits):
         last = list_of_profits[-1]
-        before_last = list_of_profits[-2]
+        before_last = np.max(list_of_profits[:-1])
         diff = before_last - last
         percentage = diff / before_last
         return percentage

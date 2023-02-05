@@ -38,7 +38,9 @@ minimun_trade = 10
 
 
 class Trader:
-    def __init__(self, name, capital, max_risk, trader_type, tick_queue, clock) -> None:
+    def __init__(
+        self, name, capital, max_risk, trader_type, tick_queue, clock, candle_queue=None
+    ) -> None:
         self.user = creds[name.split(":")[0]]["user"]
         self.passw = creds[name.split(":")[0]]["passw"]
         self.name = name
@@ -56,6 +58,7 @@ class Trader:
         self.apiSession = ApiSessionManager(self.user, self.passw, clock)
         self.apiSession.set_apiClient()
         self.tick_queue = tick_queue
+        self.candle_queue = candle_queue
         self.clock = clock
 
     def look_for_suitable_symbols_v1(self, df):
@@ -126,6 +129,7 @@ class Trader:
             apiClient=self.apiSession,
             test=test,
             tick_queue=self.tick_queue,
+            candle_queue=self.candle_queue,
             clock=self.clock,
         )
         self.session = session

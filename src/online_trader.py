@@ -51,6 +51,7 @@ def main():
     for index, row in params_df.iterrows():
         logger.info("Start Online trading")
         tick_queue = SimpleQueue()
+        candle_queue = SimpleQueue()
         clock = Clock()
         trader = Trader(
             name=f"trader68709:{row['symbol']}:{trader_name}",
@@ -59,10 +60,16 @@ def main():
             trader_type="FX",
             tick_queue=tick_queue,
             clock=clock,
+            candle_queue=candle_queue,
         )
 
         trader.apiSession.set_streamClient(
-            row["symbol"], tick=True, candle=True, trade=True, queue=tick_queue
+            row["symbol"],
+            tick=True,
+            candle=True,
+            trade=True,
+            tick_queue=tick_queue,
+            candle_queue=candle_queue,
         )
         trader.start_trading_session(row, test=test)
         while 1:

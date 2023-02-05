@@ -6,7 +6,8 @@ from trader_db_utils import *
 from trader_utils import *
 from trader_api_utils import *
 from xAPIConnector import *
-
+from multiprocessing import SimpleQueue
+from connection_clock import Clock
 
 today = get_today()
 todayms = get_today_ms()
@@ -29,18 +30,22 @@ logger.addHandler(logging.FileHandler(f"{logs_path}{__name__}.log"))
 
 
 def main():
+    tick_queue = SimpleQueue()
+    clock = Clock()
     trader = Trader(
-        name="TestTrader",
+        name="trader68709",
         capital=1000,
         max_risk=0.05,
         trader_type="FX",
+        tick_queue=tick_queue,
+        clock=clock,
     )
     symbols_df = trader.apiSession.get_symbols()
     symbols_df = trader.look_for_suitable_symbols_v1(symbols_df)
     trader.update_stocks(symbols_df, period=1, days=14)
 
     trader.evaluate_stocks(
-        date=(datetime.today() - timedelta(days=30)).strftime("%Y-%m-%d"),
+        date=(datetime.today() - timedelta(days=9)).strftime("%Y-%m-%d"),
         threshold=40,
     )
 

@@ -295,6 +295,7 @@ def get_trader_id(name):
         cur.close()
     except Exception as e:
         logger.info(f"Exception | get trader id | {e}")
+        traderid = None
     return traderid
 
 
@@ -310,6 +311,7 @@ def insert_trader(name, capital, max_risk):
         traderid = get_trader_id(name)
     except Exception as e:
         logger.info(f"Exception | insert_trader | {e}")
+        traderid = None
     return traderid
 
 

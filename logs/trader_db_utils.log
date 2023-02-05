@@ -1,0 +1,1 @@
+| MainThread | 2023-02-05 12:03:06,545 | trader_db_utils | INFO | INSERT INTO traders (tradername, creation_date, initial_capital, max_risk) VALUES ('trader68709','2023-02-05 12:03:06.545803',1000,0.05);
