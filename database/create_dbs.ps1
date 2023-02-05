@@ -22,8 +22,18 @@ if (-not (docker ps -a | Select-String -Pattern 'tick_db' -Quiet))
     }
     else {
         Write-Output "tick_db already created"
+        Invoke-Expression "docker start tick_db"
     }
-
+Write-Output "Creating tick_db"
+if (-not (docker ps -a | Select-String -Pattern 'tick_db' -Quiet))
+    {  
+        Invoke-Expression "docker run -e 'ACCEPT_EULA=Y' -e 'MSSQL_SA_PASSWORD=yourStrong(!)Password' --name trader_db -p 1433:1433 -d mcr.microsoft.com/mssql/server:2022-latest"  
+    }
+    else {
+        Write-Output "trader_db already created"
+        Invoke-Expression "docker start trader_db_db"
+    }
+    
 Write-Output "Installing DBeaver"
 if (Test-Path -Path "C:\Program Files\DBeaver")
     {

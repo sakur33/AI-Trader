@@ -1,13 +1,15 @@
+import os
 import json
 import socket
+from logger_settings import setup_logging
 import logging
 import time
 import ssl
-from trader_utils import baseCommand, return_as_df
+from trader_utils import baseCommand
 from threading import Thread
 
 # set to true on debug environment only
-DEBUG = True
+DEBUG = False
 
 # default connection properites
 DEFAULT_XAPI_ADDRESS = "xapi.xtb.com"
@@ -25,14 +27,13 @@ API_SEND_TIMEOUT = 100
 API_MAX_CONN_TRIES = 3
 
 # logger properties
-logger = logging.getLogger("jsonSocket")
-FORMAT = "[%(asctime)-15s][%(funcName)s:%(lineno)d] %(message)s"
-logging.basicConfig(format=FORMAT)
+curr_path = os.path.dirname(os.path.realpath(__file__))
+logs_path = curr_path + "../../logs/"
+if os.path.exists(f"{logs_path}{__name__}.log"):
+    os.remove(f"{logs_path}{__name__}.log")
 
-if DEBUG:
-    logger.setLevel(logging.DEBUG)
-else:
-    logger.setLevel(logging.CRITICAL)
+logger = logging.getLogger(__name__)
+logger = setup_logging(logger, logs_path, __name__, console_debug=True)
 
 
 class TransactionSide(object):
@@ -74,9 +75,13 @@ class JsonSocket(object):
                 logger.error("SockThread Error: %s" % msg)
                 time.sleep(0.25)
                 continue
-            logger.info("\nSocket connected")
+            # logger.debug("\nSocket connected")
             return True
         return False
+
+    def relaunch_socket(self):
+        logger.info("\n***********\nSOCKET RELAUNCH\n***********\n")
+        self.__init__(self._address, self._port, encrypt=True)
 
     def _sendObj(self, obj):
         msg = json.dumps(obj)
@@ -84,20 +89,28 @@ class JsonSocket(object):
 
     def _waitingSend(self, msg):
         if self.socket:
-            sent = 0
+            total_sent = 0
             msg = msg.encode("utf-8")
-            while sent < len(msg):
-                sent += self.conn.send(msg[sent:])
-                logger.info("\nSent: " + str(msg))
-                time.sleep(API_SEND_TIMEOUT / 1000)
+
+            while total_sent < len(msg):
+                try:
+                    sent = self.conn.send(msg[total_sent:])
+                    if sent == 0:
+                        self.relaunch_socket()
+                    total_sent = total_sent + sent
+                    # logger.debug("\nSent: " + str(msg))
+                    time.sleep(API_SEND_TIMEOUT / 1000)
+                except (OSError, Exception) as e:
+                    self.relaunch_socket()
 
     def _read(self, bytesSize=4096):
         if not self.socket:
+            logger.error("Socket connection broken")
             raise RuntimeError("socket connection broken")
         while True:
-            char = self.conn.recv(bytesSize).decode()
-            self._receivedData += char
             try:
+                char = self.conn.recv(bytesSize).decode()
+                self._receivedData += char
                 (resp, size) = self._decoder.raw_decode(self._receivedData)
                 if size == len(self._receivedData):
                     self._receivedData = ""
@@ -106,8 +119,10 @@ class JsonSocket(object):
                     self._receivedData = self._receivedData[size:].strip()
                     break
             except ValueError as e:
+                # logger.error(f"ValueError: {e}")
                 continue
-        logger.debug("Received: " + str(resp))
+            except (OSError, Exception) as e:
+                self.relaunch_socket()
         return resp
 
     def _readObj(self):
@@ -152,6 +167,9 @@ class JsonSocket(object):
     def _set_encrypt(self, encrypt):
         pass
 
+    def _keep_alive(self):
+        pass
+
     timeout = property(_get_timeout, _set_timeout, doc="Get/set the socket timeout")
     address = property(
         _get_address, _set_address, doc="read only property socket address"
@@ -165,6 +183,10 @@ class APIClient(JsonSocket):
         self, address=DEFAULT_XAPI_ADDRESS, port=DEFAULT_XAPI_PORT, encrypt=True
     ):
         super(APIClient, self).__init__(address, port, encrypt)
+        self.LAST_COMMAND_EXECUTED = time.time()
+        pingFun = Thread(target=self.ping)
+        pingFun.setDaemon(True)
+        pingFun.start()
         if not self.connect():
             raise Exception(
                 "Cannot connect to "
@@ -183,17 +205,22 @@ class APIClient(JsonSocket):
     def disconnect(self):
         self.close()
 
-    def commandExecute(self, commandName, arguments=None, return_df=True):
+    def commandExecute(self, commandName, arguments=None):
+        self.LAST_COMMAND_EXECUTED = time.time()
         commandResponse = self.execute(baseCommand(commandName, arguments))
         if commandResponse["status"] == False:
             error_code = commandResponse["errorCode"]
-            logger.info(f"\nLogin failed. Error code: {error_code}")
-            df = None
-        else:
-            if return_df:
-                return return_as_df(commandResponse["returnData"])
-            else:
-                return commandResponse
+            logger.error(f"\nLogin failed. Error code: {error_code}")
+
+        return commandResponse
+
+    def ping(self):
+        while True:
+            if (time.time() - self.LAST_COMMAND_EXECUTED) > (60):
+                commandResponse = self.commandExecute(
+                    commandName="ping",
+                )
+                logger.debug("ping")
 
 
 class APIStreamClient(JsonSocket):
@@ -209,6 +236,8 @@ class APIStreamClient(JsonSocket):
         tradeStatusFun=None,
         profitFun=None,
         newsFun=None,
+        candleFun=None,
+        keepAliveFun=None,
     ):
         super(APIStreamClient, self).__init__(address, port, encrypt)
         self._ssId = ssId
@@ -219,6 +248,8 @@ class APIStreamClient(JsonSocket):
         self._tradeStatusFun = tradeStatusFun
         self._profitFun = profitFun
         self._newsFun = newsFun
+        self._candleFun = candleFun
+        self.last_tick_time = None
 
         if not self.connect():
             raise Exception(
@@ -235,14 +266,17 @@ class APIStreamClient(JsonSocket):
         self._t = Thread(target=self._readStream, args=())
         self._t.setDaemon(True)
         self._t.start()
+        self.subscribeKeepAlive()
 
     def _readStream(self):
         while self._running:
             msg = self._readObj()
-            logger.info("Stream received: " + str(msg))
             if msg["command"] == "tickPrices":
                 self._tickFun(msg)
+            elif msg["command"] == "candle":
+                self._candleFun(msg)
             elif msg["command"] == "trade":
+                logger.debug("trade-call")
                 self._tradeFun(msg)
             elif msg["command"] == "balance":
                 self._balanceFun(msg)
@@ -255,23 +289,23 @@ class APIStreamClient(JsonSocket):
 
     def disconnect(self):
         self._running = False
-        self._t.join()
         self.close()
 
     def execute(self, dictionary):
         self._sendObj(dictionary)
 
-    def subscribePrice(self, symbol, minArrivalTime=1):
+    def subscribePrice(self, symbol, minArrivalTime=10 * 1000, maxLevel=1):
         self.execute(
             dict(
                 command="getTickPrices",
                 symbol=symbol,
                 streamSessionId=self._ssId,
                 minArrivalTime=minArrivalTime,
+                maxLevel=maxLevel,
             )
         )
 
-    def subscribePrices(self, symbols, minArrivalTime=1):
+    def subscribeMultiplePrices(self, symbols, minArrivalTime=1):
         for symbolX in symbols:
             self.subscribePrice(symbolX, minArrivalTime)
 
@@ -290,12 +324,24 @@ class APIStreamClient(JsonSocket):
     def subscribeNews(self):
         self.execute(dict(command="getNews", streamSessionId=self._ssId))
 
+    def subscribeMultipleCandles(self, symbols):
+        for symbol in symbols:
+            self.subscribeCandles(symbol)
+
+    def subscribeCandle(self, symbol):
+        self.execute(
+            dict(command="getCandles", streamSessionId=self._ssId, symbol=symbol)
+        )
+
+    def subscribeKeepAlive(self):
+        self.execute(dict(command="getKeepAlive", streamSessionId=self._ssId))
+
     def unsubscribePrice(self, symbol):
         self.execute(
             dict(command="stopTickPrices", symbol=symbol, streamSessionId=self._ssId)
         )
 
-    def unsubscribePrices(self, symbols):
+    def unsubscribeMultiplePrices(self, symbols):
         for symbolX in symbols:
             self.unsubscribePrice(symbolX)
 
@@ -313,3 +359,10 @@ class APIStreamClient(JsonSocket):
 
     def unsubscribeNews(self):
         self.execute(dict(command="stopNews", streamSessionId=self._ssId))
+
+    def unsubscribeCandles(self, symbol):
+        self.execute(dict(command="stopCandles", symbol=symbol))
+
+    def unsubscribeMultipleCandles(self, symbols):
+        for symbolX in symbols:
+            self.unsubscribeCandles(symbolX)

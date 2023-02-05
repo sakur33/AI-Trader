@@ -100,6 +100,8 @@ CREATE TABLE stocks(
     open REAL NULL,
     close REAL NULL,
     vol REAL NULL,
+    min REAL NULL,
+    max REAL NULL,
     PRIMARY KEY (symbol_name, ctm),
     FOREIGN KEY (symbol_name) REFERENCES symbols (symbol)
 );
@@ -116,4 +118,13 @@ CREATE TABLE ticks (
     tick_level INT NULL,
     spreadTable REAL NULL,
     spreadRaw REAL NULL
+);
+
+CREATE TABLE trading_params(
+    symbol_name TEXT NOT NULL,
+    date TEXT NOT NULL,
+    score REAL NOT NULL,
+    short_ma INT NOT NULL,
+    long_ma INT NOT NULL,
+    out REAL NOT NULL
 );
