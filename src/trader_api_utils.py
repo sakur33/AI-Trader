@@ -61,7 +61,15 @@ class ApiSessionManager:
             quit()
         return loginResponse
 
-    def set_streamClient(self, symbol, tick=False, candle=True, trade=True, queue=None):
+    def set_streamClient(
+        self,
+        symbol,
+        tick=False,
+        candle=True,
+        trade=True,
+        tick_queue=None,
+        candle_queue=None,
+    ):
         self.stream_clients = {}
         self.symbol = symbol
 
