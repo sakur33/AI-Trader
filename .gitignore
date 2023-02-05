@@ -13,6 +13,7 @@ __pycache__
 .DS_Store
 node_modules
 /dist
+visualizator/node_modules
 
 
 # local env files
