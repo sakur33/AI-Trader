@@ -1,3 +1,4 @@
+from scipy.stats import skewnorm, norm
 import datetime as dt
 from datetime import datetime, timedelta
 from sklearn.base import BaseEstimator, DensityMixin
@@ -18,6 +19,8 @@ from ta.momentum import StochasticOscillator
 from scipy.signal import argrelextrema
 from sklearn.model_selection import GridSearchCV
 from forex_python.converter import CurrencyRates
+from numpy.random import rand
+from tqdm import tqdm
 import json
 import warnings
 
@@ -38,6 +41,104 @@ class CustomJSONizer(json.JSONEncoder):
                 return super().default(obj)
             except Exception as e:
                 return "Class"
+
+
+class StockSimulator:
+    def __init__(
+        self,
+        days=7,
+        initial_price=0.9545,
+        volatility=0.0005,
+        drift=0.0000001,
+        spread=0.002,
+    ) -> None:
+        days = 7
+        self.initial_price = initial_price
+
+        self.stock = self.create_stock(
+            initial_price,
+            drift,
+            volatility,
+            spread,
+            days,
+        )
+
+    def create_stock(self, initial_price, drift, volatility, spread, days):
+        stock = self.create_empty_df(days)
+        stock["ask"][0] = initial_price
+        random_variates = self.create_random_variates(size=stock.shape[0])
+        changes = []
+        for i in tqdm(range(1, stock.shape[0])):
+            # TODO: Vectorize this implementation
+            change = (random_variates[i] * volatility) + drift
+            val = stock.iloc[i - 1] + change
+            stock.iloc[i] = val
+            changes.append(change)
+        stock["bid"] = stock["ask"].apply(
+            lambda x: x * (1 + (spread * (np.random.rand())))
+        )
+        self.changes = changes
+        return stock
+
+    def create_random_variates(self, size=1000, loc=0, scale=1):
+        x = norm.rvs(size=size, scale=scale, loc=loc)
+        return x
+
+    def create_empty_df(self, days):
+        time = pd.Series(
+            pd.date_range(datetime.now(), periods=days * 24 * 60 * 60, freq="S")
+        ).values
+        values = np.zeros(time.shape).reshape(-1, 1)
+        stock = pd.DataFrame(data=values, columns=["ask"], index=time)
+        return stock
+
+    def get_stock(self):
+        return self.stock
+
+    def get_candlestick(self, frame="1min", price="ask"):
+        candles = (
+            self.stock[price]
+            .resample(frame)
+            .agg(
+                {
+                    "open": "first",
+                    "high": "max",
+                    "low": "min",
+                    "close": "last",
+                }
+            )
+        )
+        return candles
+
+
+def generate_random_symbols(
+    symbol_count=1,
+    days=7,
+    initial_price=0.9545,
+    volatility=np.random.rand() * 0.0001,
+    drift=0.0,
+    trend=0.00000001,
+    spread=0.002,
+):
+    symbols = None
+    for symbol in range(symbol_count):
+        sm = StockSimulator(
+            days=days,
+            initial_price=initial_price,
+            volatility=volatility,
+            drift=drift,
+            spread=spread,
+        )
+        candles = sm.get_candlestick()
+        candles["symbol"] = f"SYNTH-{symbol}"
+        candles = candles.reset_index()
+        candles = candles.rename(columns={"index": "ctmstring"})
+        if symbols is None:
+            symbols = candles
+        else:
+            symbols = symbols.append(candles)
+
+    return symbols
 
 
 def calculate_position(price, vol, contractSize=100000, leverage=5, currency="EUR"):
@@ -525,7 +626,466 @@ def get_angle_between_lines(m1, m2):
     return np.degrees(np.arctan((m1 - m2) / (1 + (m1 * m2))))
 
 
+def log_dict(info_dict, logger, no_keys=["Trades", "Crossover", "candles"]):
+    str = ""
+    for key in info_dict.keys():
+        if key not in no_keys:
+            new_str = f"\n{key}: {info_dict[key]}"
+            str += new_str
+    logger.info(str)
+
+
 # PLOTTING FUNCTIONS
+def plot_stock_simple(
+    df,
+    trades=None,
+    crossovers=None,
+    symbol="",
+    params="",
+    profit="",
+    show=False,
+    min_list=None,
+    max_list=None,
+    id="ctmstring",
+):
+    fig = make_subplots(
+        rows=2,
+        cols=1,
+        shared_xaxes=True,
+        vertical_spacing=0.01,
+        row_heights=[0.9, 0.1],
+    )
+    fig.add_trace(
+        go.Candlestick(
+            x=df.index,
+            open=df["open"],
+            high=df["high"],
+            low=df["low"],
+            close=df["close"],
+            name=symbol,
+        ),
+        row=1,
+        col=1,
+    )
+    if "short_ma" in list(df.columns):
+        fig.add_trace(
+            go.Scatter(
+                x=df.index,
+                y=df["short_ma"],
+                opacity=0.7,
+                line=dict(color="blue", width=2),
+                name="short_ma",
+            )
+        )
+    if "long_ma" in list(df.columns):
+        fig.add_trace(
+            go.Scatter(
+                x=df.index,
+                y=df["long_ma"],
+                opacity=0.7,
+                line=dict(color="orange", width=2),
+                name="long_ma",
+            )
+        )
+    if "vol" in list(df.columns):
+        fig.add_trace(go.Bar(x=df.index, y=df["vol"], name="Volume"), row=2, col=1)
+    if min_list:
+        for min_line in min_list:
+            fig.add_hline(
+                y=min_line,
+                name="min",
+                line_dash="dash",
+                line_color="yellow",
+                line_width=3,
+                row=1,
+                col=1,
+            )
+    if max_list:
+        for max_line in max_list:
+            fig.add_hline(
+                y=max_line,
+                name="max",
+                line_dash="dash",
+                line_color="blue",
+                line_width=3,
+                row=1,
+                col=1,
+            )
+    if trades:
+        trade_opens = {"time": [], "price": []}
+        trade_closes = {"time": [], "price": []}
+        for trade in trades:
+            trade_opens["time"].append(trade["open_time"])
+            trade_opens["price"].append(trade["open_price"])
+            trade_closes["time"].append(trade["close_time"])
+            trade_closes["price"].append(trade["close_price"])
+
+        fig.add_trace(
+            go.Scatter(
+                x=trade_opens["time"],
+                y=trade_opens["price"],
+                name="Trade Opens",
+                mode="markers",
+                marker_color="green",
+                marker_size=5,
+                marker_symbol="cross",
+            ),
+            row=1,
+            col=1,
+        )
+        fig.add_trace(
+            go.Scatter(
+                x=trade_closes["time"],
+                y=trade_closes["price"],
+                name="Trade Closes",
+                mode="markers",
+                marker_color="red",
+                marker_size=5,
+                marker_symbol="cross",
+            ),
+            row=1,
+            col=1,
+        )
+
+    # if crossovers:
+    #     for crossover in crossovers:
+    #         fig.add_vline(
+    #             x=crossover["time"],
+    #             name="Cross",
+    #             line_dash="dash",
+    #             line_color='black',
+    #             line_width=3,
+    #             row=1,
+    #             col=1,
+    #         )
+
+    fig.update_layout(
+        xaxis_rangeslider_visible=False,
+        xaxis2_rangeslider_visible=False,
+        title_text=f"{symbol}-{params}-p:{profit}",
+    )
+    config = {
+        "scrollZoom": True,
+        "displayModeBar": True,
+        "displaylogo": False,
+        "toImageButtonOptions": {
+            "format": "svg",  # one of png, svg, jpeg, webp
+            "filename": "custom_image",
+            "height": 1080,
+            "width": 1920,
+            "scale": 1,  # Multiply title/legend/axis/canvas sizes by this factor
+        },
+        "modeBarButtonsToAdd": [
+            "drawline",
+            "drawopenpath",
+            "drawclosedpath",
+            "drawcircle",
+            "drawrect",
+            "eraseshape",
+        ],
+    }
+
+    if show:
+        fig.show(config=config)
+    else:
+        fig.write_html(f"results/{symbol}_config.html", config=config)
+
+
+def plot_stock_all_trades(
+    df, trades=None, crossovers=None, symbol="", params="", profit="", show=False
+):
+    fig = make_subplots(
+        rows=2,
+        cols=1,
+        shared_xaxes=True,
+        vertical_spacing=0.01,
+        row_heights=[0.9, 0.1],
+    )
+    fig.add_trace(
+        go.Candlestick(
+            x=df["ctmstring"],
+            open=df["open"],
+            high=df["high"],
+            low=df["low"],
+            close=df["close"],
+            name=symbol,
+        ),
+        row=1,
+        col=1,
+    )
+    if "short_ma" in list(df.columns):
+        fig.add_trace(
+            go.Scatter(
+                x=df["ctmstring"],
+                y=df["short_ma"],
+                opacity=0.7,
+                line=dict(color="blue", width=2),
+                name="short_ma",
+            )
+        )
+    if "long_ma" in list(df.columns):
+        fig.add_trace(
+            go.Scatter(
+                x=df["ctmstring"],
+                y=df["long_ma"],
+                opacity=0.7,
+                line=dict(color="orange", width=2),
+                name="long_ma",
+            )
+        )
+    if "vol" in list(df.columns):
+        fig.add_trace(
+            go.Bar(x=df["ctmstring"], y=df["vol"], name="Volume"), row=2, col=1
+        )
+
+    for cont, trade in enumerate(trades):
+        fig.add_trace(
+            go.Scatter(
+                x=[trade["open_time"]],
+                y=[trade["open_price"]],
+                name="Trade Open",
+                legendgroup=f"trade_{cont}",
+                mode="markers",
+                marker_color="green",
+                marker_size=10,
+                marker_symbol="cross",
+            ),
+            row=1,
+            col=1,
+        )
+        fig.add_trace(
+            go.Scatter(
+                x=[trade["close_time"]],
+                y=[trade["close_price"]],
+                name="Trade Close",
+                text=f"Profit: {trade['profit']}",
+                legendgroup=f"trade_{cont}",
+                mode="markers",
+                marker_color="red",
+                marker_size=10,
+                marker_symbol="cross",
+            ),
+            row=1,
+            col=1,
+        )
+        fig.add_trace(
+            go.Scatter(
+                x=[trade["open_time"], trade["close_time"]],
+                y=[trade["sl"]],
+                name="Stop Loss",
+                legendgroup=f"trade_{cont}",
+                mode="lines",
+                line=dict(color="red", width=5),
+            ),
+            row=1,
+            col=1,
+        )
+        fig.add_trace(
+            go.Scatter(
+                x=[trade["open_time"], trade["close_time"]],
+                y=[trade["tp"]],
+                name="Take Profit",
+                legendgroup=f"trade_{cont}",
+                mode="lines",
+                line=dict(color="green", width=5),
+            ),
+            row=1,
+            col=1,
+        )
+
+    # if crossovers:
+    #     for crossover in crossovers:
+    #         fig.add_vline(
+    #             x=crossover["time"],
+    #             name="Cross",
+    #             line_dash="dash",
+    #             line_color='black',
+    #             line_width=3,
+    #             row=1,
+    #             col=1,
+    #         )
+
+    fig.update_layout(
+        xaxis_rangeslider_visible=False,
+        xaxis2_rangeslider_visible=False,
+        title_text=f"{symbol}-{params}-p:{profit}",
+    )
+    config = {
+        "scrollZoom": True,
+        "displayModeBar": True,
+        "displaylogo": False,
+        "toImageButtonOptions": {
+            "format": "svg",  # one of png, svg, jpeg, webp
+            "filename": "custom_image",
+            "height": 1080,
+            "width": 1920,
+            "scale": 1,  # Multiply title/legend/axis/canvas sizes by this factor
+        },
+        "modeBarButtonsToAdd": [
+            "drawline",
+            "drawopenpath",
+            "drawclosedpath",
+            "drawcircle",
+            "drawrect",
+            "eraseshape",
+        ],
+    }
+
+    if show:
+        fig.show(config=config)
+    else:
+        fig.write_html(f"results/{symbol}/{symbol}_config.html", config=config)
+
+
+def plot_stock_trade(
+    df,
+    trade=None,
+    id=0,
+    crossovers=None,
+    symbol="",
+    params="",
+    profit="",
+    show=True,
+    path=None,
+):
+    fig = make_subplots(
+        rows=2,
+        cols=1,
+        shared_xaxes=True,
+        vertical_spacing=0.01,
+        row_heights=[0.9, 0.1],
+    )
+    fig.add_trace(
+        go.Candlestick(
+            x=df["ctmstring"],
+            open=df["open"],
+            high=df["high"],
+            low=df["low"],
+            close=df["close"],
+            name=symbol,
+        ),
+        row=1,
+        col=1,
+    )
+    if "short_ma" in list(df.columns):
+        fig.add_trace(
+            go.Scatter(
+                x=df["ctmstring"],
+                y=df["short_ma"],
+                opacity=0.7,
+                line=dict(color="blue", width=2),
+                name="short_ma",
+            )
+        )
+    if "long_ma" in list(df.columns):
+        fig.add_trace(
+            go.Scatter(
+                x=df["ctmstring"],
+                y=df["long_ma"],
+                opacity=0.7,
+                line=dict(color="orange", width=2),
+                name="long_ma",
+            )
+        )
+    if "vol" in list(df.columns):
+        fig.add_trace(
+            go.Bar(x=df["ctmstring"], y=df["vol"], name="Volume"), row=2, col=1
+        )
+
+    if trade is not None:
+        fig.add_trace(
+            go.Scatter(
+                x=[trade["open_time"]],
+                y=[trade["open_price"]],
+                name="Trade Open",
+                mode="markers",
+                marker_color="black",
+                marker_size=10,
+                marker_symbol="cross",
+            ),
+            row=1,
+            col=1,
+        )
+        fig.add_hline(
+            y=trade["sl"],
+            name="SL",
+            line_dash="dash",
+            line_color="red",
+            line_width=3,
+            row=1,
+            col=1,
+        )
+        fig.add_hline(
+            y=trade["tp"],
+            name="TP",
+            line_dash="dash",
+            line_color="green",
+            line_width=3,
+            row=1,
+            col=1,
+        )
+        if "close_time" in trade.keys():
+            fig.add_trace(
+                go.Scatter(
+                    x=[trade["close_time"]],
+                    y=[trade["close_price"]],
+                    name="Trade Close",
+                    mode="markers",
+                    marker_color="blue",
+                    marker_size=10,
+                    marker_symbol="circle",
+                ),
+                row=1,
+                col=1,
+            )
+
+    # if crossovers:
+    #     for crossover in crossovers:
+    #         fig.add_vline(
+    #             x=crossover["time"],
+    #             name="Cross",
+    #             line_dash="dash",
+    #             line_color='black',
+    #             line_width=3,
+    #             row=1,
+    #             col=1,
+    #         )
+
+    fig.update_layout(
+        xaxis_rangeslider_visible=False,
+        xaxis2_rangeslider_visible=False,
+        title_text=f"{symbol}-{params}-p:{profit}",
+    )
+    config = {
+        "scrollZoom": True,
+        "displayModeBar": True,
+        "displaylogo": False,
+        "toImageButtonOptions": {
+            "format": "svg",  # one of png, svg, jpeg, webp
+            "filename": "custom_image",
+            "height": 1080,
+            "width": 1920,
+            "scale": 1,  # Multiply title/legend/axis/canvas sizes by this factor
+        },
+        "modeBarButtonsToAdd": [
+            "drawline",
+            "drawopenpath",
+            "drawclosedpath",
+            "drawcircle",
+            "drawrect",
+            "eraseshape",
+        ],
+    }
+
+    if show:
+        fig.show(config=config)
+    else:
+        if path:
+            fig.write_html(f"results/{path}.html", config=config)
+        else:
+            fig.write_html(f"results/trades/{symbol}_trade{id}.html", config=config)
+
+
 def plot_stock(df, params=None, symbol=None, return_fig=False, fig=None):
     if not fig:
         fig = make_subplots(
@@ -547,24 +1107,24 @@ def plot_stock(df, params=None, symbol=None, return_fig=False, fig=None):
         row=1,
         col=1,
     )
-    if "MA_short" in list(df.columns):
+    if "short_ma" in list(df.columns):
         fig.add_trace(
             go.Scatter(
                 x=df.index,
-                y=df["MA_short"],
+                y=df["short_ma"],
                 opacity=0.7,
                 line=dict(color="blue", width=2),
-                name="MA short",
+                name="short_ma",
             )
         )
-    if "MA_long" in list(df.columns):
+    if "long_ma" in list(df.columns):
         fig.add_trace(
             go.Scatter(
                 x=df.index,
-                y=df["MA_long"],
+                y=df["long_ma"],
                 opacity=0.7,
                 line=dict(color="orange", width=2),
-                name="MA long",
+                name="long_ma",
             )
         )
     MACD1, STOCH1 = get_macd_stoch(df)
@@ -595,7 +1155,7 @@ def plot_stock(df, params=None, symbol=None, return_fig=False, fig=None):
 
     if params:
         fig.add_hline(
-            y=params["buy_price"],
+            y=params["open_price"],
             name="BP",
             line_dash="dash",
             line_color="yellow",
@@ -604,7 +1164,7 @@ def plot_stock(df, params=None, symbol=None, return_fig=False, fig=None):
             col=1,
         )
         fig.add_hline(
-            y=params["stop_loss"],
+            y=params["sl"],
             name="SL",
             line_dash="dash",
             line_color="red",
@@ -613,8 +1173,8 @@ def plot_stock(df, params=None, symbol=None, return_fig=False, fig=None):
             col=1,
         )
         fig.add_hline(
-            y=params["take_profit"],
-            name="TP",
+            y=params["close_price"],
+            name="CP",
             line_dash="dash",
             line_color="green",
             line_width=3,
@@ -1004,3 +1564,21 @@ class TradingEstimator(BaseEstimator, DensityMixin):
             tick["high"] * self.contractSize / ((1 / self.leverage) * 100)
         ) * self.lotStep
         return is_bought, is_short, buy_price
+
+    def look_for_suitable_symbols_v1(self, df, symbol_type, capital, max_risk):
+        # TODO look for suitable symbols
+        # Look for symbols with:
+        #   - Volatility bigger than spread [DONE LATER]
+        #   - Trader_type products
+        #   - Ask comparable to our max_risk
+        try:
+            df = df[df["categoryName"] == symbol_type]
+            df["min_price"] = (
+                df["ask"] * df["lotMin"] * df["contractSize"] * (df["leverage"] / 100)
+            )
+            df = df[df["min_price"] <= (capital * max_risk)]
+            df["spread_percentage"] = (df["ask"] - df["bid"]) / df["ask"]
+            df = df.sort_values(by=["spread_percentage"])
+            return df
+        except Exception as e:
+            raise LogicError

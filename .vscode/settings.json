@@ -9,10 +9,10 @@
   },
   "python.formatting.provider": "black",
   "editor.formatOnSave": true,
-  "python.languageServer": "None",
+  "python.languageServer": "Default",
   // "python.linting.pylintEnabled": true,
   // "python.linting.enabled": true,
-  "python.analysis.typeCheckingMode": "basic",
+  "python.analysis.typeCheckingMode": "off",
   "python.defaultInterpreterPath": "${workspaceFolder}/.env",
   // "python.linting.pylintArgs": [
   //   "--init-hook",

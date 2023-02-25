@@ -1,0 +1,16 @@
+| MainThread | 2023-02-09 17:10:50,704 | __main__ | INFO | ONLINE TRADER
+| MainThread | 2023-02-09 17:11:35,100 | __main__ | INFO | SYSTEM STARTS
+| MainThread | 2023-02-10 10:08:53,283 | __main__ | INFO | ONLINE TRADER
+| MainThread | 2023-02-10 10:10:38,468 | __main__ | INFO | ONLINE TRADER
+| MainThread | 2023-02-10 10:11:24,713 | __main__ | INFO | SYSTEM STARTS
+| MainThread | 2023-02-10 10:12:03,439 | __main__ | INFO | Added trailing of 43.0
+| MainThread | 2023-02-10 10:12:04,601 | __main__ | INFO | 
+******
+BUY
+******
+BUY PRICE: 0.69578 | SL: 0.69173
+| MainThread | 2023-02-10 10:12:04,648 | __main__ | INFO | Random entry
+| MainThread | 2023-02-10 10:12:04,710 | __main__ | INFO | 
+Crossover: True/False
+Hist. Profits: [0]
+Max risks: 0
