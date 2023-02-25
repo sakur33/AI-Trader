@@ -1,1 +1,0 @@
-| Thread-33 (insert_trade) | 2023-02-10 10:12:04,679 | trader_db_utils | INFO | Exception at insert | ('HY000', 'The driver did not supply an error!')
