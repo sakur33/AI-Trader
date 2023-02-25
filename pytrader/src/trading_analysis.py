@@ -48,8 +48,10 @@ def get_slope(self, prev_candle, c_candle, candles, short_ma, long_ma):
     return ma_short_slope, ma_long_slope
 
 
-def get_absolute_angles(self, prev_candle, c_candle):
-    ma_short_slope, ma_long_slope = self.get_slope(prev_candle, c_candle)
+def get_absolute_angles(self, prev_candle, c_candle, candles, short_ma, long_ma):
+    ma_short_slope, ma_long_slope = get_slope(
+        prev_candle, c_candle, candles, short_ma, long_ma
+    )
     angle_short = np.degrees(
         np.arctan((ma_short_slope - 0) / (1 + (ma_short_slope * 0)))
     )
@@ -57,21 +59,21 @@ def get_absolute_angles(self, prev_candle, c_candle):
     return angle_short, angle_long
 
 
-def get_angle_between_slopes(self, prev_candle, c_candle):
-    m1, m2 = self.get_slope(prev_candle, c_candle)
+def get_angle_between_slopes(self, prev_candle, c_candle, candles, short_ma, long_ma):
+    m1, m2 = get_slope(prev_candle, c_candle)
     return np.degrees(np.arctan((m1 - m2) / (1 + (m1 * m2))))
 
 
-def buy_slope(self, prev_candle, c_candle):
+def buy_slope(self, prev_candle, c_candle, min_angle, spread):
     buy_short = False
     buy_long = False
-    short_a, long_a = self.get_absolute_angles(prev_candle, c_candle)
-    if np.abs(c_candle["short_ma"] - c_candle["long_ma"]) > self.spread:
-        if short_a < -(self.min_angle * 2) and long_a < -(self.min_angle / 2):
+    short_a, long_a = get_absolute_angles(prev_candle, c_candle)
+    if np.abs(c_candle["short_ma"] - c_candle["long_ma"]) > spread:
+        if short_a < -(min_angle * 2) and long_a < -(min_angle / 2):
             # trend is negative
             buy_short = False
             buy_long = True
-        elif short_a > (self.min_angle * 2) and long_a > (self.min_angle / 2):
+        elif short_a > (min_angle * 2) and long_a > (min_angle / 2):
             # trend is positive
             buy_short = True
             buy_long = False
@@ -144,6 +146,10 @@ for symbol in fx_candles["symbol"].unique():
 
     candles["short_ma"] = candles["close"].rolling(30).mean()
     candles["long_ma"] = candles["close"].rolling(1000).mean()
+
+    for index, row in candles.iterrows():
+        i
+        get_absolute_angles(self, prev_candle, c_candle, candles, short_ma, long_ma)
 
     plot_stock_simple(
         candles.iloc[: int(candles.shape[0] / 200), :],
