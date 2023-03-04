@@ -1,0 +1,24 @@
+{
+    "trailingComma": "es5",
+    "tabWidth": 2,
+    "semi": false,
+    "singleQuote": false,
+    "endOfLine": "auto",
+    "overrides": [
+        {
+            "files": "*.vue",
+            "options": {
+                "semi": true,
+                "endOfLine": "auto"
+            }
+        },
+        {
+            "files": "*.ts",
+            "options": {
+                "semi": true,
+                "singleQuote": false,
+                "endOfLine": "auto"
+            }
+        }
+    ]
+  }
