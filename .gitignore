@@ -16,7 +16,7 @@ node_modules
 /dist
 visualizator/node_modules
 *results.pkl
-
+results/*
 # local env files
 .env.local
 .env.*.local
