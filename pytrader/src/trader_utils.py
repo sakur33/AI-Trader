@@ -675,6 +675,7 @@ def plot_stock_simple(
                 opacity=0.7,
                 line=dict(color="blue", width=2),
                 name="short_ma",
+                text=df["angle_short"],
             )
         )
     if "long_ma" in list(df.columns):
@@ -685,10 +686,12 @@ def plot_stock_simple(
                 opacity=0.7,
                 line=dict(color="orange", width=2),
                 name="long_ma",
+                text=df["angle_long"],
             )
         )
     if "vol" in list(df.columns):
         fig.add_trace(go.Bar(x=df.index, y=df["vol"], name="Volume"), row=2, col=1)
+
     if min_list:
         for min_line in min_list:
             fig.add_hline(
@@ -711,23 +714,15 @@ def plot_stock_simple(
                 row=1,
                 col=1,
             )
-    if trades:
-        trade_opens = {"time": [], "price": []}
-        trade_closes = {"time": [], "price": []}
-        for trade in trades:
-            trade_opens["time"].append(trade["open_time"])
-            trade_opens["price"].append(trade["open_price"])
-            trade_closes["time"].append(trade["close_time"])
-            trade_closes["price"].append(trade["close_price"])
-
+    if "trades" in list(df.columns):
         fig.add_trace(
             go.Scatter(
-                x=trade_opens["time"],
-                y=trade_opens["price"],
-                name="Trade Opens",
+                x=df[df["trades"] == 1].index,
+                y=df[df["trades"] == 1]["open"],
+                name="Trade Buys",
                 mode="markers",
                 marker_color="green",
-                marker_size=5,
+                marker_size=10,
                 marker_symbol="cross",
             ),
             row=1,
@@ -735,12 +730,12 @@ def plot_stock_simple(
         )
         fig.add_trace(
             go.Scatter(
-                x=trade_closes["time"],
-                y=trade_closes["price"],
-                name="Trade Closes",
+                x=df[df["trades"] == -1].index,
+                y=df[df["trades"] == -1]["open"],
+                name="Trade Short",
                 mode="markers",
                 marker_color="red",
-                marker_size=5,
+                marker_size=10,
                 marker_symbol="cross",
             ),
             row=1,
@@ -792,7 +787,14 @@ def plot_stock_simple(
 
 
 def plot_stock_all_trades(
-    df, trades=None, crossovers=None, symbol="", params="", profit="", show=False
+    df,
+    trades=None,
+    crossovers=None,
+    symbol="",
+    params="",
+    profit="",
+    show=False,
+    ret=False,
 ):
     fig = make_subplots(
         rows=2,
@@ -803,7 +805,7 @@ def plot_stock_all_trades(
     )
     fig.add_trace(
         go.Candlestick(
-            x=df["ctmstring"],
+            x=df.index,
             open=df["open"],
             high=df["high"],
             low=df["low"],
@@ -816,7 +818,7 @@ def plot_stock_all_trades(
     if "short_ma" in list(df.columns):
         fig.add_trace(
             go.Scatter(
-                x=df["ctmstring"],
+                x=df.index,
                 y=df["short_ma"],
                 opacity=0.7,
                 line=dict(color="blue", width=2),
@@ -826,7 +828,7 @@ def plot_stock_all_trades(
     if "long_ma" in list(df.columns):
         fig.add_trace(
             go.Scatter(
-                x=df["ctmstring"],
+                x=df.index,
                 y=df["long_ma"],
                 opacity=0.7,
                 line=dict(color="orange", width=2),
@@ -834,9 +836,7 @@ def plot_stock_all_trades(
             )
         )
     if "vol" in list(df.columns):
-        fig.add_trace(
-            go.Bar(x=df["ctmstring"], y=df["vol"], name="Volume"), row=2, col=1
-        )
+        fig.add_trace(go.Bar(x=df.index, y=df["vol"], name="Volume"), row=2, col=1)
 
     for cont, trade in enumerate(trades):
         fig.add_trace(
@@ -868,42 +868,32 @@ def plot_stock_all_trades(
             row=1,
             col=1,
         )
-        fig.add_trace(
-            go.Scatter(
-                x=[trade["open_time"], trade["close_time"]],
-                y=[trade["sl"]],
-                name="Stop Loss",
-                legendgroup=f"trade_{cont}",
-                mode="lines",
-                line=dict(color="red", width=5),
-            ),
-            row=1,
-            col=1,
-        )
-        fig.add_trace(
-            go.Scatter(
-                x=[trade["open_time"], trade["close_time"]],
-                y=[trade["tp"]],
-                name="Take Profit",
-                legendgroup=f"trade_{cont}",
-                mode="lines",
-                line=dict(color="green", width=5),
-            ),
-            row=1,
-            col=1,
-        )
-
-    # if crossovers:
-    #     for crossover in crossovers:
-    #         fig.add_vline(
-    #             x=crossover["time"],
-    #             name="Cross",
-    #             line_dash="dash",
-    #             line_color='black',
-    #             line_width=3,
-    #             row=1,
-    #             col=1,
-    #         )
+        if "sl" in list(trade.keys()):
+            fig.add_trace(
+                go.Scatter(
+                    x=[trade["open_time"], trade["close_time"]],
+                    y=[trade["sl"]],
+                    name="Stop Loss",
+                    legendgroup=f"trade_{cont}",
+                    mode="lines",
+                    line=dict(color="red", width=5),
+                ),
+                row=1,
+                col=1,
+            )
+        if "tp" in list(trade.keys()):
+            fig.add_trace(
+                go.Scatter(
+                    x=[trade["open_time"], trade["close_time"]],
+                    y=[trade["tp"]],
+                    name="Take Profit",
+                    legendgroup=f"trade_{cont}",
+                    mode="lines",
+                    line=dict(color="green", width=5),
+                ),
+                row=1,
+                col=1,
+            )
 
     fig.update_layout(
         xaxis_rangeslider_visible=False,
@@ -935,6 +925,8 @@ def plot_stock_all_trades(
         fig.show(config=config)
     else:
         fig.write_html(f"results/{symbol}/{symbol}_config.html", config=config)
+    if ret:
+        return fig
 
 
 def plot_stock_trade(
