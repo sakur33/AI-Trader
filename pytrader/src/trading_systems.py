@@ -411,6 +411,64 @@ class BaseTrader:
         self.logger.info("Base logger step function has to be overriden")
 
 
+class AngleTrader(BaseTrader):
+    def __init__(
+        self, name, capital, max_risk, trader_type, logger=None, test=0
+    ) -> None:
+        super().__init__(name, capital, max_risk, trader_type, logger=logger, test=test)
+
+        self.SYMBOl = None
+        self.VOLUME = None
+        self.HIST_PROFITS = [0]
+        self.ORDER_N = None
+        self.POTENTIAL_PROFITS = []
+        self.SYMBOL_INFO = None
+        self.MAX_RISK = None
+        self.IN_POSITION = False
+        self.TRANS_TYPE = None
+
+        self.short_ma = None
+        self.long_ma = None
+        self.profit_exit = None
+        self.loss_exit = None
+        self.min_angle = None
+
+        self.last_update_time = 0
+
+    def sell_position(self):
+        # TODO: Implement the function to call self.trade and sell the position
+        pass
+
+    def buy_position(self):
+        # TODO: Implement the function to call self.trade and buy a position
+        pass
+
+    def enter_position(self):
+        # TODO: Implement the logic to enter a trade.
+
+        """
+        Rules to enter:
+            1st: Separation between short_ma and long_ma is greater than the spread
+            2nd: Enter long:
+                ((angle_short > 60) and (angle long < -6) and (short_ma < long_ma))
+                OR ((angle_short > 30) and (angle_long > 15))
+            3rd: Enter short:
+                ((angle_short < -60) and (angle long > 6) and (short_ma > long_ma))
+                OR ((angle_short < -30) and (angle_long < -15))
+        """
+        pass
+
+    def exit_position(self):
+        # TODO: Implement the logit to exit a position
+
+        """
+        Rules to exit:
+            1st: Profit is negative (not counting entry spread)
+            2nd: If last profit / current profit < 0.95
+            3rd: Profit is > 0.01
+        """
+
+
 class CrossTrader(BaseTrader):
     def __init__(
         self, name, capital, max_risk, trader_type, logger=None, test=0

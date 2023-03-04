@@ -324,6 +324,7 @@ for symbol in fx_candles["symbol"].unique():
     buy = False
     short = False
 
+    # Enter logic
     for index in tqdm(range(long_ma, candles.shape[0])):
         # logger.info(f"\nBuy-signals:{buy_signals}\nShort-signals: {short_signals}")
         candle = candles.iloc[index, :]
