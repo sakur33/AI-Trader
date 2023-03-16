@@ -160,7 +160,7 @@ class TraderDB:
             conn.commit()
             cur.close()
         except IntegrityError as e:
-            self.logger.info(f"Integrity Error | trade already exists")
+            self.logger.info(f"Integrity Error | row already exists")
             sql = self.generate_update_stmt(db, table, obj)
             sql = self.format_db_naming(db, sql, mode="update")
             cur = conn.cursor()
@@ -189,7 +189,7 @@ class TraderDB:
 
         return sql
 
-    def generate_insert_stmt(self, db, table, obj):
+    def generate_insert_stmt(self, db, table, obj, batch=False):
         try:
             if db == "SQL":
                 insert_stmt = f"INSERT INTO master.dbo.{table}"
@@ -204,30 +204,32 @@ class TraderDB:
 
             sql = insert_stmt + "(" + ",".join(obj.keys()) + ")VALUES("
 
-            for key in obj.keys():
-                try:
-                    if TYPES[db][table][key] == "String":
-                        sql = sql + f"'{obj[key]}',"
+            if batch:
+                for key in obj.keys():
+                    try:
+                        if TYPES[db][table][key] == "String":
+                            sql = sql + f"'{obj[key]}',"
 
-                    elif (
-                        TYPES[db][table][key] == "double"
-                        or TYPES[db][table][key] == "int"
-                    ):
-                        sql = sql + f"{obj[key]},"
+                        elif (
+                            TYPES[db][table][key] == "double"
+                            or TYPES[db][table][key] == "int"
+                        ):
+                            sql = sql + f"{obj[key]},"
 
-                    elif TYPES[db][table][key] == "BIT":
-                        if obj[key]:
-                            sql = sql + f"1,"
-                        else:
-                            sql = sql + f"0,"
+                        elif TYPES[db][table][key] == "BIT":
+                            if obj[key]:
+                                sql = sql + f"1,"
+                            else:
+                                sql = sql + f"0,"
 
-                    elif TYPES[db][table][key] == "Time":
-                        val = xtb_time_to_date(obj[key])
-                        sql = sql + f"'{val}',"
-                except KeyError as e:
-                    continue
-
-            sql = sql[:-1] + ");"
+                        elif TYPES[db][table][key] == "Time":
+                            val = xtb_time_to_date(obj[key])
+                            sql = sql + f"'{val}',"
+                    except KeyError as e:
+                        continue
+                sql = sql[:-1] + ");"
+            else:
+                pass
 
             return sql
         except Exception as e:
@@ -408,6 +410,20 @@ class TraderDB:
             self.insert_candle_batch(candles)
 
     def insert_trade(self, trade):
+        self.CLOCK.wait_clock()
+        try:
+            self.logger.debug(f"TRADE {trade['open_time']} | {datetime.now()}")
+            if trade["customComment"] is None:
+                trade["trader_name"] = "WebPage"
+            else:
+                trade["trader_name"] = trade["customComment"]
+            self.execute_insert(db="SQL", table="trades", obj=trade)
+        except Exception as error:
+            self.logger.debug(f"Error inserting candles | {error}")
+            self.CLOCK.wait_clock()
+            self.insert_trade(trade)
+
+    def insert_trade_batch(self, trade):
         self.CLOCK.wait_clock()
         try:
             self.logger.debug(f"TRADE {trade['open_time']} | {datetime.now()}")

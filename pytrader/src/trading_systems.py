@@ -6,7 +6,9 @@ from custom_exceptions import *
 import time
 import os
 import copy as cp
-from multiprocessing import SimpleQueue
+from queue import LifoQueue, SimpleQueue
+
+# from multiprocessing import SimpleQueue
 from connection_clock import Clock
 import pickle as pkl
 import shutil
@@ -47,16 +49,22 @@ class BaseTrader:
 
         self.CLIENT = None
         self.STREAM_CLIENTS = {}
-        self.TICK_QUEUE = SimpleQueue()
+        self.TICK_QUEUE = LifoQueue(maxsize=10)
         self.CANDLE_QUEUE = SimpleQueue()
         self.TRADE_QUEUE = SimpleQueue()
+        self.PROFIT_QUEUE = LifoQueue(maxsize=10)
         self.CLOCK = Clock()
 
         self.LAST_TICK = None
-        self.LAST_TICKS = []
+        self.LAST_TICKS = None
         self.LAST_CANDLE = None
         self.LAST_CANDLES = None
+        self.LAST_TRADE = None
+        self.LAST_TRADES = None
+        self.LAST_PROFITS = None
         self.new_candle = False
+        self.new_tick = False
+        self.new_profit = False
 
         self.last_risk_update_time = 0
         self.live_risks = 0
@@ -72,7 +80,9 @@ class BaseTrader:
         self.CLIENT = client
         self.ssid = ssid
 
-    def start_stream_clients(self, symbol, tick=False, candle=True, trade=True):
+    def start_stream_clients(
+        self, symbol, tick=False, candle=True, trade=True, profit=True
+    ):
         try:
             symbol = symbol
             if self.CLIENT is None:
@@ -106,11 +116,24 @@ class BaseTrader:
                     ssId=self.ssid,
                     address=DEFAULT_XAPI_ADDRESS,
                     port=DEFAULT_XAPI_STREAMING_PORT,
+                    trade_queue=self.TRADE_QUEUE,
                     db_obj=self.DB,
                     logger=self.logger,
                 )
                 stream_client.subscribeTrades()
                 self.set_stream_clients(name="trade", stream_client=stream_client)
+
+            if profit:
+                stream_client = APIStreamClient(
+                    ssId=self.ssid,
+                    address=DEFAULT_XAPI_ADDRESS,
+                    port=DEFAULT_XAPI_STREAMING_PORT,
+                    profit_queue=self.PROFIT_QUEUE,
+                    db_obj=self.DB,
+                    logger=self.logger,
+                )
+                stream_client.subscribeProfits()
+                self.set_stream_clients(name="profit", stream_client=stream_client)
 
         except Exception as e:
             raise ApiException
@@ -267,6 +290,7 @@ class BaseTrader:
         price=0,
         volume=0,
         trailing=False,
+        risk_test=True,
     ):
         try:
             order_status = False
@@ -281,7 +305,7 @@ class BaseTrader:
                     self.logger.info(f"Added trailing of {trailing/10}")
                 else:
                     trailing = 0
-                if order_type == 0 or order_type == 3:
+                if (order_type == 0 or order_type == 3) and risk_test:
                     added_risk = self.test_risk(price, sl, volume)
                     if np.sum(self.live_risks) + added_risk > (
                         self.CAPITAL * self.max_risk
@@ -433,15 +457,130 @@ class AngleTrader(BaseTrader):
         self.loss_exit = None
         self.min_angle = None
 
+        self.trade_side = 1
+
         self.last_update_time = 0
 
-    def sell_position(self):
-        # TODO: Implement the function to call self.trade and sell the position
-        pass
+        self.is_bought = 0
 
-    def buy_position(self):
+    def trade(self, name="", order_cmd=0, order_type=0, position=0):
+        commandResponse = self.CLIENT.commandExecute(
+            "tradeTransaction",
+            arguments={
+                "tradeTransInfo": {
+                    "cmd": order_cmd,
+                    "customComment": name,
+                    "expiration": 0,
+                    "offset": 0,
+                    "order": position,
+                    "price": self.LAST_TICKS.iloc[-1, :]["ask"],
+                    "sl": 0,
+                    "symbol": self.SYMBOl,
+                    "tp": 0.0,
+                    "type": order_type,
+                    "volume": self.VOLUME,
+                }
+            },
+        )
+
+    def sell_position(self, position):
+        # TODO: Implement the function to call self.trade and sell the position
+
+        order_cmd = TransactionSide.BUY
+        order_type = TransactionType.ORDER_CLOSE
+        sell_order_n = self.trade(
+            name=self.name,
+            order_cmd=order_cmd,
+            order_type=order_type,
+            position=position,
+        )
+        self.HIST_PROFITS.append(self.get_profit(position))
+        while not self.PROFIT_QUEUE.empty():
+            _ = self.PROFIT_QUEUE.get()
+        self.LAST_PROFITS = None
+        self.new_profit = False
+        self.LAST_TRADE = None
+        self.IN_POSITION = False
+        self.is_bought -= 1
+
+    def buy_position(self, short=False):
         # TODO: Implement the function to call self.trade and buy a position
-        pass
+
+        c_tick = self.LAST_TICKS.iloc[-1, :]
+        if short:
+            trade_type = "SHORT"
+            order_cmd = TransactionSide.SELL
+        else:
+            trade_type = "BUY"
+            order_cmd = TransactionSide.BUY
+            sl = self.LAST_CANDLES
+
+        order_type = TransactionType.ORDER_OPEN
+        order_n = self.trade(name=self.name, order_cmd=order_cmd, order_type=order_type)
+        self.IN_POSITION = True
+        self.is_bought += 1
+
+    def calculate_cost(self, price):
+        position = self.SYMBOL_INFO["contractSize"] * self.VOLUME * price
+        return position
+
+    def set_last_candle(self):
+        # self.LAST_CANDLE = self.DB.get_last_candle(self.SYMBOl)
+        if not self.CANDLE_QUEUE.empty():
+            new_candle = self.CANDLE_QUEUE.get()
+            if self.LAST_CANDLES is None:
+                self.LAST_CANDLES = pd.DataFrame([new_candle])
+            else:
+                self.LAST_CANDLES = self.LAST_CANDLES.append(
+                    new_candle, ignore_index=True
+                )
+                if self.LAST_CANDLES.shape[0] > (self.long_ma + 3):
+                    self.LAST_CANDLES["short_ma"] = (
+                        self.LAST_CANDLES["close"].rolling(window=self.short_ma).mean()
+                    )
+                    self.LAST_CANDLES["long_ma"] = (
+                        self.LAST_CANDLES["close"].rolling(window=self.long_ma).mean()
+                    )
+                    self.LAST_CANDLES.drop([0])
+                    self.LAST_CANDLES = self.LAST_CANDLES.reset_index(drop=True)
+                    self.new_candle = True
+
+    def set_last_tick(self):
+        if not self.TICK_QUEUE.empty():
+            new_tick = self.TICK_QUEUE.get()
+            if self.LAST_TICKS is None:
+                self.LAST_TICKS = pd.DataFrame([new_tick])
+            else:
+                self.LAST_TICKS = self.LAST_TICKS.append(new_tick, ignore_index=True)
+                if self.LAST_TICKS.shape[0] > 100:
+                    self.LAST_CANDLES.drop([0])
+                    self.LAST_CANDLES = self.LAST_CANDLES.reset_index(drop=True)
+                    self.new_tick = True
+
+    def set_last_trade(self):
+        if not self.TRADE_QUEUE.empty():
+            new_trade = self.TRADE_QUEUE.get()
+            self.LAST_TRADE = new_trade
+
+    def set_last_profit(self, trades=1):
+        for i in range(trades):
+            if not self.PROFIT_QUEUE.empty():
+                self.new_profit = True
+                new_profit = self.PROFIT_QUEUE.get()
+                spreadCost = self.calculate_cost(
+                    10 * self.LAST_TICKS.iloc[-1, :]["spreadRaw"]
+                )
+                old_profit = new_profit["profit"]
+                # new_profit["profit"] = new_profit["profit"] + spreadCost
+                if self.LAST_PROFITS is None:
+                    self.LAST_PROFITS = pd.DataFrame([new_profit])
+                else:
+                    self.LAST_PROFITS = self.LAST_PROFITS.append(
+                        new_profit, ignore_index=True
+                    )
+                    if self.LAST_PROFITS.shape[0] > 100:
+                        self.LAST_PROFITS.drop([0])
+                        self.LAST_PROFITS = self.LAST_PROFITS.reset_index(drop=True)
 
     def enter_position(self):
         # TODO: Implement the logic to enter a trade.
@@ -456,7 +595,37 @@ class AngleTrader(BaseTrader):
                 ((angle_short < -60) and (angle long > 6) and (short_ma > long_ma))
                 OR ((angle_short < -30) and (angle_long < -15))
         """
-        pass
+        # candles = self.LAST_CANDLES
+        # prev_candle = candles.iloc[-2, :]
+        # curr_candle = candles.iloc[-1, :]
+        # if (
+        #     np.abs(curr_candle["short_ma"] - prev_candle["long_ma"])
+        #     > self.SYMBOL_INFO["spreadRaw"]
+        # ):
+        #     short_ma, long_ma = curr_candle["short_ma"], curr_candle["long_ma"]
+        #     angle_short, angle_long = get_absolute_angles(
+        #         prev_candle,
+        #         curr_candle,
+        #         self.short_ma,
+        #         self.long_ma,
+        #         min_=candles["low"].min(),
+        #         max_=candles["high"].max(),
+        #     )
+        #     if (
+        #         (angle_short > 60)
+        #         and (angle_long < -(60 / 10))
+        #         and (short_ma < long_ma)
+        #     ) or ((angle_short > (60 / 2)) and (angle_long > (60 / 4))):
+        #         self.buy_position(short=False)
+        #     elif (
+        #         (angle_short < -60)
+        #         and (angle_long > (60 / 10))
+        #         and (short_ma > long_ma)
+        #     ) or ((angle_short < -(60 / 2)) and (angle_long < -(60 / 4))):
+        #         self.buy_position(short=True)
+        r = np.random.rand()
+        self.buy_position(short=1)
+        self.buy_position(short=0)
 
     def exit_position(self):
         # TODO: Implement the logit to exit a position
@@ -467,6 +636,70 @@ class AngleTrader(BaseTrader):
             2nd: If last profit / current profit < 0.95
             3rd: Profit is > 0.01
         """
+        for position in self.LAST_PROFITS["position"].unique():
+            trade_profits = self.LAST_PROFITS[self.LAST_PROFITS["position"] == position]
+            first_profit = trade_profits.iloc[0, :]
+            max_profit = trade_profits["profit"].max()
+            if trade_profits.shape[0] == 1:
+                last_profit = trade_profits.iloc[-1, :]
+            else:
+                last_profit = trade_profits.iloc[-2, :]
+            curr_profit = trade_profits.iloc[-1, :]
+
+            if curr_profit["profit"] < -0.3:
+                self.sell_position(position=int(curr_profit["position"]))
+                self.logger.info("Exit lossing")
+
+            if curr_profit["profit"] > 0.6:
+                if last_profit["profit"] / curr_profit["profit"] > 1.50:
+                    self.sell_position(int(curr_profit["position"]))
+                    self.logger.info(
+                        f"Sudden drop | ({last_profit['profit']} / {curr_profit['profit']} = {last_profit['profit'] / curr_profit['profit']})"
+                    )
+            if curr_profit["profit"] > 5:
+                self.sell_position(int(curr_profit["position"]))
+                self.logger.info(f"Great return | ({curr_profit['profit']}")
+
+            self.logger.info(
+                f"\nPosition: {first_profit['position']}\nOrig: {first_profit['profit']}\nMax: {max_profit}\nPrev: {last_profit['profit']}\nCurr: {curr_profit['profit']}"
+            )
+        # if curr_profit["profit"] > 0:
+        #     if curr_profit["profit"] > 0.6:
+        #         if last_profit["profit"] / curr_profit["profit"] > 1.05:
+        #             self.sell_position(int(curr_profit["position"]))
+        #             self.logger.info(
+        #                 f"Sudden drop | ({last_profit['profit']} / {curr_profit['profit']} = {last_profit['profit'] / curr_profit['profit']})"
+        #             )
+        # else:
+        #     if last_profit["profit"] / curr_profit["profit"] > 2:
+        #         self.sell_position(int(curr_profit["position"]))
+        #         self.logger.info(
+        #             f"Sudden drop low profit | ({last_profit['profit']} / {curr_profit['profit']} = {last_profit['profit'] / curr_profit['profit']})"
+        #         )
+
+        #     if max_profit / curr_profit["profit"] > 1.5:
+        #         self.sell_position(int(curr_profit["position"]))
+        #         self.logger.info(
+        #             f"Far from max | ({max_profit} / {curr_profit['profit']} = {max_profit / curr_profit['profit']})"
+        #         )
+
+        # if curr_profit["profit"] > 1.2:
+        #     self.sell_position(int(curr_profit["position"]))
+        #     self.logger.info(f"Great return | ({curr_profit['profit']}")
+
+    def step(self):
+        try:
+            curr_time = datetime.now().strftime("%H:%M:%S").split(":")
+            if self.is_bought == 0:
+                if self.new_profit:
+                    self.new_profit = False
+                    self.exit_position()
+            elif (int(curr_time[0]) > 10) and (int(curr_time[0]) < 20):
+                if self.new_candle:
+                    self.new_candle = False
+                    self.enter_position()
+        except Exception as e:
+            raise SessionError(e)
 
 
 class CrossTrader(BaseTrader):

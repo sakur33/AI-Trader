@@ -97,6 +97,7 @@ class JsonSocket(object):
             char = self.conn.recv(bytesSize).decode()
             if char == "":
                 self.logger.info("Socket disconnection")
+                quit()
                 raise SocketError("Socket disconnection")
             self._receivedData += char
             # if self._receivedData[-1] == "}":
@@ -260,6 +261,8 @@ class APIStreamClient(JsonSocket):
         keepAliveFun=None,
         candle_queue=None,
         tick_queue=None,
+        trade_queue=None,
+        profit_queue=None,
         db_obj=None,
         logger=None,
     ):
@@ -270,12 +273,17 @@ class APIStreamClient(JsonSocket):
         self._tradeFun = self.trade_processor
         self._balanceFun = balanceFun
         self._tradeStatusFun = tradeStatusFun
-        self._profitFun = profitFun
+        self._profitFun = self.profit_processor
         self._newsFun = newsFun
         self._candleFun = self.candle_processor
         self.last_tick_time = None
         self.candle_queue = candle_queue
         self.tick_queue = tick_queue
+        self.trade_queue = trade_queue
+        self.profit_queue = profit_queue
+        self.ticks = []
+        self.candles = []
+        self.trades = []
 
         if not self.connect():
             raise Exception(
@@ -400,8 +408,13 @@ class APIStreamClient(JsonSocket):
             tick = msg["data"]
             self.logger.debug(f"TICK:{msg}")
             self.tick_queue.put(tick)
-            inserTick = threading.Thread(target=self.DB.insert_tick, args=(tick,))
-            inserTick.start()
+            if len(self.ticks) < 10:
+                self.ticks.append(tick)
+            else:
+                self.ticks.append(tick)
+                inserTick = threading.Thread(target=self.DB.insert_tick, args=(tick,))
+                inserTick.start()
+                self.ticks = []
         except Exception as e:
             raise ApiException
 
@@ -410,8 +423,8 @@ class APIStreamClient(JsonSocket):
             candle = msg["data"]
             self.logger.debug(f"CANDLE:{msg}")
             self.candle_queue.put(candle)
-            inserCandle = threading.Thread(target=self.DB.insert_candle, args=(candle,))
-            inserCandle.start()
+            # inserCandle = threading.Thread(target=self.DB.insert_candle, args=(candle,))
+            # inserCandle.start()
         except Exception as e:
             raise ApiException
 
@@ -419,7 +432,24 @@ class APIStreamClient(JsonSocket):
         try:
             trade = msg["data"]
             self.logger.debug(f"TRADE:{msg}")
-            inserTrade = threading.Thread(target=self.DB.insert_trade, args=(trade,))
-            inserTrade.start()
+            self.trade_queue.put(trade)
+            # if len(self.trades) < 10:
+            #     self.trades.append(trade)
+            # else:
+            #     self.trades.append(trade)
+            #     inserTrade = threading.Thread(
+            #         target=self.DB.insert_trade, args=(self.trades,)
+            #     )
+            #     inserTrade.start()
+            #     self.trades = []
+
+        except Exception as e:
+            raise ApiException
+
+    def profit_processor(self, msg):
+        try:
+            profit = msg["data"]
+            self.logger.debug(f"PROFIT:{msg}")
+            self.profit_queue.put(profit)
         except Exception as e:
             raise ApiException

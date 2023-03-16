@@ -1,5 +1,5 @@
 from xAPIConnector import *
-from trading_systems import CrossTrader, BacktestCrossTrader
+from trading_systems import CrossTrader, BacktestCrossTrader, RandomTrader
 from trader_utils import *
 from trader_db_utils import *
 from logger_settings import *
@@ -22,6 +22,7 @@ DEFAULT_XAPI_STREAMING_PORT = 5125
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--trader_name", type=str, help="Trader name")
+parser.add_argument("--force_backtest", type=int, default=0, help="Force Backtesting")
 parser.add_argument("--test", type=int, default=0, help="Override trading params")
 args = parser.parse_args()
 
@@ -29,6 +30,8 @@ if args.trader_name:
     TRADER_NAME = args.trader_name
 else:
     TRADER_NAME = "tests"
+
+force_backtest = args.force_backtest
 
 is_debug_run = os.environ.get("is_debug_run")
 
@@ -53,7 +56,7 @@ def main():
     logger = logging.getLogger(__name__)
     logger = custom_logger.setup_logging(logger, TRADER_NAME, console_debug=True)
     weekno = datetime.today().weekday()
-    if weekno > -1:
+    if force_backtest:
         trader = BacktestCrossTrader(
             name=f"trader68709:",
             capital=1000,
@@ -94,48 +97,55 @@ def main():
         chosen_symbols = ["AUDUSD", "GBPUSD", "EURUSD"]
         trader.backTest(symbols=chosen_symbols)
     else:
+        trader = RandomTrader(
+            name=f"trader:",
+            capital=1000,
+            max_risk=0.05,
+            trader_type="FX",
+            logger=logger,
+            test=is_debug_run or test,
+        )
         logger.info(f"ONLINE TRADER")
-        params_df = trader.DB.get_trading_params()
-        iterator = params_df.iterrows()
-        index, row = next(iterator)
-        trader.name = f"trader68709:{row['symbol']}:{TRADER_NAME}"
+        symbol = "GBPUSD"
+        # params_df = trader.DB.get_trading_params()
+        # iterator = params_df.iterrows()
+        # index, row = next(iterator)
+        trader.name = f"trader:{symbol}:{TRADER_NAME}"
         trader.test_name = TRADER_NAME
-        trader.CLIENT = apiClient
-        trader.SYMBOl = "AUDUSD"
+        trader.start_api_client()
+        trader.SYMBOl = "GBPUSD"
         trader.VOLUME = 0.01
 
         if test:
             trader.short_ma = 1
             trader.long_ma = 10
         else:
-            trader.short_ma = 5
-            trader.long_ma = 200
+            trader.short_ma = 30
+            trader.long_ma = 1000
 
         date = datetime.now() - timedelta(
-            minutes=int(np.max([trader.long_ma, 200]) + 3)
+            minutes=int(np.max([trader.long_ma, 1000]) + 100)
         )
-        trader.store_past_candles(row["symbol"], date)
+        trader.store_past_candles(symbol, date)
 
-        trader.SYMBOL_INFO = trader.DB.get_symbol_info(row["symbol"])
-        trader.start_stream_clients(row["symbol"], tick=True, candle=True, trade=True)
+        trader.SYMBOL_INFO = trader.DB.get_symbol_info(symbol)
+        trader.start_stream_clients(symbol, tick=True, candle=True, trade=True)
         trader.set_last_candle()
         logger.info("SYSTEM STARTS")
         while True:
             try:
                 trader.set_last_tick()
-                trader.set_last_candle(margin=200)
-                trader.update_trades()
-                trader.evaluate_risks()
+                trader.set_last_candle()
+                trader.set_last_trade()
+                trader.set_last_profit(trades=2)
                 trader.step()
-                # trader.update_stop_loss()
-                # TODO: Calculate left balance
-                # TODO: Gather closed trades
-                # TODO: Improve positions
-                time.sleep(5)
+            except KeyboardInterrupt:
+                logger.info(f"Keyboard Interrupt")
+                quit()
             except Exception as e:
                 logger.info(f"Exception in main loop | {e}")
+                time.sleep(30)
                 restart_program()
-                quit()
             pass
 
 

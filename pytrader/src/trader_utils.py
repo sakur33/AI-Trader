@@ -316,6 +316,45 @@ def get_angle_between_lines(m1, m2):
     return np.degrees(np.arctan((m1 - m2) / (1 + (m1 * m2))))
 
 
+def get_slope(prev_candle, c_candle, short_ma, long_ma, min_, max_):
+    min_ctm, max_ctm = short_ma, long_ma
+    min_close, max_close = min_, max_
+
+    prev_ctm = 0.999
+    c_ctm = 1
+    prev_short = min_max_norm(prev_candle["short_ma"], min_close, max_close)
+    c_short = min_max_norm(c_candle["short_ma"], min_close, max_close)
+    prev_long = min_max_norm(prev_candle["long_ma"], min_close, max_close)
+    c_long = min_max_norm(c_candle["long_ma"], min_close, max_close)
+
+    p1 = [prev_ctm, prev_short]
+    p2 = [c_ctm, c_short]
+    x1, y1 = p1
+    x2, y2 = p2
+    ma_short_slope = (y2 - y1) / (x2 - x1)
+
+    p1 = [prev_ctm, prev_long]
+    p2 = [c_ctm, c_long]
+    x1, y1 = p1
+    x2, y2 = p2
+    ma_long_slope = (y2 - y1) / (x2 - x1)
+    return ma_short_slope, ma_long_slope
+
+
+def get_absolute_angles(prev_candle, c_candle, short_ma, long_ma):
+    ma_short_slope, ma_long_slope = get_slope(prev_candle, c_candle, short_ma, long_ma)
+    angle_short = np.degrees(
+        np.arctan((ma_short_slope - 0) / (1 + (ma_short_slope * 0)))
+    )
+    angle_long = np.degrees(np.arctan((ma_long_slope - 0) / (1 + (ma_long_slope * 0))))
+    return angle_short, angle_long
+
+
+def get_angle_between_slopes(prev_candle, c_candle, short_ma, long_ma):
+    m1, m2 = get_slope(prev_candle, c_candle)
+    return np.degrees(np.arctan((m1 - m2) / (1 + (m1 * m2))))
+
+
 def log_dict(info_dict, logger, no_keys=["Trades", "Crossover", "candles"]):
     str = ""
     for key in info_dict.keys():
