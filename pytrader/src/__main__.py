@@ -46,8 +46,7 @@ def restart_program():
     """Restarts the current program.
     Note: this function does not return. Any cleanup action (like
     saving data) must be done before calling this function."""
-    if not test:
-        os.execl(sys.executable, os.path.abspath(__file__), *sys.argv)
+    os.execl(sys.executable, os.path.abspath(__file__), *sys.argv)
 
 
 def main():
@@ -116,24 +115,16 @@ def main():
         trader.SYMBOl = "GBPUSD"
         trader.VOLUME = 0.01
 
-        if test:
-            trader.short_ma = 1
-            trader.long_ma = 10
-        else:
-            trader.short_ma = 30
-            trader.long_ma = 1000
-
-        date = datetime.now() - timedelta(
-            minutes=int(np.max([trader.long_ma, 1000]) + 100)
-        )
-        trader.store_past_candles(symbol, date)
-
         trader.SYMBOL_INFO = trader.DB.get_symbol_info(symbol)
         trader.start_stream_clients(symbol, tick=True, candle=True, trade=True)
         trader.set_last_candle()
         logger.info("SYSTEM STARTS")
+        trader.recover_trades()
         while True:
             try:
+                if not trader.exception_queue.empty():
+                    exception = trader.exception_queue.get()
+                    raise exception
                 trader.set_last_tick()
                 trader.set_last_candle()
                 trader.set_last_trade()
@@ -145,7 +136,11 @@ def main():
             except Exception as e:
                 logger.info(f"Exception in main loop | {e}")
                 time.sleep(30)
-                restart_program()
+                if not test:
+                    logger.info(f"Restarting system")
+                    restart_program()
+                else:
+                    logger.info(f"No restart in debug mode")
             pass
 
 
