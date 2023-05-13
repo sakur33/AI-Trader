@@ -593,10 +593,13 @@ class TraderDB:
         except Exception as e:
             raise DbError
 
-    def get_candles_range(self, start_date, end_date):
+    def get_candles_range(self, start_date, end_date, symbol=None):
         self.CLOCK.wait_clock()
         try:
-            sql = f"SELECT * FROM candles WHERE ctmString BETWEEN '{start_date}' and '{end_date}' ORDER BY ctm ASC;"
+            if symbol is not None:
+                sql = f"SELECT * FROM candles WHERE ctmString BETWEEN '{start_date}' and '{end_date}' and symbol='{symbol}' ORDER BY ctm ASC;"
+            else:
+                sql = f"SELECT * FROM candles WHERE ctmString BETWEEN '{start_date}' and '{end_date}' ORDER BY ctm ASC;"
             candle = self.execute_query(sql, self.TS_CONN, mode="df")
             return candle
         except Exception as e:

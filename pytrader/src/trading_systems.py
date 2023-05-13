@@ -1,3 +1,7 @@
+from custom_exceptions import __name__
+from logger_settings import __name__, logging
+from trader_db_utils import __name__, logging
+from trader_utils import __name__
 from xAPIConnector import *
 from trader_utils import *
 from trader_db_utils import *
@@ -13,6 +17,8 @@ from connection_clock import Clock
 import pickle as pkl
 import shutil
 import warnings
+
+from xAPIConnector import __name__, logging
 
 warnings.simplefilter(action="ignore", category=FutureWarning)
 
@@ -194,14 +200,20 @@ class BaseTrader:
                         f"Inserting {start_date.strftime('%Y-%m-%d')} | {end_date.strftime('%Y-%m-%d')} ..."
                     )
                     for symbol in tqdm(list(df["symbol"])):
-                        self.store_past_candles(symbol, start_date, end_date, period)
-
+                        self.store_past_candles(
+                            symbol=symbol,
+                            start_date=start_date,
+                            end_date=end_date,
+                            period=period,
+                        )
             else:
                 start_date = datetime.now() - timedelta(days=days)
                 for symbol in list(df["symbol"]):
                     self.logger.info(f"Inserting symbol: {symbol}")
                     if not self.DB.get_candles_today() or force:
-                        self.store_past_candles(symbol, start_date, period)
+                        self.store_past_candles(
+                            symbol=symbol, start_date=start_date, period=period
+                        )
         except Exception as e:
             raise LogicError
 
@@ -670,18 +682,33 @@ class RandomTrader(BaseTrader):
             raise SessionError(e)
 
 
-class BacktestRandomTrader(RandomTrader, BaseEstimator, DensityMixin):
+class BacktestRandomTrader(BaseEstimator, DensityMixin):
     def __init__(
-        self, name, capital, max_risk, trader_type, logger=None, test=0
+        self,
+        max_profit_percentage=None,
+        good_profit_percentage=None,
+        max_loss_percentage=None,
+        max_instant_drawdown_percentage=None,
+        max_drawdown_from_max_percentage=None,
+        max_loss_from_profitable_max_percentage=None,
+        show=False,
     ) -> None:
-        super().__init__(name, capital, max_risk, trader_type, logger, test)
+        self.logger = logging.getLogger(__name__)
+        self.max_profit_percentage = max_profit_percentage
+        self.good_profit_percentage = good_profit_percentage
+        self.max_loss_percentage = max_loss_percentage
+        self.max_instant_drawdown_percentage = max_instant_drawdown_percentage
+        self.max_drawdown_from_max_percentage = max_drawdown_from_max_percentage
+        self.max_loss_from_profitable_max_percentage = (
+            max_loss_from_profitable_max_percentage
+        )
+        self.show = show
 
-    def fit(self, X, y=None, **kwargs):
+    def fit(self, X, y=None):
         self.candles = X
-        return self
 
     def score(self, X, y=None):
-        return self.back_test(X)
+        return self.back_test()
 
     def test(self, X, parameters, test_period="7D", show=False):
         self.max_loss = parameters["max_loss"]
@@ -692,38 +719,51 @@ class BacktestRandomTrader(RandomTrader, BaseEstimator, DensityMixin):
         self.max_drawdown_from_max = parameters["max_drawdown_from_max"]
         return self.back_test(X, test_period=test_period, show=show)
 
-    def back_test(self, df=None, test_period=None, show=False):
+    def back_test(self):
+        df = self.candles
         self.profits = []
         self.is_bought = False
         self.LAST_PROFITS = []
-        profits = []
+        curr_time = 0
         for i_candle in range(df.shape[0]):
-            for price in ["open", "low", "high", "close"]:
-                curr_time = []
-                if self.is_bought != 0:
-                    new_price = df.iloc[i_candle, :][price]
-                    if self.is_short:
-                        new_profit = self.buy_price - new_price
-                    else:
-                        new_profit = new_price - self.buy_price
-                    new_profit = {"position": 1, "profit": new_profit}
-                    self.LAST_PROFITS = self.LAST_PROFITS.append(
-                        new_profit, ignore_index=True
+            if self.is_bought:
+                self.new_price = np.round(
+                    np.min(df.iloc[i_candle, :][["open", "low", "high", "close"]]), 4
+                )
+                new_profit = np.round(self.new_price - self.buy_price, 4)
+                if self.is_short:
+                    self.new_price = np.round(
+                        np.max(df.iloc[i_candle, :][["open", "low", "high", "close"]]),
+                        4,
                     )
-                    self.exit_position()
-                elif (int(curr_time[0]) >= 10) and (int(curr_time[0]) < 18):
-                    self.is_bought = True
-                    r = np.random.rand()
-                    if r >= 0.5:
-                        self.is_short = True
-                    else:
-                        self.is_short = False
-                    self.buy_price = df.iloc[i_candle, :][price]
-                    self.LAST_PROFITS = pd.DataFrame([{"position": 1, "profit": -0.15}])
+                    new_profit = np.round(self.buy_price - self.new_price, 4)
 
-        return np.sum(profits)
+                new_profit = {"position": 1, "profit": new_profit}
+                self.LAST_PROFITS = self.LAST_PROFITS.append(
+                    new_profit, ignore_index=True
+                )
+                self.evaluate_positions()
+            elif curr_time % 15 == 0:
+                self.is_bought = True
+                r = np.random.rand()
+                if r >= 0.5:
+                    self.is_short = True
+                    self.buy_price = np.round(
+                        np.min(df.iloc[i_candle, :][["open", "low", "high", "close"]]),
+                        4,
+                    )
+                else:
+                    self.is_short = False
+                    self.buy_price = np.round(
+                        np.max(df.iloc[i_candle, :][["open", "low", "high", "close"]]),
+                        4,
+                    )
 
-    def exit_position(self):
+                self.LAST_PROFITS = pd.DataFrame([{"position": 1, "profit": -0.15}])
+            curr_time += 1
+        return np.sum(self.profits)
+
+    def evaluate_positions(self):
         for position in self.LAST_PROFITS["position"].unique():
             trade_profits = self.LAST_PROFITS[self.LAST_PROFITS["position"] == position]
             max_profit = trade_profits["profit"].max()
@@ -733,40 +773,68 @@ class BacktestRandomTrader(RandomTrader, BaseEstimator, DensityMixin):
                 last_profit = trade_profits.iloc[-2, :]
             curr_profit = trade_profits.iloc[-1, :]
 
-            if curr_profit["profit"] < self.max_loss:
-                self.profits.append(curr_profit["profit"])
-                self.logger.info("Exit lossing")
+            # Calculate the values
+            max_loss = np.round(-self.max_loss_percentage * self.buy_price, 4)
+            good_profit = np.round(self.good_profit_percentage * self.buy_price, 4)
+            max_instant_drawdown = np.round(
+                self.max_instant_drawdown_percentage * self.buy_price, 4
+            )
+            max_drawdown_from_max = np.round(
+                np.abs(self.max_drawdown_from_max_percentage * max_profit), 4
+            )
+            dist_from_max = np.round(max_profit - curr_profit["profit"], 4)
+            max_profit = np.round(self.max_profit_percentage * self.buy_price, 4)
 
-            if curr_profit["profit"] > self.drawdown_threshold:
+            self.profits.append(curr_profit["profit"])
+            if self.show:
+                self.logger.info(
+                    f"\nShort: {self.is_short}\nBuy price: {self.buy_price}\nCurrent price: {self.new_price}\nLast Profit: {last_profit['profit']}\nCurrent Profit: {curr_profit['profit']}"
+                )
+
+            # The profit is less than the maximum percentage of trade loss
+            if curr_profit["profit"] < max_loss:
+                self.exit_position(
+                    message="Exit loosing: The profit is less than the maximum percentage of trade loss",
+                    profit=curr_profit,
+                )
+            # The profit is positive over the good profit threshold
+            if curr_profit["profit"] > good_profit:
+
+                # The profit is positive but the drop in the last update was bigger than the maximum instant percentage dropdown and the maximum instant value dropdown
                 if (
                     (last_profit["profit"] / curr_profit["profit"])
                     > self.max_instant_drawdown_percentage
                 ) and (
                     (last_profit["profit"] - curr_profit["profit"])
-                    > self.max_instant_drawdown
+                    > max_instant_drawdown
                 ):
-                    self.profits.append(curr_profit["profit"])
-                    self.logger.info(
-                        f"Sudden drop | ({last_profit['profit']} / {curr_profit['profit']} = {last_profit['profit'] / curr_profit['profit']})"
+                    self.exit_position(
+                        message=f"Sudden drop | ({last_profit['profit']} / {curr_profit['profit']} = {last_profit['profit'] / curr_profit['profit']})",
+                        profit=curr_profit,
                     )
 
-            if (max_profit - curr_profit["profit"]) > (
-                self.max_drawdown_from_max - np.max([0, max_profit])
+            # The drop from the maximum profit of the trade is too far
+            if dist_from_max > max_drawdown_from_max and (
+                dist_from_max > max_instant_drawdown
             ):
-                if (
-                    np.abs(
-                        ((max_profit - curr_profit["profit"]) / curr_profit["profit"])
-                    )
-                    > 0.1
-                ):
-                    self.profits.append(curr_profit["profit"])
-                self.logger.info(
-                    f"Far from max | ({max_profit} - {curr_profit['profit']} = {max_profit - curr_profit['profit']})"
+                self.exit_position(
+                    message=f"Far from max | ({max_profit} - {curr_profit['profit']} = {max_profit - curr_profit['profit']})",
+                    profit=curr_profit,
                 )
 
-            if curr_profit["profit"] > self.max_profit:
-                self.profits.append(curr_profit["profit"])
-                self.logger.info(f"Great return | ({curr_profit['profit']}")
+            if curr_profit["profit"] > max_profit:
+                self.exit_position(
+                    message=f"Great return | ({curr_profit['profit']}",
+                    profit=curr_profit,
+                )
+
+    def exit_position(self, message, profit):
+        self.is_bought = False
+        self.is_short = False
+        if self.show:
+            self.logger.info(message)
+        self.profits.append(profit)
+        pass
 
 
 class CrossTrader(BaseTrader):

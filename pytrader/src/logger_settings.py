@@ -8,13 +8,13 @@ class CustomLogger:
         self.today = get_today()
         self.todayms, self.today_int = get_today_ms()
         curr_path = os.path.dirname(os.path.realpath(__file__))
-        self.data_path = curr_path + "../../../data/"
-        self.symbol_path = curr_path + "../../../symbols/"
-        self.cluster_path = curr_path + "../../../clusters/"
-        self.model_path = curr_path + "../../../model/"
-        self.result_path = curr_path + "../../../result/"
-        self.docs_path = curr_path + "../../../docs/"
-        self.database_path = curr_path + "../../../database/"
+        self.data_path = curr_path + "./data/"
+        self.symbol_path = curr_path + "./symbols/"
+        self.cluster_path = curr_path + "./clusters/"
+        self.model_path = curr_path + "./model/"
+        self.result_path = curr_path + "./result/"
+        self.docs_path = curr_path + "./docs/"
+        self.database_path = curr_path + "./database/"
         self.logs_path = curr_path + "../../../logs/" + test_name + "/"
         if not os.path.exists(self.logs_path):
             os.makedirs(self.logs_path)

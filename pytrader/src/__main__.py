@@ -1,10 +1,12 @@
 from xAPIConnector import *
-from trading_systems import CrossTrader, BacktestCrossTrader, RandomTrader
+from trading_systems import BaseTrader, RandomTrader, BacktestRandomTrader
+from sklearn.model_selection import GridSearchCV
 from trader_utils import *
 from trader_db_utils import *
 from logger_settings import *
 from custom_exceptions import *
 
+import pickle as pkl
 import logging
 import time
 import os
@@ -38,6 +40,7 @@ is_debug_run = os.environ.get("is_debug_run")
 if is_debug_run or args.test:
     test = True
     first_run = True
+    force_backtest = True
 else:
     test = False
 
@@ -56,45 +59,65 @@ def main():
     logger = custom_logger.setup_logging(logger, TRADER_NAME, console_debug=True)
     weekno = datetime.today().weekday()
     if force_backtest:
-        trader = BacktestCrossTrader(
-            name=f"trader68709:",
+        trader = RandomTrader(
+            name=f"trader:",
             capital=1000,
             max_risk=0.05,
             trader_type="FX",
             logger=logger,
             test=is_debug_run or test,
         )
-        # trader.start_api_client()
-        # apiClient = trader.CLIENT
+        trader.start_api_client()
         logger.info(f"OFFLINE TRADER")
         trader.CLOCK.wait_clock()
-        # logger.info("Loading symbols")
-        # symbols = trader.DB.get_symbol_today()
-        # if not isinstance(symbols, pd.DataFrame):
-        #     commandResponse = apiClient.commandExecute(commandName="getAllSymbols")
-        #     symbols_df = return_as_df(commandResponse["returnData"])
-        #     trader.DB.insert_symbols(symbols_df)
-        # else:
-        #     symbols_df = symbols
-        # logger.info("Filtering suitable symbols")
-        # symbols_df = trader.look_for_suitable_symbols_v1(
-        #     symbols_df, symbol_type="FX", capital=1000, max_risk=0.05
-        # )
-        # logger.info("Updating stocks...")
-        # trader.update_stocks(symbols_df, period=1, days=7, force=True)
-        # logger.info("Evaluating stocks...")
-        # symbol_analysis = trader.evaluate_stocks(
-        #     date=(datetime.today() - timedelta(days=7)).strftime("%Y-%m-%d"),
-        #     threshold=40,
-        # )
-        # logger.info(symbol_analysis)
-        # chosen_symbols = []
-        # for symbol in symbol_analysis.keys():
-        #     logger.info(f"{symbol}: {symbol_analysis[symbol]['Score']}")
-        #     if symbol_analysis[symbol]['Score'] > 1:
-        #         chosen_symbols.append(symbol)
-        chosen_symbols = ["AUDUSD", "GBPUSD", "EURUSD"]
-        trader.backTest(symbols=chosen_symbols)
+        logger.info("Loading symbols")
+        if not os.path.exists("./data/symbols_today.pkl"):
+            commandResponse = trader.CLIENT.commandExecute(commandName="getAllSymbols")
+            symbols_df = return_as_df(commandResponse["returnData"])
+            trader.DB.insert_symbols(symbols_df)
+            with open("./data/symbols_today.pkl", "wb") as f:
+                pkl.dump(symbols_df, f, pkl.HIGHEST_PROTOCOL)
+        else:
+            with open("./data/symbols_today.pkl", "rb") as f:
+                symbols_df = pkl.load(f)
+        logger.info("Filtering suitable symbols")
+        symbols_df = symbols_df[symbols_df["categoryName"] == "FX"]
+        logger.info("Updating stocks...")
+        # trader.update_stocks(symbols_df, period=1, days=30, force=False)
+        logger.info("Evaluating stocks...")
+        if hasattr(trader, "evaluate_stocks"):
+            symbol_analysis = trader.evaluate_stocks(
+                date=(datetime.today() - timedelta(days=7)).strftime("%Y-%m-%d"),
+                threshold=40,
+            )
+            logger.info(symbol_analysis)
+            chosen_symbols = []
+            for symbol in symbol_analysis.keys():
+                logger.info(f"{symbol}: {symbol_analysis[symbol]['Score']}")
+                if symbol_analysis[symbol]["Score"] > 1:
+                    chosen_symbols.append(symbol)
+        else:
+            chosen_symbols = symbols_df["symbol"]
+        for symbol in chosen_symbols:
+            df = trader.DB.get_candles_range(
+                start_date=(datetime.now() - timedelta(days=30)).strftime("%m-%d-%Y"),
+                end_date=get_today(),
+                symbol=symbol,
+            )
+            params = {
+                "max_profit_percentage": np.linspace(1.01, 1.5, num=5),
+                "good_profit_percentage": np.linspace(1.01, 1.5, num=5),
+                "max_loss_percentage": np.linspace(0.005, 0.1, num=5),
+                "max_instant_drawdown_percentage": np.linspace(1.01, 1.5, num=5),
+                "max_drawdown_from_max_percentage": np.linspace(1.01, 1.5, num=5),
+                "max_loss_from_profitable_max_percentage": np.linspace(
+                    0.005, 0.1, num=5
+                ),
+            }
+            clf_trader = BacktestRandomTrader()
+            clf = GridSearchCV(clf_trader, params, verbose=3)
+            clf.fit(X=df, y=None)
+
     else:
         trader = RandomTrader(
             name=f"trader:",
